@@ -8,14 +8,14 @@ import {
 } from '@nestjs/common';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
-import { UserCreateDto } from './dto';
+import { AccountCreateDto } from './dto';
 
 @Controller('/accounts')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
   @Post()
-  async createNewUser(@Body() account: UserCreateDto) {
+  async createNewUser(@Body() account: AccountCreateDto) {
     const { email, role } = account;
 
     if (role === Role.ADMIN)

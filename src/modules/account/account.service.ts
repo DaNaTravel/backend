@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { hashPassword } from 'src/utils';
-import { UserCreateDto } from './dto';
+import { AccountCreateDto } from './dto';
 
 @Injectable()
 export class AccountService {
@@ -20,7 +20,7 @@ export class AccountService {
     return Boolean(account);
   }
 
-  async createAccount(account: UserCreateDto) {
+  async createAccount(account: AccountCreateDto) {
     this.logger.log(`Create new user: ${JSON.stringify(account)}`);
 
     const { password, ...data } = account;

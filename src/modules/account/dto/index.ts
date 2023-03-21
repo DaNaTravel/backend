@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { Role } from 'src/utils';
 
-export class UserCreateDto {
+export class AccountCreateDto {
   @IsEmail()
   @MaxLength(100)
   email: string;
