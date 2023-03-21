@@ -20,7 +20,7 @@ export class AccountService {
     return Boolean(account);
   }
 
-  async createUser(account: UserCreateDto) {
+  async createAccount(account: UserCreateDto) {
     this.logger.log(`Create new user: ${JSON.stringify(account)}`);
 
     const { password, ...data } = account;

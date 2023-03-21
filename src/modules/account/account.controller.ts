@@ -1,4 +1,11 @@
-import { BadRequestException, Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  HttpException,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
 import { UserCreateDto } from './dto';
@@ -24,7 +31,7 @@ export class AccountController {
         data: null,
       });
 
-    const newAccount = await this.accountService.createUser(account);
+    const newAccount = await this.accountService.createAccount(account);
 
     return {
       message: null,
