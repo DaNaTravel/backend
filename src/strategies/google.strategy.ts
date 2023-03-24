@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
 import { Profile } from 'passport-google-oauth20';
 import { Strategy } from 'passport-google-oauth20';
+import { PassportStrategy } from '@nestjs/passport';
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, HOST } from 'src/constants';
 
 @Injectable()
@@ -14,6 +14,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       scope: ['profile', 'email'],
     });
   }
+
   async validate(accessToken: string, refreshToken: string, profile: Profile) {
     const user = {
       email: profile.emails[0].value,

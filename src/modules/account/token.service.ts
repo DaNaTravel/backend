@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   EXPIRES_IN,
-  JWT_REFRESH_SECRET_KEY,
   JWT_SECRET_KEY,
   REFRESH_EXPIRES_IN,
+  JWT_REFRESH_SECRET_KEY,
 } from 'src/constants';
 
 @Injectable()

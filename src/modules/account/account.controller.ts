@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Body,
   Controller,
-  HttpStatus,
   Post,
   Get,
   UseGuards,
@@ -12,9 +11,9 @@ import {
 import { Request } from 'express';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
-import { RefreshAuthGuard } from 'src/guard/refresh.guard';
+import { GoogleAuthGuard } from '../../guards/google.guard';
+import { RefreshAuthGuard } from 'src/guards/refresh.guard';
 import { AccountCreateDto, GoogleAccountDto, SignInDto } from './dto';
-import { GoogleAuthGuard } from '../../google/google.guard';
 
 @Controller('/accounts')
 export class AccountController {
@@ -81,9 +80,7 @@ export class AccountController {
 
   @Get('/google')
   @UseGuards(GoogleAuthGuard)
-  async signInByGoogle() {
-    console.log('OK');
-  }
+  async signInByGoogle() {}
 
   @Get('/google-redirect')
   @UseGuards(GoogleAuthGuard)
@@ -91,7 +88,7 @@ export class AccountController {
     const account = request.user as GoogleAccountDto;
     if (account) {
       const data = await this.accountService.validateGoogleAccount(account);
-      console.log(data);
+
       return {
         message: null,
         data: data,

@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
-import { JwtStategy } from 'src/jwt/jwt.stratgy';
+import { JwtStategy } from 'src/strategies/jwt.stratgy';
 import { TokenService } from './token.service';
 import { AccountService } from './account.service';
 import { AccountController } from './account.controller';
 import { Account, AccountSchema } from 'src/schemas/accounts';
-import { RefreshTokenStrategy } from 'src/jwt/refreshToken.strategy';
-import { GoogleStrategy } from '../../google/google.strategy';
+import { RefreshTokenStrategy } from 'src/strategies/refreshToken.strategy';
+import { GoogleStrategy } from '../../strategies/google.strategy';
 
 @Module({
   imports: [
@@ -23,10 +23,6 @@ import { GoogleStrategy } from '../../google/google.strategy';
     JwtStategy,
     GoogleStrategy,
     RefreshTokenStrategy,
-    {
-      provide: 'AUTH_SERVICE',
-      useClass: AccountService,
-    },
   ],
   controllers: [AccountController],
 })

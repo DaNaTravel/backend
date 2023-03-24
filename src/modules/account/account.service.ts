@@ -69,6 +69,8 @@ export class AccountService {
   }
 
   async refreshToken(account: any) {
+    this.logger.log(`Refresh token: ${account.id}`);
+
     const { _id, role } = account;
 
     const isExistAccount = await this.accountRepo.findOne({ _id }).lean();
@@ -85,6 +87,8 @@ export class AccountService {
   }
 
   async validateGoogleAccount(account: GoogleAccountDto) {
+    this.logger.log(`Sign-in by Google account: ${account.email}`);
+
     const existedEmail = await this.accountRepo
       .findOne({ email: account.email })
       .lean();
