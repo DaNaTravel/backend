@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
-import { GoogleStrategy } from 'src/google/google.strategy';
 import { JwtStategy } from 'src/jwt/jwt.stratgy';
 import { TokenService } from './token.service';
 import { AccountService } from './account.service';
@@ -20,7 +19,6 @@ import { RefreshTokenStrategy } from 'src/jwt/refreshToken.strategy';
     AccountService,
     JwtService,
     TokenService,
-    GoogleStrategy,
     JwtStategy,
     RefreshTokenStrategy,
     {

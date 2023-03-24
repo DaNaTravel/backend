@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MONGO_URI } from './constants';
-import { GoogleStrategy } from './google/google.strategy';
 import { AccountsModule } from './modules/account/account.module';
 
 @Module({
@@ -12,6 +11,6 @@ import { AccountsModule } from './modules/account/account.module';
     AccountsModule,
   ],
   controllers: [],
-  providers: [GoogleStrategy],
+  providers: [],
 })
 export class AppModule {}
