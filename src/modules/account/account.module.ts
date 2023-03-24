@@ -8,6 +8,7 @@ import { AccountService } from './account.service';
 import { AccountController } from './account.controller';
 import { Account, AccountSchema } from 'src/schemas/accounts';
 import { RefreshTokenStrategy } from 'src/jwt/refreshToken.strategy';
+import { GoogleStrategy } from '../../google/google.strategy';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RefreshTokenStrategy } from 'src/jwt/refreshToken.strategy';
     JwtService,
     TokenService,
     JwtStategy,
+    GoogleStrategy,
     RefreshTokenStrategy,
     {
       provide: 'AUTH_SERVICE',

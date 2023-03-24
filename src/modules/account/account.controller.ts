@@ -7,12 +7,14 @@ import {
   Get,
   UseGuards,
   Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
 import { RefreshAuthGuard } from 'src/guard/refresh.guard';
-import { AccountCreateDto, SignInDto } from './dto';
+import { AccountCreateDto, GoogleAccountDto, SignInDto } from './dto';
+import { GoogleAuthGuard } from '../../google/google.guard';
 
 @Controller('/accounts')
 export class AccountController {
@@ -75,5 +77,29 @@ export class AccountController {
       message: null,
       data: output,
     };
+  }
+
+  @Get('/google')
+  @UseGuards(GoogleAuthGuard)
+  async signInByGoogle() {
+    console.log('OK');
+  }
+
+  @Get('/google-redirect')
+  @UseGuards(GoogleAuthGuard)
+  async redirect(@Req() request: Request) {
+    const account = request.user as GoogleAccountDto;
+    if (account) {
+      const data = await this.accountService.validateGoogleAccount(account);
+      console.log(data);
+      return {
+        message: null,
+        data: data,
+      };
+    } else
+      throw new UnauthorizedException({
+        message: 'Google account is invalid',
+        data: null,
+      });
   }
 }
