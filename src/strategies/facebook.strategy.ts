@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-facebook';
 import {
-  AVATAR_DEFAULT,
   HOST,
   FACEBOOK_CLIENT_ID,
   FACEBOOK_CLIENT_SECRET,
