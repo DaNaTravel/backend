@@ -14,14 +14,16 @@ import { AccountService } from './account.service';
 import { GoogleAuthGuard } from '../../guards/google.guard';
 import { RefreshAuthGuard } from 'src/guards/refresh.guard';
 import { AccountCreateDto, GoogleAccountDto, SignInDto } from './dto';
+import { MailService } from 'src/mail/mail.service';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
 
 @Controller('/accounts')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(private readonly accountService: AccountService, private readonly mailService: MailService) {}
 
   @Post()
   async createNewUser(@Body() account: AccountCreateDto) {
-    const { email, role } = account;
+    const { email, role, name } = account;
 
     if (role === Role.ADMIN)
       throw new BadRequestException({
@@ -37,6 +39,7 @@ export class AccountController {
       });
 
     const newAccount = await this.accountService.createAccount(account);
+    await this.mailService.sendEmailConfirm(email, name);
 
     return {
       message: null,
@@ -98,5 +101,11 @@ export class AccountController {
         message: 'Google account is invalid',
         data: null,
       });
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async check() {
+    return 'OK';
   }
 }

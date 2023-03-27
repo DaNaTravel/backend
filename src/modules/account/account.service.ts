@@ -35,9 +35,7 @@ export class AccountService {
   }
 
   async validateAccount(account: SignInDto) {
-    const existedEmail = await this.accountRepo
-      .findOne({ email: account.email })
-      .lean();
+    const existedEmail = await this.accountRepo.findOne({ email: account.email }).lean();
 
     if (existedEmail) {
       const { password, ...data } = existedEmail;
@@ -46,15 +44,12 @@ export class AccountService {
       if (isCorrect) {
         const payload = { _id: data._id, role: data.role };
 
-        const { token, refreshToken } = await this.tokenService.generateToken(
-          payload,
-        );
+        const { token, refreshToken } = await this.tokenService.generateToken(payload);
 
         return {
           _id: data._id,
           token: token,
           refreshToken: refreshToken,
-          expiresIn: EXPIRES_IN,
         };
       }
     }
@@ -70,18 +65,14 @@ export class AccountService {
     if (isExistAccount) {
       const payload = { _id, role };
 
-      const { token, refreshToken } = await this.tokenService.generateToken(
-        payload,
-      );
+      const { token, refreshToken } = await this.tokenService.generateToken(payload);
 
-      return { _id, token, refreshToken, expiresIn: EXPIRES_IN };
+      return { _id, token, refreshToken };
     }
   }
 
   async validateGoogleAccount(account: GoogleAccountDto) {
-    const existedEmail = await this.accountRepo
-      .findOne({ email: account.email })
-      .lean();
+    const existedEmail = await this.accountRepo.findOne({ email: account.email }).lean();
     let payload: any = {};
 
     if (existedEmail) {
@@ -102,15 +93,12 @@ export class AccountService {
       payload = { _id: newAccount._id, role: newAccount.role };
     }
 
-    const { token, refreshToken } = await this.tokenService.generateToken(
-      payload,
-    );
+    const { token, refreshToken } = await this.tokenService.generateToken(payload);
 
     return {
       _id: payload._id,
       token: token,
       refreshToken: refreshToken,
-      expiresIn: EXPIRES_IN,
     };
   }
 }
