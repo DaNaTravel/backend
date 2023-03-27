@@ -2,18 +2,23 @@ import {
   BadRequestException,
   Body,
   Controller,
-  HttpStatus,
   Post,
   Get,
   UseGuards,
   Req,
-  Param,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
-import { RefreshAuthGuard } from 'src/guard/refresh.guard';
-import { AccountCreateDto, SignInDto } from './dto';
+import { GoogleAuthGuard, FacebookAuthGuard } from '../../guards/google.guard';
+import { RefreshAuthGuard } from 'src/guards/refresh.guard';
+import {
+  AccountCreateDto,
+  GoogleAccountDto,
+  SignInDto,
+  FacebookAccountDto,
+} from './dto';
 @Controller('/accounts')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
@@ -77,28 +82,46 @@ export class AccountController {
     };
   }
 
-  @Post('email/forgot-password/:email')
-  async sendEmailForgotPassword(@Param() params) {
-    try {
-      const isEmailSent = await this.accountService.sendEmailForgotPassword(
-        params.email,
-      );
-      if (isEmailSent) {
-        return {
-          message: 'Sent Email',
-          data: isEmailSent,
-        };
-      } else {
-        throw new BadRequestException({
-          message: 'Email not send',
-          data: isEmailSent,
-        });
-      }
-    } catch (error) {
-      throw new BadRequestException({
-        message: 'Email error',
+  @Get('/google')
+  @UseGuards(GoogleAuthGuard)
+  async signInByGoogle() {}
+
+  @Get('/google-redirect')
+  @UseGuards(GoogleAuthGuard)
+  async redirect(@Req() request: Request) {
+    const account = request.user as GoogleAccountDto;
+    if (account) {
+      const data = await this.accountService.validateGoogleAccount(account);
+
+      return {
+        message: null,
+        data: data,
+      };
+    } else
+      throw new UnauthorizedException({
+        message: 'Google account is invalid',
         data: null,
       });
-    }
+  }
+
+  @Get('/facebook')
+  @UseGuards(FacebookAuthGuard)
+  async signInByFacebook() {}
+
+  @Get('/facebook-redirect')
+  @UseGuards(FacebookAuthGuard)
+  async facebookLoginRedirect(@Req() request: Request) {
+    const account = request.user as FacebookAccountDto;
+    if (account) {
+      const data = await this.accountService.validateFacebookAccount(account);
+      return {
+        message: null,
+        data: data,
+      };
+    } else
+      throw new UnauthorizedException({
+        message: 'Facebook account is invalid',
+        data: null,
+      });
   }
 }

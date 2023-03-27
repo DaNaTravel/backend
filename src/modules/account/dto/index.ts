@@ -1,12 +1,14 @@
 import {
   IsEmail,
   IsEnum,
+  IsOptional,
   IsString,
   Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
 import { Role } from 'src/utils';
+import { AVATAR_DEFAULT } from '../../../constants';
 
 export class AccountCreateDto {
   @IsEmail()
@@ -30,6 +32,10 @@ export class AccountCreateDto {
 
   @IsEnum(Role)
   role: Role = Role.TRAVELER;
+
+  @IsOptional()
+  @IsString()
+  avatar: string = AVATAR_DEFAULT;
 }
 
 export class SignInDto {
@@ -44,4 +50,36 @@ export class SignInDto {
     message: 'Password must include at least 1 number and 1 character',
   })
   password: string;
+}
+
+export class GoogleAccountDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MaxLength(200)
+  name: string;
+
+  @IsEnum(Role)
+  role: Role = Role.TRAVELER;
+
+  @IsOptional()
+  @IsString()
+  avatar: string = AVATAR_DEFAULT;
+}
+
+export class FacebookAccountDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MaxLength(200)
+  name: string;
+
+  @IsEnum(Role)
+  role: Role = Role.TRAVELER;
+
+  @IsOptional()
+  @IsString()
+  avatar: string = AVATAR_DEFAULT;
 }
