@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
@@ -10,8 +10,6 @@ import { generate } from 'generate-password';
 
 @Injectable()
 export class AccountService {
-  private readonly logger = new Logger(AccountService.name);
-
   constructor(
     @InjectModel(Account.name)
     private readonly accountRepo: Model<AccountDocument>,
@@ -25,8 +23,6 @@ export class AccountService {
   }
 
   async createAccount(account: AccountCreateDto) {
-    this.logger.log(`Create new user: ${JSON.stringify(account)}`);
-
     const { password, ...data } = account;
     const passwordHash = hashPassword(password);
 
@@ -39,8 +35,6 @@ export class AccountService {
   }
 
   async validateAccount(account: SignInDto) {
-    this.logger.log(`Validate user: ${JSON.stringify(account)}`);
-
     const existedEmail = await this.accountRepo
       .findOne({ email: account.email })
       .lean();
@@ -69,8 +63,6 @@ export class AccountService {
   }
 
   async refreshToken(account: any) {
-    this.logger.log(`Refresh token: ${account.id}`);
-
     const { _id, role } = account;
 
     const isExistAccount = await this.accountRepo.findOne({ _id }).lean();
@@ -87,8 +79,6 @@ export class AccountService {
   }
 
   async validateGoogleAccount(account: GoogleAccountDto) {
-    this.logger.log(`Sign-in by Google account: ${account.email}`);
-
     const existedEmail = await this.accountRepo
       .findOne({ email: account.email })
       .lean();
