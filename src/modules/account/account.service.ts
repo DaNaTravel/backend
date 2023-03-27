@@ -3,8 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
-import { AccountCreateDto, SignInDto } from './dto';
+import { EXPIRES_IN } from '../../constants';
+import { AccountCreateDto, GoogleAccountDto, SignInDto } from './dto';
 import { TokenService } from './token.service';
+import { generate } from 'generate-password';
 
 @Injectable()
 export class AccountService {
@@ -54,7 +56,12 @@ export class AccountService {
           payload,
         );
 
-        return { _id: data._id, token: token, refreshToken: refreshToken };
+        return {
+          _id: data._id,
+          token: token,
+          refreshToken: refreshToken,
+          expiresIn: EXPIRES_IN,
+        };
       }
     }
 
@@ -62,6 +69,8 @@ export class AccountService {
   }
 
   async refreshToken(account: any) {
+    this.logger.log(`Refresh token: ${account.id}`);
+
     const { _id, role } = account;
 
     const isExistAccount = await this.accountRepo.findOne({ _id }).lean();
@@ -73,7 +82,45 @@ export class AccountService {
         payload,
       );
 
-      return { _id, token, refreshToken };
+      return { _id, token, refreshToken, expiresIn: EXPIRES_IN };
     }
+  }
+
+  async validateGoogleAccount(account: GoogleAccountDto) {
+    this.logger.log(`Sign-in by Google account: ${account.email}`);
+
+    const existedEmail = await this.accountRepo
+      .findOne({ email: account.email })
+      .lean();
+    let payload: any = {};
+
+    if (existedEmail) {
+      payload = { _id: existedEmail._id, role: existedEmail.role };
+    } else {
+      const password = generate({
+        length: 15,
+        numbers: true,
+        symbols: true,
+      });
+
+      const passwordHash = hashPassword(password);
+      const newAccount = await new this.accountRepo({
+        ...account,
+        password: passwordHash,
+      }).save();
+
+      payload = { _id: newAccount._id, role: newAccount.role };
+    }
+
+    const { token, refreshToken } = await this.tokenService.generateToken(
+      payload,
+    );
+
+    return {
+      _id: payload._id,
+      token: token,
+      refreshToken: refreshToken,
+      expiresIn: EXPIRES_IN,
+    };
   }
 }
