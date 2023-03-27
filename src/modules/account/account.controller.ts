@@ -11,7 +11,7 @@ import {
 import { Request } from 'express';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
-import { GoogleAuthGuard, FacebookAuthGuard } from '../../guards/google.guard';
+import { GoogleAuthGuard } from '../../guards/google.guard';
 import { RefreshAuthGuard } from 'src/guards/refresh.guard';
 import {
   AccountCreateDto,
@@ -19,6 +19,7 @@ import {
   SignInDto,
   FacebookAccountDto,
 } from './dto';
+import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 @Controller('/accounts')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
