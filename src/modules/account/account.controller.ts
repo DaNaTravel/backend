@@ -7,13 +7,13 @@ import {
   Get,
   UseGuards,
   Req,
+  Param,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
 import { RefreshAuthGuard } from 'src/guard/refresh.guard';
 import { AccountCreateDto, SignInDto } from './dto';
-
 @Controller('/accounts')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
@@ -75,5 +75,30 @@ export class AccountController {
       message: null,
       data: output,
     };
+  }
+
+  @Post('email/forgot-password/:email')
+  async sendEmailForgotPassword(@Param() params) {
+    try {
+      const isEmailSent = await this.accountService.sendEmailForgotPassword(
+        params.email,
+      );
+      if (isEmailSent) {
+        return {
+          message: 'Sent Email',
+          data: isEmailSent,
+        };
+      } else {
+        throw new BadRequestException({
+          message: 'Email not send',
+          data: isEmailSent,
+        });
+      }
+    } catch (error) {
+      throw new BadRequestException({
+        message: 'Email error',
+        data: null,
+      });
+    }
   }
 }
