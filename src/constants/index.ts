@@ -11,4 +11,6 @@ export const REFRESH_EXPIRES_IN = config.getNumber('REFRESH_EXPIRES_IN');
 export const JWT_REFRESH_SECRET_KEY = config.get('JWT_REFRESH_SECRET_KEY');
 export const GOOGLE_CLIENT_ID = config.get('GOOGLE_CLIENT_ID');
 export const GOOGLE_CLIENT_SECRET = config.get('GOOGLE_CLIENT_SECRET');
+export const FACEBOOK_CLIENT_ID = config.get('FACEBOOK_CLIENT_ID');
+export const FACEBOOK_CLIENT_SECRET = config.get('FACEBOOK_CLIENT_SECRET');
 export const AVATAR_DEFAULT = config.get('AVATAR_DEFAULT');

@@ -9,6 +9,7 @@ import { AccountController } from './account.controller';
 import { Account, AccountSchema } from 'src/schemas/accounts';
 import { RefreshTokenStrategy } from 'src/strategies/refreshToken.strategy';
 import { GoogleStrategy } from '../../strategies/google.strategy';
+import { FacebookStrategy } from 'src/strategies/facebook.strategy';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { GoogleStrategy } from '../../strategies/google.strategy';
     JwtStategy,
     GoogleStrategy,
     RefreshTokenStrategy,
+    FacebookStrategy,
   ],
   controllers: [AccountController],
 })

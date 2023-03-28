@@ -13,8 +13,13 @@ import { Role } from 'src/utils';
 import { AccountService } from './account.service';
 import { GoogleAuthGuard } from '../../guards/google.guard';
 import { RefreshAuthGuard } from 'src/guards/refresh.guard';
-import { AccountCreateDto, GoogleAccountDto, SignInDto } from './dto';
-
+import {
+  AccountCreateDto,
+  GoogleAccountDto,
+  SignInDto,
+  FacebookAccountDto,
+} from './dto';
+import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 @Controller('/accounts')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
@@ -96,6 +101,27 @@ export class AccountController {
     } else
       throw new UnauthorizedException({
         message: 'Google account is invalid',
+        data: null,
+      });
+  }
+
+  @Get('/facebook')
+  @UseGuards(FacebookAuthGuard)
+  async signInByFacebook() {}
+
+  @Get('/facebook-redirect')
+  @UseGuards(FacebookAuthGuard)
+  async facebookLoginRedirect(@Req() request: Request) {
+    const account = request.user as FacebookAccountDto;
+    if (account) {
+      const data = await this.accountService.validateFacebookAccount(account);
+      return {
+        message: null,
+        data: data,
+      };
+    } else
+      throw new UnauthorizedException({
+        message: 'Facebook account is invalid',
         data: null,
       });
   }
