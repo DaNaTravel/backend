@@ -8,6 +8,7 @@ import {
   Req,
   UnauthorizedException,
   Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Role } from 'src/utils';
@@ -17,6 +18,7 @@ import { RefreshAuthGuard } from 'src/guards/refresh.guard';
 import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, EmailConfirmationDto } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
 
 @Controller('/accounts')
 export class AccountController {
@@ -54,7 +56,7 @@ export class AccountController {
 
     const isExistEmail = await this.accountService.checkConfirmedEmail(email);
     if (isExistEmail === false) {
-      throw new BadRequestException({
+      throw new NotFoundException({
         message: 'Email is not existed',
         data: null,
       });
