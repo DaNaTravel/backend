@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
-import { EXPIRES_IN } from '../../constants';
 import { AccountCreateDto, GoogleAccountDto, SignInDto } from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
@@ -100,5 +99,17 @@ export class AccountService {
       token: token,
       refreshToken: refreshToken,
     };
+  }
+
+  async checkConfirmedEmail(email: string) {
+    const account = await this.accountRepo.findOne({ email }).lean();
+
+    return account.isConfirmed;
+  }
+
+  async updateConfirmEmail(email: string) {
+    const account = await this.accountRepo.findOneAndUpdate({ email }, { isConfirmed: true }, { new: true }).lean();
+
+    return { _id: account._id, email: account._id, isConfirmed: account.isConfirmed };
   }
 }

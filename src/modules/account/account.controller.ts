@@ -7,15 +7,15 @@ import {
   UseGuards,
   Req,
   UnauthorizedException,
+  Query,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
 import { GoogleAuthGuard } from '../../guards/google.guard';
 import { RefreshAuthGuard } from 'src/guards/refresh.guard';
-import { AccountCreateDto, GoogleAccountDto, SignInDto } from './dto';
-import { MailService } from 'src/mail/mail.service';
-import { JwtAuthGuard } from 'src/guards/jwt.guard';
+import { AccountCreateDto, EmailConfirmationDto, GoogleAccountDto, SignInDto } from './dto';
+import { MailService } from '../mail/mail.service';
 
 @Controller('/accounts')
 export class AccountController {
@@ -39,7 +39,7 @@ export class AccountController {
       });
 
     const newAccount = await this.accountService.createAccount(account);
-    await this.mailService.sendEmailConfirm(email, name);
+    await this.mailService.sendEmailConfirm(email, newAccount._id);
 
     return {
       message: null,
@@ -103,9 +103,27 @@ export class AccountController {
       });
   }
 
-  @Get()
-  @UseGuards(JwtAuthGuard)
-  async check() {
-    return 'OK';
+  @Get('/email-confirmations')
+  async confirmEmail(@Query() emailConfirmation: EmailConfirmationDto) {
+    const { email, context } = emailConfirmation;
+
+    const isConfirmed = await this.accountService.checkConfirmedEmail(email);
+    if (isConfirmed) throw new BadRequestException({ message: 'Email is confirmed', data: null });
+
+    const verify = await this.mailService.verifyConfirmToken(context);
+
+    if (verify === false) {
+      throw new BadRequestException({
+        message: 'Confirm email failed',
+        data: null,
+      });
+    }
+
+    const emailUpdated = await this.accountService.updateConfirmEmail(email);
+
+    return {
+      message: 'Email is confirmed',
+      data: emailUpdated,
+    };
   }
 }

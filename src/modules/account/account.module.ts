@@ -9,7 +9,8 @@ import { AccountController } from './account.controller';
 import { Account, AccountSchema } from 'src/schemas/accounts';
 import { RefreshTokenStrategy } from 'src/strategies/refreshToken.strategy';
 import { GoogleStrategy } from '../../strategies/google.strategy';
-import { MailModule } from 'src/mail/mail.module';
+import { MailService } from '../mail/mail.service';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { MailModule } from 'src/mail/mail.module';
     JwtModule,
     MailModule,
   ],
-  providers: [AccountService, JwtService, TokenService, JwtStategy, GoogleStrategy, RefreshTokenStrategy],
+  providers: [AccountService, JwtService, TokenService, JwtStategy, GoogleStrategy, RefreshTokenStrategy, MailService],
   controllers: [AccountController],
 })
 export class AccountsModule {}
