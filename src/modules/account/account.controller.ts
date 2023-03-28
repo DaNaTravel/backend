@@ -23,7 +23,7 @@ export class AccountController {
 
   @Post()
   async createNewUser(@Body() account: AccountCreateDto) {
-    const { email, role, name } = account;
+    const { email, role } = account;
 
     if (role === Role.ADMIN)
       throw new BadRequestException({
@@ -49,6 +49,24 @@ export class AccountController {
 
   @Post('/signin')
   async validateAccount(@Body() account: SignInDto) {
+    const { email } = account;
+
+    const isExistEmail = await this.accountService.checkConfirmedEmail(email);
+    if (isExistEmail === false) {
+      throw new BadRequestException({
+        message: 'Email is not existed',
+        data: null,
+      });
+    }
+
+    const isConfirmed = await this.accountService.checkConfirmedEmail(email);
+
+    if (Boolean(isConfirmed) === false)
+      throw new BadRequestException({
+        message: 'Please confirm your email before sign-in',
+        data: null,
+      });
+
     const output = await this.accountService.validateAccount(account);
 
     if (output === null)
