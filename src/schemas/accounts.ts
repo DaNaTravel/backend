@@ -23,6 +23,9 @@ export class Account {
 
   @Prop({ require: false })
   avatar: string;
+
+  @Prop({ default: false })
+  isConfirmed: boolean;
 }
 
 export const AccountSchema = SchemaFactory.createForClass(Account);

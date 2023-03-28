@@ -7,22 +7,22 @@ import {
   UseGuards,
   Req,
   UnauthorizedException,
+  Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
 import { GoogleAuthGuard } from '../../guards/google.guard';
 import { RefreshAuthGuard } from 'src/guards/refresh.guard';
-import {
-  AccountCreateDto,
-  GoogleAccountDto,
-  SignInDto,
-  FacebookAccountDto,
-} from './dto';
+import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, EmailConfirmationDto } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
+import { MailService } from '../mail/mail.service';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
+
 @Controller('/accounts')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(private readonly accountService: AccountService, private readonly mailService: MailService) {}
 
   @Post()
   async createNewUser(@Body() account: AccountCreateDto) {
@@ -42,6 +42,7 @@ export class AccountController {
       });
 
     const newAccount = await this.accountService.createAccount(account);
+    await this.mailService.sendEmailConfirm(email, newAccount._id);
 
     return {
       message: null,
@@ -51,6 +52,24 @@ export class AccountController {
 
   @Post('/signin')
   async validateAccount(@Body() account: SignInDto) {
+    const { email } = account;
+
+    const isExistEmail = await this.accountService.checkConfirmedEmail(email);
+    if (isExistEmail === false) {
+      throw new NotFoundException({
+        message: 'Email is not existed',
+        data: null,
+      });
+    }
+
+    const isConfirmed = await this.accountService.checkConfirmedEmail(email);
+
+    if (Boolean(isConfirmed) === false)
+      throw new BadRequestException({
+        message: 'Please confirm your email before sign-in',
+        data: null,
+      });
+
     const output = await this.accountService.validateAccount(account);
 
     if (output === null)
@@ -124,5 +143,29 @@ export class AccountController {
         message: 'Facebook account is invalid',
         data: null,
       });
+  }
+
+  @Get('/email-confirmations')
+  async confirmEmail(@Query() emailConfirmation: EmailConfirmationDto) {
+    const { email, context } = emailConfirmation;
+
+    const isConfirmed = await this.accountService.checkConfirmedEmail(email);
+    if (isConfirmed) throw new BadRequestException({ message: 'Email is confirmed', data: null });
+
+    const verify = await this.mailService.verifyConfirmToken(context);
+
+    if (verify === false) {
+      throw new BadRequestException({
+        message: 'Confirm email failed',
+        data: null,
+      });
+    }
+
+    const emailUpdated = await this.accountService.updateConfirmEmail(email);
+
+    return {
+      message: 'Email is confirmed',
+      data: emailUpdated,
+    };
   }
 }
