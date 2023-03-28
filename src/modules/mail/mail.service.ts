@@ -2,7 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ObjectId, Types } from 'mongoose';
-import { CONFIRM_EXPIRES_IN, JWT_CONFIRM_SECRET_KEY } from 'src/constants';
+import { CONFIRM_EXPIRES_IN, EMAIL_SENDER, JWT_CONFIRM_SECRET_KEY } from 'src/constants';
 
 @Injectable()
 export class MailService {
@@ -34,7 +34,7 @@ export class MailService {
     const url = `http://localhost:5000/accounts/email-confirmations?context=${token}&email=${email}`;
 
     const info = await this.mailerService.sendMail({
-      from: 'danatravel.od2t@gmail.com',
+      from: EMAIL_SENDER,
       to: email,
       subject: 'DaNaTravel - Confirm your email',
       text: `Welcome to our application. To confirm your email, please click here ${url}`,

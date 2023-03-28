@@ -18,5 +18,6 @@ export const SES_AWS_SMTP_USERNAME = config.get('SES_AWS_SMTP_USERNAME');
 export const SES_AWS_SMTP_PASWORD = config.get('SES_AWS_SMTP_PASSWORD');
 export const SES_AWS_SMTP_PORT = config.getNumber('SES_AWS_SMTP_PORT');
 export const SES_AWS_SMTP_ENDPOINT = config.get('SES_AWS_SMTP_ENDPOINT');
+export const EMAIL_SENDER = config.get('EMAIL_SENDER');
 export const CONFIRM_EXPIRES_IN = config.getNumber('CONFIRM_EXPIRES_IN');
 export const JWT_CONFIRM_SECRET_KEY = config.get('JWT_CONFIRM_SECRET_KEY');
