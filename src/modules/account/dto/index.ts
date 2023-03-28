@@ -67,3 +67,19 @@ export class EmailConfirmationDto {
   @IsString()
   email: string;
 }
+
+export class FacebookAccountDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MaxLength(200)
+  name: string;
+
+  @IsEnum(Role)
+  role: Role = Role.TRAVELER;
+
+  @IsOptional()
+  @IsString()
+  avatar: string = AVATAR_DEFAULT;
+}

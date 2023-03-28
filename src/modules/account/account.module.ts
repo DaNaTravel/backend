@@ -11,6 +11,7 @@ import { RefreshTokenStrategy } from 'src/strategies/refreshToken.strategy';
 import { GoogleStrategy } from '../../strategies/google.strategy';
 import { MailService } from '../mail/mail.service';
 import { MailModule } from '../mail/mail.module';
+import { FacebookStrategy } from 'src/strategies/facebook.strategy';
 
 @Module({
   imports: [
@@ -19,7 +20,16 @@ import { MailModule } from '../mail/mail.module';
     JwtModule,
     MailModule,
   ],
-  providers: [AccountService, JwtService, TokenService, JwtStategy, GoogleStrategy, RefreshTokenStrategy, MailService],
+  providers: [
+    AccountService,
+    JwtService,
+    TokenService,
+    JwtStategy,
+    GoogleStrategy,
+    RefreshTokenStrategy,
+    FacebookStrategy,
+    MailService,
+  ],
   controllers: [AccountController],
 })
 export class AccountsModule {}

@@ -3,7 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
-import { AccountCreateDto, GoogleAccountDto, SignInDto } from './dto';
+import { EXPIRES_IN } from '../../constants';
+import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto } from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
 
@@ -111,5 +112,36 @@ export class AccountService {
     const account = await this.accountRepo.findOneAndUpdate({ email }, { isConfirmed: true }, { new: true }).lean();
 
     return { _id: account._id, email: account._id, isConfirmed: account.isConfirmed };
+  }
+
+  async validateFacebookAccount(account: FacebookAccountDto) {
+    const existedEmail = await this.accountRepo.findOne({ email: account.email }).lean();
+    let payload: any = {};
+
+    if (existedEmail) {
+      payload = { _id: existedEmail._id, role: existedEmail.role };
+    } else {
+      const password = generate({
+        length: 15,
+        numbers: true,
+        symbols: true,
+      });
+
+      const passwordHash = hashPassword(password);
+      const newAccount = await new this.accountRepo({
+        ...account,
+        password: passwordHash,
+      }).save();
+
+      payload = { _id: newAccount._id, role: newAccount.role };
+    }
+
+    const { token, refreshToken } = await this.tokenService.generateToken(payload);
+
+    return {
+      _id: payload._id,
+      token: token,
+      refreshToken: refreshToken,
+    };
   }
 }
