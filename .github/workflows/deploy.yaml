@@ -1,0 +1,69 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: ['JOB/deploy']
+  pull_request:
+    branches: ['JOB/deploy']
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: copy files to EC2 instance
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.KEY }}
+          source: ./
+          target: ~/DaNaTravel/backend/
+
+      - name: Connect to EC2 instance and deploy application
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.KEY }}
+          script: |
+            cd ~/DaNaTravel/backend
+            sudo npm install
+            rm .env
+            echo "PORT=${{ secrets.PORT }}" >> .env
+            echo "HOST=${{ secrets.HOST }}" >> .env
+
+            echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+
+            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+
+            echo "SES_AWS_SMTP_PASSWORD${{ secrets.SES_AWS_SMTP_PASSWORD }}" >> .env
+            echo "SES_AWS_SMTP_USERNAME=${{ secrets.SES_AWS_SMTP_USERNAME }}" >> .env
+            echo "SES_AWS_SMTP_PORT =${{ secrets.SES_AWS_SMTP_PORT  }}" >> .env
+            echo "SES_AWS_SMTP_ENDPOINT=${{ secrets.SES_AWS_SMTP_ENDPOINT }}" >> .env
+
+            echo "FACEBOOK_CLIENT_ID=${{ secrets.FACEBOOK_CLIENT_ID }}" >> .env
+            echo "FACEBOOK_CLIENT_SECRET =${{ secrets.FACEBOOK_CLIENT_SECRET  }}" >> .env
+
+            echo "EXPIRES_IN=${{ secrets.EXPIRES_IN }}" >> .env
+            echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
+
+            echo "REFRESH_EXPIRES_IN=${{ secrets.REFRESH_EXPIRES_IN }}" >> .env
+            echo "JWT_REFRESH_SECRET_KEY =${{ secrets.JWT_REFRESH_SECRET_KEY  }}" >> .env
+
+            echo "CONFIRM_EXPIRES_IN${{ secrets.CONFIRM_EXPIRES_IN }}" >> .env
+            echo "JWT_CONFIRM_SECRET_KEY=${{ secrets.JWT_CONFIRM_SECRET_KEY }}" >> .env
+
+            echo "EMAIL_SENDER=${{ secrets.EMAIL_SENDER }}" >> .env
+            echo "AVATAR_DEFAULT=${{ secrets.AVATAR_DEFAULT }}" >> .env
+
+            pm2 stop backend
+            pm2 delete backend
+            pm2 start npm --name "backend" -- start
