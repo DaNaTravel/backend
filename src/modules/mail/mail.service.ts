@@ -31,7 +31,7 @@ export class MailService {
     const payload = { email, _id };
     const token = await this.generateConfirmToken(payload);
 
-    const url = `http://${HOST}:${PORT}/accounts/email-confirmations?context=${token}&email=${email}`;
+    const url = `http://192.168.20.191:${PORT}/accounts/email-confirmations?context=${token}&email=${email}`;
 
     const info = await this.mailerService.sendMail({
       from: EMAIL_SENDER,
