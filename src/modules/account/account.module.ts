@@ -9,12 +9,16 @@ import { AccountController } from './account.controller';
 import { Account, AccountSchema } from 'src/schemas/accounts';
 import { RefreshTokenStrategy } from 'src/strategies/refreshToken.strategy';
 import { GoogleStrategy } from '../../strategies/google.strategy';
+import { MailService } from '../mail/mail.service';
+import { MailModule } from '../mail/mail.module';
+import { FacebookStrategy } from 'src/strategies/facebook.strategy';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Account.name, schema: AccountSchema }]),
     PassportModule,
     JwtModule,
+    MailModule,
   ],
   providers: [
     AccountService,
@@ -23,6 +27,8 @@ import { GoogleStrategy } from '../../strategies/google.strategy';
     JwtStategy,
     GoogleStrategy,
     RefreshTokenStrategy,
+    FacebookStrategy,
+    MailService,
   ],
   controllers: [AccountController],
 })

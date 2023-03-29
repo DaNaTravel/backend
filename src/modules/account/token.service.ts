@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {
-  EXPIRES_IN,
-  JWT_SECRET_KEY,
-  REFRESH_EXPIRES_IN,
-  JWT_REFRESH_SECRET_KEY,
-} from 'src/constants';
+import { EXPIRES_IN, JWT_SECRET_KEY, REFRESH_EXPIRES_IN, JWT_REFRESH_SECRET_KEY } from 'src/constants';
+import { convertToTimeStamp, toUTCDayJS } from 'src/utils';
 
 @Injectable()
 export class TokenService {
@@ -17,7 +13,9 @@ export class TokenService {
       secret: JWT_SECRET_KEY,
     });
 
-    return accessToken;
+    const tokenExpireIn = convertToTimeStamp(EXPIRES_IN);
+
+    return { expireIn: tokenExpireIn, token: accessToken };
   }
 
   async generateRefreshToken(payload: any) {
@@ -26,7 +24,9 @@ export class TokenService {
       secret: JWT_REFRESH_SECRET_KEY,
     });
 
-    return refreshToken;
+    const refreshTokenExpireIn = convertToTimeStamp(REFRESH_EXPIRES_IN);
+
+    return { expireIn: refreshTokenExpireIn, token: refreshToken };
   }
 
   async generateToken(payload: any) {

@@ -8,17 +8,21 @@ import {
   Req,
   Param,
   UnauthorizedException,
+  NotFoundException,
+  Query,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
 import { GoogleAuthGuard } from '../../guards/google.guard';
 import { RefreshAuthGuard } from 'src/guards/refresh.guard';
-import { AccountCreateDto, GoogleAccountDto, SignInDto } from './dto';
+import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, EmailConfirmationDto } from './dto';
+import { FacebookAuthGuard } from 'src/guards/facebook.guard';
+import { MailService } from '../mail/mail.service';
 
 @Controller('/accounts')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(private readonly accountService: AccountService, private readonly mailService: MailService) {}
 
   @Post()
   async createNewUser(@Body() account: AccountCreateDto) {
@@ -38,6 +42,7 @@ export class AccountController {
       });
 
     const newAccount = await this.accountService.createAccount(account);
+    await this.mailService.sendEmailConfirm(email, newAccount._id);
 
     return {
       message: null,
@@ -47,6 +52,24 @@ export class AccountController {
 
   @Post('/signin')
   async validateAccount(@Body() account: SignInDto) {
+    const { email } = account;
+
+    const isExistEmail = await this.accountService.checkConfirmedEmail(email);
+    if (isExistEmail === false) {
+      throw new NotFoundException({
+        message: 'Email is not existed',
+        data: null,
+      });
+    }
+
+    const isConfirmed = await this.accountService.checkConfirmedEmail(email);
+
+    if (Boolean(isConfirmed) === false)
+      throw new BadRequestException({
+        message: 'Please confirm your email before sign-in',
+        data: null,
+      });
+
     const output = await this.accountService.validateAccount(account);
 
     if (output === null)
@@ -79,31 +102,6 @@ export class AccountController {
     };
   }
 
-  @Post('email/forgot-password/:email')
-  async sendEmailForgotPassword(@Param() params) {
-    try {
-      const isEmailSent = await this.accountService.sendEmailForgotPassword(
-        params.email,
-      );
-      if (isEmailSent) {
-        return {
-          message: 'Sent Email',
-          data: isEmailSent,
-        };
-      } else {
-        throw new BadRequestException({
-          message: 'Email not send',
-          data: isEmailSent,
-        });
-      }
-    } catch (error) {
-      throw new BadRequestException({
-        message: 'Email error',
-        data: null,
-      });
-    }
-  }
-
   @Get('/google')
   @UseGuards(GoogleAuthGuard)
   async signInByGoogle() {}
@@ -124,5 +122,78 @@ export class AccountController {
         message: 'Google account is invalid',
         data: null,
       });
+  }
+
+  @Get('/facebook')
+  @UseGuards(FacebookAuthGuard)
+  async signInByFacebook() {}
+
+  @Get('/facebook-redirect')
+  @UseGuards(FacebookAuthGuard)
+  async facebookLoginRedirect(@Req() request: Request) {
+    const account = request.user as FacebookAccountDto;
+    if (account) {
+      const data = await this.accountService.validateFacebookAccount(account);
+      return {
+        message: null,
+        data: data,
+      };
+    } else
+      throw new UnauthorizedException({
+        message: 'Facebook account is invalid',
+        data: null,
+      });
+  }
+
+  @Get('/email-confirmations')
+  async confirmEmail(@Query() emailConfirmation: EmailConfirmationDto) {
+    const { email, context } = emailConfirmation;
+
+    const isConfirmed = await this.accountService.checkConfirmedEmail(email);
+    if (isConfirmed) throw new BadRequestException({ message: 'Email is confirmed', data: null });
+
+    const verify = await this.mailService.verifyConfirmToken(context);
+
+    if (verify === false) {
+      throw new BadRequestException({
+        message: 'Confirm email failed',
+        data: null,
+      });
+    }
+    const emailUpdated = await this.accountService.updateConfirmEmail(email);
+
+    return {
+      message: 'Email is confirmed',
+      data: emailUpdated,
+    };
+  }
+
+  @Get('/forgot-password')
+  async sendEmailForgotPassword(@Body('email') email: string) {
+    const isConfirmed = await this.accountService.checkConfirmedEmail(email);
+    if (isConfirmed === false) {
+      throw new BadRequestException({ message: 'Email not found', data: null });
+    }
+    await this.mailService.sendEmailForgotPassword(email);
+    return {
+      message: 'System sent your email',
+      data: email,
+    };
+  }
+
+  @Get('/reset-password')
+  async resetPassword(@Query('email') email: string) {
+    const newPassword = await this.accountService.resetPassWord(email);
+    if (newPassword !== null) {
+      await this.mailService.sendEmailResetPassword(email, newPassword);
+      return {
+        message: 'Reset password success',
+        data: null,
+      };
+    }
+    return {
+      message: 'Reset assword error',
+      data: null,
+    };
   }
 }
