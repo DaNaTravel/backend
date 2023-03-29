@@ -31,7 +31,7 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.KEY }}
+          key: ${{ secrets.EC2_KEY }}
           script: |
             cd ~/DaNaTravel/backend
             sudo npm install
