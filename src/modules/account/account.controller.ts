@@ -6,9 +6,10 @@ import {
   Get,
   UseGuards,
   Req,
+  Param,
   UnauthorizedException,
-  Query,
   NotFoundException,
+  Query,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Role } from 'src/utils';
@@ -18,7 +19,6 @@ import { RefreshAuthGuard } from 'src/guards/refresh.guard';
 import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, EmailConfirmationDto } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
-import { JwtAuthGuard } from 'src/guards/jwt.guard';
 
 @Controller('/accounts')
 export class AccountController {
@@ -160,12 +160,40 @@ export class AccountController {
         data: null,
       });
     }
-
     const emailUpdated = await this.accountService.updateConfirmEmail(email);
 
     return {
       message: 'Email is confirmed',
       data: emailUpdated,
+    };
+  }
+
+  @Get('/forgot-password')
+  async sendEmailForgotPassword(@Body('email') email: string) {
+    const isConfirmed = await this.accountService.checkConfirmedEmail(email);
+    if (isConfirmed === false) {
+      throw new BadRequestException({ message: 'Email not found', data: null });
+    }
+    await this.mailService.sendEmailForgotPassword(email);
+    return {
+      message: 'System sent your email',
+      data: email,
+    };
+  }
+
+  @Get('/reset-password')
+  async resetPassword(@Query('email') email: string) {
+    const newPassword = await this.accountService.resetPassWord(email);
+    if (newPassword !== null) {
+      await this.mailService.sendEmailResetPassword(email, newPassword);
+      return {
+        message: 'Reset password success',
+        data: null,
+      };
+    }
+    return {
+      message: 'Reset assword error',
+      data: null,
     };
   }
 }

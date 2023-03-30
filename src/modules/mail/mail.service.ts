@@ -31,13 +31,38 @@ export class MailService {
     const payload = { email, _id };
     const token = await this.generateConfirmToken(payload);
 
-    const url = `http://${HOST}:${PORT}/accounts/email-confirmations?context=${token}&email=${email}`;
+    const url = `http://192.168.20.191:${PORT}/accounts/email-confirmations?context=${token}&email=${email}`;
 
     const info = await this.mailerService.sendMail({
       from: EMAIL_SENDER,
       to: email,
       subject: 'DaNaTravel - Confirm your email',
       text: `Welcome to our application. To confirm your email, please click here ${url}`,
+    });
+
+    return info;
+  }
+
+  async sendEmailForgotPassword(email: string) {
+    const url = `http://192.168.20.191:${PORT}/accounts/reset-password?email=${email}`;
+
+    const info = await this.mailerService.sendMail({
+      from: EMAIL_SENDER,
+      to: email,
+      subject: 'DaNaTravel - Reset your password',
+      text: `Welcome to our application. If you requested to reset your password, please click here ${url}`,
+    });
+
+    return info;
+  }
+
+  async sendEmailResetPassword(email: string, newPassword: string) {
+    const info = await this.mailerService.sendMail({
+      from: EMAIL_SENDER,
+      to: email,
+      subject: 'DaNaTravel - Your new password',
+      text: `Hi, this is the new password that has been reset: ${newPassword}
+      Please use it to log in and change the password as you wish for security.`,
     });
 
     return info;

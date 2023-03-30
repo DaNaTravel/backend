@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
-import { EXPIRES_IN } from '../../constants';
 import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto } from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
@@ -18,8 +17,12 @@ export class AccountService {
 
   async checkExistEmail(email: string) {
     const account = await this.accountRepo.findOne({ email }).lean();
-
     return Boolean(account);
+  }
+
+  async getAccountbyEmail(email: string) {
+    const account = await this.accountRepo.findOne({ email }).lean();
+    return account;
   }
 
   async createAccount(account: AccountCreateDto) {
@@ -143,5 +146,16 @@ export class AccountService {
       token: token,
       refreshToken: refreshToken,
     };
+  }
+
+  async resetPassWord(email: string) {
+    const account = await this.getAccountbyEmail(email);
+    if (account) {
+      const newPassword = Math.random().toString(36).slice(-8);
+      const passwordHash = hashPassword(newPassword);
+      await this.accountRepo.findOneAndUpdate({ email }, { password: passwordHash }, { new: true }).lean();
+      return newPassword;
+    }
+    return null;
   }
 }
