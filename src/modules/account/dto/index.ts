@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 import { Role } from 'src/utils';
 import { AVATAR_DEFAULT } from '../../../constants';
 
@@ -58,10 +58,6 @@ export class GoogleAccountDto {
   @IsOptional()
   @IsString()
   avatar: string = AVATAR_DEFAULT;
-
-  @IsOptional()
-  @IsBoolean()
-  isConfirmed: Boolean = true;
 }
 
 export class EmailConfirmationDto {
@@ -86,8 +82,4 @@ export class FacebookAccountDto {
   @IsOptional()
   @IsString()
   avatar: string = AVATAR_DEFAULT;
-
-  @IsOptional()
-  @IsBoolean()
-  isConfirmed: Boolean = true;
 }
