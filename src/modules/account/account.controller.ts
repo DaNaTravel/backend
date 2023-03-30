@@ -164,11 +164,10 @@ export class AccountController {
 
     return {
       message: 'Email is confirmed',
-      data: emailUpdated,
     };
   }
 
-  @Get('/forgot-password')
+  @Post('/forgot-password')
   async sendEmailForgotPassword(@Body('email') email: string) {
     const isConfirmed = await this.accountService.checkConfirmedEmail(email);
     if (isConfirmed === false) {
