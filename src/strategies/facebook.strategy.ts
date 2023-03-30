@@ -16,7 +16,7 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
 
   async validate(accessToken: string, refreshToken: string, profile: Profile) {
     const user = {
-      email: profile.emails[0].value,
+      email: profile.emails ? profile.emails[0].value : `danatravel${profile.id}@gmail.com`,
       name: profile.name.familyName + profile.name.middleName + profile.name.givenName,
     };
     return user || null;
