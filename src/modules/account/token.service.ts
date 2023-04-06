@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { EXPIRES_IN, JWT_SECRET_KEY, REFRESH_EXPIRES_IN, JWT_REFRESH_SECRET_KEY } from 'src/constants';
-import { convertToTimeStamp } from 'src/utils';
-import { RedisService } from 'nestjs-redis';
-import { resetPasswordTokenDto } from './dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Token, TokenDocument } from 'src/schemas/tokens';
 import { Model } from 'mongoose';
+import { EXPIRES_IN, JWT_SECRET_KEY, REFRESH_EXPIRES_IN, JWT_REFRESH_SECRET_KEY } from 'src/constants';
+import { Token, TokenDocument } from 'src/schemas/tokens';
+
 @Injectable()
 export class TokenService {
   constructor(
@@ -20,9 +18,7 @@ export class TokenService {
       secret: JWT_SECRET_KEY,
     });
 
-    const tokenExpireIn = convertToTimeStamp(EXPIRES_IN);
-
-    return { expireIn: tokenExpireIn, token: accessToken };
+    return accessToken;
   }
 
   async generateRefreshToken(payload: any) {
@@ -31,9 +27,7 @@ export class TokenService {
       secret: JWT_REFRESH_SECRET_KEY,
     });
 
-    const refreshTokenExpireIn = convertToTimeStamp(REFRESH_EXPIRES_IN);
-
-    return { expireIn: refreshTokenExpireIn, token: refreshToken };
+    return refreshToken;
   }
 
   async generateToken(payload: any) {
@@ -45,7 +39,28 @@ export class TokenService {
     return { token, refreshToken };
   }
 
-  async createToken(payload: any) {
-    const token = await this
+  async verifyToken(token: string) {
+    const payload = await this.jwtService.verify(token, { secret: JWT_SECRET_KEY });
+    return payload;
+  }
+
+  async createToken(code: string) {
+    const payload = { code };
+    const [hashToken] = await Promise.all([
+      this.generateAccessToken(payload),
+      new this.tokenRepo({ token: code }).save(),
+    ]);
+
+    return hashToken;
+  }
+
+  async findToken(payload: any) {
+    const isExist = await this.tokenRepo.findOne({ token: payload }).lean();
+    return Boolean(isExist);
+  }
+
+  async deleteToken(code: string) {
+    const deletedToken = await this.tokenRepo.findOneAndDelete({ token: code });
+    return Boolean(deletedToken);
   }
 }

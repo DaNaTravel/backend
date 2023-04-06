@@ -12,10 +12,14 @@ import { GoogleStrategy } from '../../strategies/google.strategy';
 import { MailService } from '../mail/mail.service';
 import { MailModule } from '../mail/mail.module';
 import { FacebookStrategy } from 'src/strategies/facebook.strategy';
+import { Token, TokenSchema } from 'src/schemas/tokens';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Account.name, schema: AccountSchema }, ]),
+    MongooseModule.forFeature([
+      { name: Account.name, schema: AccountSchema },
+      { name: Token.name, schema: TokenSchema },
+    ]),
     PassportModule,
     JwtModule,
     MailModule,

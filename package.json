@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "nest start --watch",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
@@ -35,8 +35,8 @@
     "express-session": "^1.17.3",
     "generate-password": "^1.7.0",
     "google-auth-library": "^8.7.0",
+    "ioredis": "^5.3.1",
     "mongoose": "^7.0.2",
-    "nestjs-redis": "^1.3.3",
     "nodemailer": "^6.9.1",
     "passport": "^0.6.0",
     "passport-facebook": "^3.0.0",
@@ -44,7 +44,8 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",

@@ -43,19 +43,14 @@ export class MailService {
     return info;
   }
 
-  async sendEmailForgotPassword(email: string, hashToken: string) {
-    const url = `http://${HOST}:${PORT}/accounts/reset-password?email=${email}&token=${hashToken}`;
-    console.log(url);
-    console.log(EMAIL_SENDER);
-    console.log(email);
-
+  async sendEmailForgotPassword(email: string, token: string) {
+    const url = `http://${HOST}:${PORT}/accounts/reset-password?email=${email}&token=${token}`;
     const info = await this.mailerService.sendMail({
       from: EMAIL_SENDER,
       to: email,
       subject: 'DaNaTravel - Reset your password',
       text: `Welcome to our application. If you requested to reset your password, please click here ${url}`,
     });
-    console.log(info);
 
     return info;
   }

@@ -7,6 +7,7 @@ import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto } fro
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
 import { JwtService } from '@nestjs/jwt';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common/exceptions';
 
 @Injectable()
 export class AccountService {
@@ -150,13 +151,11 @@ export class AccountService {
     };
   }
 
-  async resetPassWord(token: string) {
-    const decoded: any = this.jwtService.verify(token, { secret: process.env.JWT_CONFIRM_SECRET_KEY });
-    console.log(decoded);
-    const userId = decoded.userId;
+  async resetPassWord(email: string) {
     const newPassword = Math.random().toString(36).slice(-8);
     const passwordHash = hashPassword(newPassword);
-    await this.accountRepo.findOneAndUpdate({ userId }, { password: passwordHash }, { new: true }).lean();
+    await this.accountRepo.findOneAndUpdate({ email }, { password: passwordHash }, { new: true }).lean();
+
     return newPassword;
   }
 }

@@ -11,6 +11,7 @@ import {
   NotFoundException,
   Query,
 } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 import { Request } from 'express';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
@@ -20,7 +21,7 @@ import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, Emai
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from './token.service';
-
+import { log } from 'console';
 @Controller('/accounts')
 export class AccountController {
   constructor(
@@ -50,7 +51,7 @@ export class AccountController {
     await this.mailService.sendEmailConfirm(email, newAccount._id);
 
     return {
-      message: null,
+      message: 'Please confirm your email',
       data: newAccount,
     };
   }
@@ -89,7 +90,7 @@ export class AccountController {
     };
   }
 
-  @Post('/refresh')
+  @Get('/refresh')
   @UseGuards(RefreshAuthGuard)
   async refreshToken(@Req() request: Request) {
     const account = request.user;
@@ -174,22 +175,13 @@ export class AccountController {
 
   @Post('/forgot-password')
   async sendEmailForgotPassword(@Body('email') email: string) {
-    // const isConfirmed = await this.accountService.checkConfirmedEmail(email);
-    // if (isConfirmed === false) {
-    //   throw new BadRequestException({ message: 'Email not found', data: null });
-    // }
-    // await this.mailService.sendEmailForgotPassword(email);
-    // return {
-    //   message: 'System sent your email',
-    //   data: email,
-    // };
     const user = await this.accountService.getAccountbyEmail(email);
     if (!user) {
       throw new BadRequestException({ message: 'Email not found', data: null });
     }
-    
-
-    await this.mailService.sendEmailForgotPassword(email, hashToken);
+    const code = uuidv4();
+    const token = await this.tokenService.createToken(code);
+    await this.mailService.sendEmailForgotPassword(email, token);
     return {
       message: 'System sent your email',
       data: email,
@@ -198,14 +190,19 @@ export class AccountController {
 
   @Get('/reset-password')
   async resetPassword(@Query('email') email: string, @Query('token') token: string) {
-    const isTokenUsed = await this.tokenService.isTokenUsed(token);
-    if (isTokenUsed) {
-      throw new Error('Token has been used');
-    }
-    await this.tokenService.addTokenToUsedTokens(token);
-    const newPassword = await this.accountService.resetPassWord(token);
+    const payload = await this.tokenService.verifyToken(token);
+    const { code } = payload;
+
+    const isExist = await this.tokenService.findToken(code);
+    if (isExist === false) throw new UnauthorizedException('Token is invalid');
+
+    const newPassword = await this.accountService.resetPassWord(email);
     if (newPassword !== null) {
-      await this.mailService.sendEmailResetPassword(email, newPassword);
+      await Promise.all([
+        this.mailService.sendEmailResetPassword(email, newPassword),
+        this.tokenService.deleteToken(code),
+      ]);
+
       return {
         message: 'Reset password success',
         data: email,
