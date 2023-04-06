@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Profile } from 'passport-google-oauth20';
 import { Strategy } from 'passport-google-oauth20';
 import { PassportStrategy } from '@nestjs/passport';
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, HOST } from 'src/constants';
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, HOST, PORT } from 'src/constants';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -10,7 +10,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     super({
       clientID: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
-      callbackURL: `http://${HOST}:5000/accounts/google-redirect`,
+      callbackURL: `http://${HOST}:${PORT}/accounts/google-redirect`,
       scope: ['profile', 'email'],
     });
   }
