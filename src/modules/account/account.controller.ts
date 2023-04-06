@@ -19,6 +19,7 @@ import { RefreshAuthGuard } from 'src/guards/refresh.guard';
 import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, EmailConfirmationDto } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
 
 @Controller('/accounts')
 export class AccountController {
@@ -45,7 +46,7 @@ export class AccountController {
     await this.mailService.sendEmailConfirm(email, newAccount._id);
 
     return {
-      message: null,
+      message: 'Please confirm your email',
       data: newAccount,
     };
   }
@@ -84,7 +85,7 @@ export class AccountController {
     };
   }
 
-  @Post('/refresh')
+  @Get('/refresh')
   @UseGuards(RefreshAuthGuard)
   async refreshToken(@Req() request: Request) {
     const account = request.user;
@@ -169,11 +170,14 @@ export class AccountController {
 
   @Post('/forgot-password')
   async sendEmailForgotPassword(@Body('email') email: string) {
-    const isConfirmed = await this.accountService.checkConfirmedEmail(email);
-    if (isConfirmed === false) {
+    const isExisted = await this.accountService.checkExistEmail(email);
+
+    if (isExisted === false) {
       throw new BadRequestException({ message: 'Email not found', data: null });
     }
+
     await this.mailService.sendEmailForgotPassword(email);
+
     return {
       message: 'System sent your email',
       data: email,

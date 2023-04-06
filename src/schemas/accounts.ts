@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { AVATAR_DEFAULT } from 'src/constants';
 import { Role } from 'src/utils';
 
 export type AccountDocument = HydratedDocument<Account>;
@@ -21,7 +22,7 @@ export class Account {
   @Prop({ required: false })
   phone: string;
 
-  @Prop({ require: false })
+  @Prop({ default: AVATAR_DEFAULT })
   avatar: string;
 
   @Prop({ default: false })
