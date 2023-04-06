@@ -41,6 +41,8 @@ export class MailService {
     });
 
     return info;
+
+    
   }
 
   async sendEmailForgotPassword(email: string) {
