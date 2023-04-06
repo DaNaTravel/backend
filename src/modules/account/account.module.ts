@@ -15,7 +15,7 @@ import { FacebookStrategy } from 'src/strategies/facebook.strategy';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Account.name, schema: AccountSchema }]),
+    MongooseModule.forFeature([{ name: Account.name, schema: AccountSchema }, ]),
     PassportModule,
     JwtModule,
     MailModule,

@@ -19,10 +19,15 @@ import { RefreshAuthGuard } from 'src/guards/refresh.guard';
 import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, EmailConfirmationDto } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
+import { TokenService } from './token.service';
 
 @Controller('/accounts')
 export class AccountController {
-  constructor(private readonly accountService: AccountService, private readonly mailService: MailService) {}
+  constructor(
+    private readonly accountService: AccountService,
+    private readonly mailService: MailService,
+    private readonly tokenService: TokenService,
+  ) {}
 
   @Post()
   async createNewUser(@Body() account: AccountCreateDto) {
@@ -169,11 +174,22 @@ export class AccountController {
 
   @Post('/forgot-password')
   async sendEmailForgotPassword(@Body('email') email: string) {
-    const isConfirmed = await this.accountService.checkConfirmedEmail(email);
-    if (isConfirmed === false) {
+    // const isConfirmed = await this.accountService.checkConfirmedEmail(email);
+    // if (isConfirmed === false) {
+    //   throw new BadRequestException({ message: 'Email not found', data: null });
+    // }
+    // await this.mailService.sendEmailForgotPassword(email);
+    // return {
+    //   message: 'System sent your email',
+    //   data: email,
+    // };
+    const user = await this.accountService.getAccountbyEmail(email);
+    if (!user) {
       throw new BadRequestException({ message: 'Email not found', data: null });
     }
-    await this.mailService.sendEmailForgotPassword(email);
+    
+
+    await this.mailService.sendEmailForgotPassword(email, hashToken);
     return {
       message: 'System sent your email',
       data: email,
@@ -181,13 +197,18 @@ export class AccountController {
   }
 
   @Get('/reset-password')
-  async resetPassword(@Query('email') email: string) {
-    const newPassword = await this.accountService.resetPassWord(email);
+  async resetPassword(@Query('email') email: string, @Query('token') token: string) {
+    const isTokenUsed = await this.tokenService.isTokenUsed(token);
+    if (isTokenUsed) {
+      throw new Error('Token has been used');
+    }
+    await this.tokenService.addTokenToUsedTokens(token);
+    const newPassword = await this.accountService.resetPassWord(token);
     if (newPassword !== null) {
       await this.mailService.sendEmailResetPassword(email, newPassword);
       return {
         message: 'Reset password success',
-        data: null,
+        data: email,
       };
     }
     return {
