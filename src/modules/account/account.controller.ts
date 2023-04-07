@@ -11,6 +11,7 @@ import {
   NotFoundException,
   Query,
 } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 import { Request } from 'express';
 import { Role } from 'src/utils';
 import { AccountService } from './account.service';
@@ -19,11 +20,15 @@ import { RefreshAuthGuard } from 'src/guards/refresh.guard';
 import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, EmailConfirmationDto } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
-import { JwtAuthGuard } from 'src/guards/jwt.guard';
+import { TokenService } from './token.service';
 
 @Controller('/accounts')
 export class AccountController {
-  constructor(private readonly accountService: AccountService, private readonly mailService: MailService) {}
+  constructor(
+    private readonly accountService: AccountService,
+    private readonly mailService: MailService,
+    private readonly tokenService: TokenService,
+  ) {}
 
   @Post()
   async createNewUser(@Body() account: AccountCreateDto) {
@@ -170,14 +175,13 @@ export class AccountController {
 
   @Post('/forgot-password')
   async sendEmailForgotPassword(@Body('email') email: string) {
-    const isExisted = await this.accountService.checkExistEmail(email);
-
-    if (isExisted === false) {
+    const user = await this.accountService.getAccountbyEmail(email);
+    if (!user) {
       throw new BadRequestException({ message: 'Email not found', data: null });
     }
-
-    await this.mailService.sendEmailForgotPassword(email);
-
+    const code = uuidv4();
+    const token = await this.tokenService.createToken(code);
+    await this.mailService.sendEmailForgotPassword(email, token);
     return {
       message: 'System sent your email',
       data: email,
@@ -185,13 +189,23 @@ export class AccountController {
   }
 
   @Get('/reset-password')
-  async resetPassword(@Query('email') email: string) {
+  async resetPassword(@Query('email') email: string, @Query('token') token: string) {
+    const payload = await this.tokenService.verifyToken(token);
+    const { code } = payload;
+
+    const isExist = await this.tokenService.findToken(code);
+    if (isExist === false) throw new UnauthorizedException('Token is invalid');
+
     const newPassword = await this.accountService.resetPassWord(email);
     if (newPassword !== null) {
-      await this.mailService.sendEmailResetPassword(email, newPassword);
+      await Promise.all([
+        this.mailService.sendEmailResetPassword(email, newPassword),
+        this.tokenService.deleteToken(code),
+      ]);
+
       return {
         message: 'Reset password success',
-        data: null,
+        data: email,
       };
     }
     return {
