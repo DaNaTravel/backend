@@ -21,7 +21,7 @@ import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, Emai
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from './token.service';
-import { log } from 'console';
+
 @Controller('/accounts')
 export class AccountController {
   constructor(
