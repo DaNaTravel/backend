@@ -22,7 +22,7 @@ export class LocationController {
     };
   }
 
-  // @Get()
+  @Get()
   // async getListProducts(
   //   @Query() pagination: Pagination,
   //   @Query('keyword') keyword: string,
@@ -30,7 +30,12 @@ export class LocationController {
   // ) {
   //   return this.locationService.getListLocations(pagination, keyword, type);
   // }
-  async getListLocations(@Query() pagination: Pagination, @Query('keyword') keyword: string) {
-    return this.locationService.getListLocations(pagination, keyword);
+  async getListLocations(
+    @Query() pagination: Pagination,
+    @Query('keyword') keyword: string,
+    @Query('types') types: LocationType[],
+  ) {
+    console.log(pagination, keyword, types);
+    return this.locationService.getListLocations(pagination, keyword, types);
   }
 }

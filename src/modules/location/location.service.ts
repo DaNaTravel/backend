@@ -16,7 +16,7 @@ export class LocationService {
     return location;
   }
 
-  async getListLocations(input: Pagination, keyword: string) {
+  async getListLocations(input: Pagination, keyword: string, types: LocationType[]) {
     const { page, take, skip } = getPagination(input.take, input.page);
 
     const where: FilterQuery<unknown>[] = [];
@@ -24,6 +24,10 @@ export class LocationService {
       where.push({
         $or: [{ name: { $regex: keyword, $options: 'i' } }, { formatted_address: { $regex: keyword, $options: 'i' } }],
       });
+    }
+
+    if (types && types.length) {
+      where.push({ types: { $all: types } });
     }
 
     const [count, listLocations] = await Promise.all([
