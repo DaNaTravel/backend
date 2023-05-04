@@ -92,3 +92,26 @@ export class Pagination {
   @IsOptional()
   take: number;
 }
+
+export type LocationType =
+  | 'restaurant'
+  | 'cafe'
+  | 'tourist_attraction'
+  | 'lodging'
+  | 'tourist_attraction'
+  | 'museum'
+  | 'amusement_park'
+  | 'park'
+  | 'church'
+  | 'place_of_worship'
+  | 'general_contractor'
+  | 'grocery_or_supermarket'
+  | 'rv_park'
+  | 'natural_feature'
+  | 'beauty_salon'
+  | 'neighborhood'
+  | 'bus_station'
+  | 'transit_station'
+  | 'travel_agency'
+  | 'route'
+  | 'store';
