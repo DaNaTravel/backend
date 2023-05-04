@@ -11,7 +11,7 @@ export class LocationService {
   ) {}
 
   async getDetailLocation(locationId: ObjectId) {
-    const location = await this.locationRepo.findById(locationId);
+    const location = await this.locationRepo.findById(locationId).lean();
     return location;
   }
 }

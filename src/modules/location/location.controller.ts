@@ -8,7 +8,6 @@ export class LocationController {
 
   @Get()
   async getDetailLocation(@Query('locationId') locationId: ObjectId) {
-    console.log('hi');
     const location = await this.locationService.getDetailLocation(locationId);
     if (!location) {
       throw new NotFoundException({
