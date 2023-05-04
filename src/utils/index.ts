@@ -14,11 +14,9 @@ export const toUTCDayJS = (value: Date | string | number | DayJS = Date.now()) =
   return dayjs(value).utc();
 };
 
-export const convertToTimeStamp = (expireIn = 0) => {
-  const now = new Date();
-  const newTime = new Date().setMinutes(now.getMinutes() + expireIn);
-
-  return toUTCDayJS(newTime).unix();
+export const getDate = (value: Date | string | number | DayJS = Date.now(), index: number = 0) => {
+  const newValue = toUTCDayJS(value).add(index, 'day');
+  return newValue.format('dddd');
 };
 
 export type ActiveTime = {
@@ -58,4 +56,28 @@ export const haversineDistance = (lat1: number, lng1: number, lat2: number, lng2
 
 export const fitness = (distance: number) => {
   return 1 / (distance + 1);
+};
+
+export const handleDurationTime = (
+  startDate: string | number | Date | DayJS = Date.now(),
+  endDate: string | number | Date | DayJS = Date.now(),
+) => {
+  const diffInSeconds = toUTCDayJS(endDate).unix() - toUTCDayJS(startDate).unix();
+  const diffInDays = Math.floor(diffInSeconds / (60 * 60 * 24));
+
+  const weekdays = Array.from({ length: diffInDays }, (_, i) => i + 1).map((item: number) => getDate(startDate, item));
+
+  return weekdays;
+};
+
+export const compareTimes = (currentTime: number, openTimes: ActiveTime[], stayTime: number = 0) => {
+  for (const time of openTimes) {
+    if (time.openTime <= currentTime && time.closeTime >= currentTime + stayTime) return true;
+  }
+
+  return false;
+};
+
+export const checkExistedValue = (array: unknown[], value: unknown) => {
+  return array.some((item) => JSON.stringify(item) === JSON.stringify(value));
 };

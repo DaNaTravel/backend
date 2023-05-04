@@ -31,7 +31,7 @@ export class Location {
   reviews: [];
 
   @Prop()
-  types: [];
+  types: string[];
 
   @Prop()
   user_ratings_total: number;

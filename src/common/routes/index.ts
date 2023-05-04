@@ -1,10 +1,10 @@
 import { fitness, haversineDistance } from 'src/utils';
-import { Location } from '../locations';
+import { LocationOptions } from '../locations';
 
 export class RouteOptions {
-  route: Location[];
+  route: LocationOptions[];
 
-  constructor(route: Location[]) {
+  constructor(route: LocationOptions[]) {
     this.route = route;
   }
 
@@ -27,6 +27,6 @@ export class RouteOptions {
   }
 }
 
-export const getRoute = (route: Location[]) => {
+export const getRoute = (route: LocationOptions[]) => {
   return new RouteOptions(route);
 };

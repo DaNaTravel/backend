@@ -7,7 +7,7 @@ export class LocationOptions {
   openTimes: ActiveTime[];
   time: ActiveTime;
 
-  constructor(latitude: number, longitude: number, openTimes: ActiveTime[], time: ActiveTime) {
+  constructor(latitude: number, longitude: number, openTimes?: ActiveTime[], time?: ActiveTime) {
     this.latitude = latitude;
     this.longitude = longitude;
     this.openTimes = openTimes;
@@ -23,11 +23,11 @@ export class LocationOptions {
   }
 }
 
-export const getLocation = (latitude: number, longitude: number, openTimes: ActiveTime[], time: ActiveTime) => {
-  return new LocationOptions(latitude, longitude, openTimes, time);
+export const getLocation = (location: LocationDto) => {
+  return new LocationOptions(location.latitude, location.longitude, location.openTimes, location.time);
 };
 
-export class Location {
+export class LocationDto {
   @IsNumber()
   latitude: number;
 
@@ -35,6 +35,7 @@ export class Location {
   longitude: number;
 
   @IsArray()
+  @IsOptional()
   openTimes: ActiveTime[];
 
   @IsOptional()
