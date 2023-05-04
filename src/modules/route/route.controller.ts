@@ -7,6 +7,6 @@ export class RouteController {
 
   @Get()
   async getLocations() {
-    return this.routeService.getLocations();
+    // return this.routeService.getLocations();
   }
 }
