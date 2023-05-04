@@ -35,7 +35,6 @@ export class LocationController {
     @Query('keyword') keyword: string,
     @Query('types') types: LocationType[],
   ) {
-    console.log(pagination, keyword, types);
     return this.locationService.getListLocations(pagination, keyword, types);
   }
 }
