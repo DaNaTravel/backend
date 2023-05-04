@@ -1,3 +1,4 @@
+import { IsOptional } from 'class-validator';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
@@ -59,3 +60,35 @@ export const haversineDistance = (lat1: number, lng1: number, lat2: number, lng2
 export const fitness = (distance: number) => {
   return 1 / (distance + 1);
 };
+
+export const PAGINATION = {
+  take: 10,
+  limit: 200,
+  page: 1,
+};
+
+class PageOptions {
+  page: number;
+  take: number;
+
+  constructor(take = PAGINATION.take, page = PAGINATION.page) {
+    this.take = take;
+    this.page = page;
+  }
+
+  get skip() {
+    return this.take * (this.page - 1);
+  }
+}
+
+export const getPagination = (page?: number, take?: number) => {
+  return new PageOptions(page, take);
+};
+
+export class Pagination {
+  @IsOptional()
+  page: number;
+
+  @IsOptional()
+  take: number;
+}
