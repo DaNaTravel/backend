@@ -1,7 +1,7 @@
-import { IsArray, IsNumber } from 'class-validator';
+import { IsArray, IsNumber, IsOptional } from 'class-validator';
 import { ActiveTime } from 'src/utils';
 
-class LocationOptions {
+export class LocationOptions {
   latitude: number;
   longitude: number;
   openTimes: ActiveTime[];
@@ -14,11 +14,11 @@ class LocationOptions {
     this.time = time;
   }
 
-  setTime(time: ActiveTime) {
+  set times(time: ActiveTime) {
     this.time = time;
   }
 
-  get() {
+  get location() {
     return { latitude: this.latitude, longitude: this.longitude };
   }
 }
@@ -37,5 +37,6 @@ export class Location {
   @IsArray()
   openTimes: ActiveTime[];
 
+  @IsOptional()
   time: ActiveTime;
 }
