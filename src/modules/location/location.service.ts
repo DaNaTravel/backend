@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Location, LocationDocument } from 'src/schemas/locations';
-import { LocationType, Pagination, getPagination } from 'src/utils';
+import { getPagination } from 'src/utils';
 import { LocationQueryDto } from './dto';
 
 @Injectable()
