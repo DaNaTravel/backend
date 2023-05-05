@@ -1,7 +1,7 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ObjectId, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { CONFIRM_EXPIRES_IN, EMAIL_SENDER, HOST, JWT_CONFIRM_SECRET_KEY, PORT } from 'src/constants';
 
 @Injectable()
