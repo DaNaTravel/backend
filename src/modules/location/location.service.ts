@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { LocationType, Pagination, getPagination } from 'src/utils';
+import { LocationQueryDto } from './dto';
 
 @Injectable()
 export class LocationService {
@@ -16,8 +17,10 @@ export class LocationService {
     return location;
   }
 
-  async getListLocations(input: Pagination, keyword: string, types: LocationType[]) {
-    const { page, take, skip } = getPagination(input.take, input.page);
+  async getListLocations(query: LocationQueryDto) {
+    const { keyword, types } = query;
+
+    const { page, take, skip } = getPagination(query.page, query.take);
 
     const where: FilterQuery<unknown>[] = [];
     if (keyword && keyword.length) {
@@ -27,7 +30,8 @@ export class LocationService {
     }
 
     if (types && types.length) {
-      where.push({ types: { $all: types } });
+      const typesArray = types.split(',').map((item: string) => item.trim());
+      where.push({ types: { $all: typesArray } });
     }
 
     const [count, listLocations] = await Promise.all([

@@ -81,8 +81,8 @@ class PageOptions {
   }
 }
 
-export const getPagination = (page?: number, take?: number) => {
-  return new PageOptions(page, take);
+export const getPagination = (page?: number | string, take?: number | string) => {
+  return new PageOptions(Number(take), Number(page));
 };
 
 export class Pagination {

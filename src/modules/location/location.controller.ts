@@ -2,6 +2,7 @@ import { Controller, Get, Query, Param, NotFoundException } from '@nestjs/common
 import { LocationService } from './location.service';
 import { ObjectId } from 'mongoose';
 import { LocationType, Pagination } from 'src/utils';
+import { LocationQueryDto } from './dto';
 
 @Controller('/locations')
 export class LocationController {
@@ -30,11 +31,7 @@ export class LocationController {
   // ) {
   //   return this.locationService.getListLocations(pagination, keyword, type);
   // }
-  async getListLocations(
-    @Query() pagination: Pagination,
-    @Query('keyword') keyword: string,
-    @Query('types') types: LocationType[],
-  ) {
-    return this.locationService.getListLocations(pagination, keyword, types);
+  async getListLocations(@Query() dto: LocationQueryDto) {
+    return this.locationService.getListLocations(dto);
   }
 }

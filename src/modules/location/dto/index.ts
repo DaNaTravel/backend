@@ -1,5 +1,5 @@
-import { IsArray, IsLatitude, IsLongitude, IsNumber, IsObject, IsString } from 'class-validator';
-import { OpeningHours } from 'src/utils';
+import { IsArray, IsLatitude, IsLongitude, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import { LocationType, OpeningHours, Pagination } from 'src/utils';
 
 export class locationDto {
   @IsString()
@@ -31,4 +31,12 @@ export class locationDto {
 
   @IsNumber()
   user_ratings_total: number;
+}
+
+export class LocationQueryDto extends Pagination {
+  @IsOptional()
+  keyword: string;
+
+  @IsOptional()
+  types: LocationType;
 }
