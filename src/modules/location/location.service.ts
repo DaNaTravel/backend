@@ -17,6 +17,11 @@ export class LocationService {
     return location;
   }
 
+  async getListRelatedLocations(type: string) {
+    const relatedLocations = await this.locationRepo.find({ types: type }).limit(5).exec();
+    return relatedLocations;
+  }
+
   async getListLocations(query: LocationQueryDto) {
     const { keyword, types } = query;
 
