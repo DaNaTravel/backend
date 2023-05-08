@@ -6,8 +6,10 @@ export class LocationOptions {
   longitude: number;
   openTimes: ActiveTime[];
   time: ActiveTime;
+  name: string;
 
-  constructor(latitude: number, longitude: number, openTimes?: ActiveTime[], time?: ActiveTime) {
+  constructor(latitude: number, longitude: number, openTimes?: ActiveTime[], time?: ActiveTime, name?: string) {
+    this.name = name;
     this.latitude = latitude;
     this.longitude = longitude;
     this.openTimes = openTimes;
@@ -24,7 +26,7 @@ export class LocationOptions {
 }
 
 export const getLocation = (location: LocationDto) => {
-  return new LocationOptions(location.latitude, location.longitude, location.openTimes, location.time);
+  return new LocationOptions(location.latitude, location.longitude, location.openTimes, location.time, location.name);
 };
 
 export class LocationDto {
@@ -40,4 +42,7 @@ export class LocationDto {
 
   @IsOptional()
   time: ActiveTime;
+
+  @IsOptional()
+  name: string;
 }

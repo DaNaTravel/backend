@@ -81,3 +81,7 @@ export const compareTimes = (currentTime: number, openTimes: ActiveTime[], stayT
 export const checkExistedValue = (array: unknown[], value: unknown) => {
   return array.some((item) => JSON.stringify(item) === JSON.stringify(value));
 };
+
+export const random = (len: number) => {
+  return Math.floor(Math.random() * len) + 1;
+};

@@ -12,33 +12,13 @@ export class RouteController {
     // const listSamples = [1, 2, 3, 4, 5];
     // return _.shuffle(listSamples);
     const startPoint: LocationDto = {
-      latitude: 16.019110655988168,
-      longitude: 108.22903420822459,
+      latitude: 16.048585550314694,
+      longitude: 108.21649050452005,
       openTimes: [],
       time: { openTime: 420, closeTime: 420 },
+      name: 'Start point',
     };
 
-    const routes = await this.routeService.nearestNeighborAlgorithm(
-      '2023-05-04',
-      '2023-05-05',
-      getLocation(startPoint),
-    );
-    // return routes[0];
-    const pop = this.routeService.initPopulation(20, routes[0]);
-    const ranked = this.routeService.rankedRoutes(pop);
-    return this.routeService.selection(ranked);
-    // return handleDurationTime('2023-05-04', '2023-05-09');
-    // const iTrue = checkExistedValue(
-    //   [
-    //     { latitude: 16.019110655988168, longitude: 108.22903420822459 },
-    //     { latitude: 16.0385547, longitude: 108.2233731 },
-    //     { latitude: 16.0385547, longitude: 108.2233731 },
-    //     { latitude: 16.0385547, longitude: 108.2233731 },
-    //     { latitude: 16.0385547, longitude: 108.2233731 },
-    //   ],
-    //   { latitude: 16.0385547, longitude: 108.2233731 },
-    // );
-    // if (iTrue === false) return false;
-    // return true;
+    return this.routeService.recommendRoute(startPoint, '2023-05-04', '2023-05-05');
   }
 }
