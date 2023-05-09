@@ -1,22 +1,25 @@
 import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { MailService } from './mail.service';
-import { SES_AWS_SMTP_ENDPOINT, SES_AWS_SMTP_PASWORD, SES_AWS_SMTP_PORT, SES_AWS_SMTP_USERNAME } from 'src/constants';
+import {
+  EMAIL_SENDER,
+  KEY_SENDER,
+  SES_AWS_SMTP_ENDPOINT,
+  SES_AWS_SMTP_PASWORD,
+  SES_AWS_SMTP_PORT,
+  SES_AWS_SMTP_USERNAME,
+} from 'src/constants';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
     MailerModule.forRoot({
       transport: {
-        host: SES_AWS_SMTP_ENDPOINT,
-        port: SES_AWS_SMTP_PORT,
+        service: 'Gmail',
         auth: {
-          user: SES_AWS_SMTP_USERNAME,
-          pass: SES_AWS_SMTP_PASWORD,
+          user: EMAIL_SENDER,
+          pass: KEY_SENDER,
         },
-      },
-      defaults: {
-        from: 'No Reply <danatravel.od2t@gmail.com>',
       },
     }),
     JwtModule,
