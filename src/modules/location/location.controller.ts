@@ -2,10 +2,22 @@ import { Controller, Get, Query, Param, NotFoundException, UsePipes, ValidationP
 import { LocationService } from './location.service';
 import { ObjectId } from 'mongoose';
 import { LocationQueryDto } from './dto';
+import { LocationType } from 'src/utils';
+import { LocationSchema } from 'src/schemas/locations';
 
 @Controller('/locations')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
+
+  @Get('/related')
+  async getListRelatedLocations(@Query('type') type: string, @Query('locationId') locationId: ObjectId) {
+    const locations = await this.locationService.getListRelatedLocations(type, locationId);
+
+    return {
+      mesage: 'Success',
+      data: locations,
+    };
+  }
 
   @Get('/:locationId')
   async getDetailLocation(@Param('locationId') locationId: ObjectId) {
