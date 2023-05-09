@@ -12,12 +12,7 @@ export class LocationController {
   @Get('/related')
   async getListRelatedLocations(@Query('type') type: string, @Query('locationId') locationId: ObjectId) {
     const locations = await this.locationService.getListRelatedLocations(type, locationId);
-    if (!locations) {
-      throw new NotFoundException({
-        message: 'Locations is not existed',
-        data: null,
-      });
-    }
+
     return {
       mesage: 'Success',
       data: locations,
