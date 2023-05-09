@@ -6,12 +6,17 @@ import { Location, LocationDocument } from 'src/schemas/locations';
 import { ActiveTime, checkExistedValue, compareTimes, handleDurationTime, haversineDistance, random } from 'src/utils';
 import _, { range } from 'lodash';
 import { RouteOptions, getRoute } from 'src/common/routes';
+import { RouteQueryDto } from './dto';
+import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
 
 @Injectable()
 export class RouteService {
   private locations: Location[] = [];
 
-  constructor(@InjectModel(Location.name) private readonly locationRepo: Model<LocationDocument>) {
+  constructor(
+    @InjectModel(Location.name) private readonly locationRepo: Model<LocationDocument>,
+    @InjectModel(Itinerary.name) private readonly itineraryRepo: Model<ItineraryDocument>,
+  ) {
     this.init();
   }
 
@@ -97,19 +102,22 @@ export class RouteService {
     return { listPoints, listPointDetails };
   }
 
-  async nearestNeighborAlgorithm(startDate: string | Date, endDate: string | Date, startPoint: LocationOptions) {
+  async nearestNeighborAlgorithm(
+    startDate: string | Date,
+    endDate: string | Date,
+    startPoint: LocationOptions,
+    startTime: number = 420,
+    endTime: number = 1350,
+    stayTime: number = 90,
+  ) {
     const locations = await this.locationRepo.find({}).lean();
 
-    const weekdays = handleDurationTime(startDate, endDate);
+    const { weekdays, diffInDays } = handleDurationTime(startDate, endDate);
 
     const allPoints = [];
     const routesInfo: LocationOptions[][] = [];
 
     weekdays.map((day: string) => {
-      const startTime = 420;
-      const endTime = 1350;
-      const stayTime = 90;
-
       const { listPoints, listPointDetails } = this.getPointsByDay(
         locations,
         startPoint,
@@ -124,7 +132,7 @@ export class RouteService {
       routesInfo.push(listPointDetails);
     });
 
-    return routesInfo;
+    return { totalDays: diffInDays, routesInfo: routesInfo };
   }
 
   checkArrivalTime(routes: LocationOptions[], startTime: number = 420, endTime: number = 1350, stayTime: number = 90) {
@@ -148,6 +156,7 @@ export class RouteService {
     for (let i = 1; i <= routes.route.length - 2; i++) {
       arrivalTime += 30;
       routes.route[i].time = { openTime: arrivalTime, closeTime: arrivalTime + stayTime } as ActiveTime;
+      arrivalTime += stayTime;
     }
 
     return routes;
@@ -359,15 +368,19 @@ export class RouteService {
     return { bestDistance, bestFinalRoute };
   }
 
-  async recommendRoute(location: LocationDto, startDate: string | Date, endDate: string | Date) {
-    const startPoint = getLocation(location);
-    const initRoutes = await this.nearestNeighborAlgorithm(startDate, endDate, startPoint);
+  async recommendRoute(dto: RouteQueryDto) {
+    const { latitude, longitude, startDate, endDate, minCost, maxCost, ...data } = dto;
 
-    const routes = initRoutes.map((route: LocationOptions[]) => {
+    const startPoint = getLocation({ latitude, longitude } as LocationDto);
+    const { totalDays, routesInfo } = await this.nearestNeighborAlgorithm(startDate, endDate, startPoint);
+
+    const routes = routesInfo.map((route: LocationOptions[]) => {
       const { bestDistance, bestFinalRoute } = this.geneticAlgorithm(500, 250, 50, 0.005, route);
       return { distance: bestDistance, route: bestFinalRoute.route };
     });
 
-    return routes;
+    const newItinerary = await new this.itineraryRepo({ ...data, days: totalDays, routes: routes }).save();
+
+    return { _id: newItinerary._id, totalDays, routes };
   }
 }

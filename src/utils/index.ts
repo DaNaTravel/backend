@@ -35,7 +35,7 @@ export type OpeningHours = {
 };
 
 export const toRadians = (degrees: number) => {
-  return (degrees * Math.PI) / 180;
+  return degrees * (Math.PI / 180);
 };
 
 export const haversineDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -63,11 +63,11 @@ export const handleDurationTime = (
   endDate: string | number | Date | DayJS = Date.now(),
 ) => {
   const diffInSeconds = toUTCDayJS(endDate).unix() - toUTCDayJS(startDate).unix();
-  const diffInDays = Math.floor(diffInSeconds / (60 * 60 * 24));
+  const diffInDays = Math.floor(diffInSeconds / (60 * 60 * 24)) + 1;
 
   const weekdays = Array.from({ length: diffInDays }, (_, i) => i + 1).map((item: number) => getDate(startDate, item));
 
-  return weekdays;
+  return { weekdays, diffInDays };
 };
 
 export const compareTimes = (currentTime: number, openTimes: ActiveTime[], stayTime: number = 0) => {
@@ -85,3 +85,12 @@ export const checkExistedValue = (array: unknown[], value: unknown) => {
 export const random = (len: number) => {
   return Math.floor(Math.random() * len) + 1;
 };
+
+export enum TravelType {
+  ALL,
+  ARTS,
+  HISTORICAL,
+  CULINARY,
+  RELAX,
+  NATURAL,
+}

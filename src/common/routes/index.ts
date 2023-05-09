@@ -10,7 +10,7 @@ export class RouteOptions {
 
   get distance() {
     let pathDistance = 0;
-    for (let i = 0; i < this.route.length - 2; i++) {
+    for (let i = 0; i < this.route.length - 1; i++) {
       const dist = haversineDistance(
         this.route[i].latitude,
         this.route[i].longitude,
