@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Query, Param, NotFoundException, UsePipes, ValidationPipe } from '@nestjs/common';
 import { LocationService } from './location.service';
 import { ObjectId } from 'mongoose';
 import { LocationQueryDto } from './dto';
@@ -22,6 +22,7 @@ export class LocationController {
     };
   }
 
+  @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
   @Get()
   async getListLocations(@Query() dto: LocationQueryDto) {
     return this.locationService.getListLocations(dto);

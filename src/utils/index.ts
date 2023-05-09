@@ -1,4 +1,5 @@
-import { IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNumber, IsOptional, IsPositive } from 'class-validator';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
@@ -57,15 +58,21 @@ class PageOptions {
   }
 }
 
-export const getPagination = (page?: number | string, take?: number | string) => {
-  return new PageOptions(Number(take), Number(page));
+export const getPagination = (page?: number, take?: number) => {
+  return new PageOptions(take, page);
 };
 
 export class Pagination {
   @IsOptional()
+  @IsPositive()
+  @Type(() => Number)
+  @IsNumber()
   page: number;
 
   @IsOptional()
+  @IsPositive()
+  @Type(() => Number)
+  @IsNumber()
   take: number;
 }
 
