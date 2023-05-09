@@ -10,8 +10,8 @@ export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
   @Get('/related')
-  async getListRelatedLocations(@Query('type') type: string) {
-    const locations = await this.locationService.getListRelatedLocations(type);
+  async getListRelatedLocations(@Query('type') type: string, @Query('locationId') locationId: ObjectId) {
+    const locations = await this.locationService.getListRelatedLocations(type, locationId);
     if (!locations) {
       throw new NotFoundException({
         message: 'Locations is not existed',

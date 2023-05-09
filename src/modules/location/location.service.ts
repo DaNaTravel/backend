@@ -17,8 +17,11 @@ export class LocationService {
     return location;
   }
 
-  async getListRelatedLocations(type: string) {
-    const relatedLocations = await this.locationRepo.find({ types: type }).limit(5).exec();
+  async getListRelatedLocations(type: string, locationId: ObjectId) {
+    const relatedLocations = await this.locationRepo
+      .find({ types: type, _id: { $ne: locationId } })
+      .limit(5)
+      .exec();
     return relatedLocations;
   }
 
