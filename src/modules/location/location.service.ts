@@ -13,16 +13,15 @@ export class LocationService {
   ) {}
 
   async getDetailLocation(locationId: ObjectId) {
-    const location = await this.locationRepo.findById(locationId);
-    return location;
-  }
+    const locationMain = await this.locationRepo.findById(locationId).lean();
 
-  async getListRelatedLocations(type: string, locationId: ObjectId) {
+    const [type]: string[] = locationMain?.types;
     const relatedLocations = await this.locationRepo
       .find({ types: type, _id: { $ne: locationId } })
       .limit(5)
       .exec();
-    return relatedLocations;
+    const locations = { ...locationMain, relatedLocations: relatedLocations };
+    return locations;
   }
 
   async getListLocations(query: LocationQueryDto) {
