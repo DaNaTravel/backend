@@ -1,5 +1,5 @@
 import { IsArray, IsNumber, IsOptional } from 'class-validator';
-import { ActiveTime } from 'src/utils';
+import { ActiveTime, convertTime } from 'src/utils';
 
 export class LocationOptions {
   latitude: number;
@@ -7,6 +7,7 @@ export class LocationOptions {
   openTimes: ActiveTime[];
   time: ActiveTime;
   name: string;
+  travelTime: string;
 
   constructor(latitude: number, longitude: number, openTimes?: ActiveTime[], time?: ActiveTime, name?: string) {
     this.name = name;
@@ -22,6 +23,18 @@ export class LocationOptions {
 
   get location() {
     return { latitude: this.latitude, longitude: this.longitude };
+  }
+
+  get travelInfo() {
+    const openTimes = this.openTimes.map((time: ActiveTime) => {
+      const openTime = convertTime(time.openTime);
+      const closeTime = convertTime(time.closeTime);
+
+      return { openTime, closeTime };
+    });
+
+    const travelTime = {};
+    return { name: this.name, latitude: this.latitude, longitude: this.longitude };
   }
 }
 
