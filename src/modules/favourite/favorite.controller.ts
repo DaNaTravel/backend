@@ -24,11 +24,11 @@ export class FavoriteController {
     const { locationId, itineraryId } = bodyData;
     if (!locationId && !itineraryId) throw new BadRequestException({ message: 'You must transport data', data: null });
 
-    const favorite = await this.favoriteService.removeLoctionToFavorite(bodyData);
+    const favorite = await this.favoriteService.removeToFavorite(bodyData);
     if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
     return {
       mesage: 'Success',
-      data: favorite,
+      data: favorite.deletedCount,
     };
   }
 }

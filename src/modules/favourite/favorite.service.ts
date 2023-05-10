@@ -16,8 +16,9 @@ export class FavoriteService {
     return favorite;
   }
 
-  // async addItineraryToFavorite(accountId: string, itineraryId: string) {
-  //   const favorite = this.favoriteRepo.create({ accountId, itineraryId: null });
-  //   return favorite;
-  // }
+  async removeToFavorite(dto: AddFavoriteDto) {
+    const data = { ...dto };
+    const favorite = await this.favoriteRepo.deleteOne(data);
+    return favorite;
+  }
 }
