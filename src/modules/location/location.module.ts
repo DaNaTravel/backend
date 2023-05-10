@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Location, LocationSchema } from 'src/schemas/locations';
-import { RouteService } from './route.service';
-import { RouteController } from './route.controller';
 import { Itinerary, ItinerarySchema } from 'src/schemas/itineraries';
+import { LocationController } from './location.controller';
+import { LocationService } from './location.service';
 
 @Module({
   imports: [
@@ -12,7 +12,7 @@ import { Itinerary, ItinerarySchema } from 'src/schemas/itineraries';
       { name: Itinerary.name, schema: ItinerarySchema },
     ]),
   ],
-  controllers: [RouteController],
-  providers: [RouteService],
+  controllers: [LocationController],
+  providers: [LocationService],
 })
-export class RouteModule {}
+export class LocationModule {}

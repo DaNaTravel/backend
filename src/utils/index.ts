@@ -1,3 +1,5 @@
+import { Type } from 'class-transformer';
+import { IsNumber, IsOptional, IsPositive } from 'class-validator';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
@@ -92,6 +94,44 @@ export const convertTime = (value: number) => {
 
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 };
+
+export const PAGINATION = {
+  take: 10,
+  limit: 200,
+  page: 1,
+};
+
+class PageOptions {
+  page: number;
+  take: number;
+
+  constructor(take = PAGINATION.take, page = PAGINATION.page) {
+    this.take = take;
+    this.page = page;
+  }
+
+  get skip() {
+    return this.take * (this.page - 1);
+  }
+}
+
+export const getPagination = (page?: number, take?: number) => {
+  return new PageOptions(take, page);
+};
+
+export class Pagination {
+  @IsOptional()
+  @IsPositive()
+  @Type(() => Number)
+  @IsNumber()
+  page: number;
+
+  @IsOptional()
+  @IsPositive()
+  @Type(() => Number)
+  @IsNumber()
+  take: number;
+}
 
 export enum TravelType {
   ALL,

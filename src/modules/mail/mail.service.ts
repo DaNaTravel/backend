@@ -37,7 +37,7 @@ export class MailService {
       from: EMAIL_SENDER,
       to: email,
       subject: 'DaNaTravel - Confirm your email',
-      text: `Welcome to our application. To confirm your email, please click here ${url}`,
+      html: `Welcome to our application. To confirm your email, please click <a href="${url}">here</a>.`,
     });
 
     return info;
@@ -49,7 +49,7 @@ export class MailService {
       from: EMAIL_SENDER,
       to: email,
       subject: 'DaNaTravel - Reset your password',
-      text: `Welcome to our application. If you requested to reset your password, please click here ${url}`,
+      html: `Welcome to our application. If you requested to reset your password, please click <a href="${url}">here</a>.`,
     });
 
     return info;
