@@ -35,6 +35,9 @@ export class Location {
 
   @Prop()
   user_ratings_total: number;
+
+  @Prop()
+  rating: number;
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);

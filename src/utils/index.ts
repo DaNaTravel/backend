@@ -88,9 +88,9 @@ export const random = (len: number) => {
 
 export const convertTime = (value: number) => {
   const hour = Math.floor(value / 60);
-  const minute = (value % 60) * 60;
+  const minute = value % 60;
 
-  return `${hour} : ${minute}`;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 };
 
 export enum TravelType {
@@ -100,4 +100,39 @@ export enum TravelType {
   CULINARY,
   RELAX,
   NATURAL,
+}
+
+export type LocationType =
+  | 'restaurant'
+  | 'cafe'
+  | 'tourist_attraction'
+  | 'lodging'
+  | 'tourist_attraction'
+  | 'museum'
+  | 'amusement_park'
+  | 'park'
+  | 'church'
+  | 'place_of_worship'
+  | 'general_contractor'
+  | 'grocery_or_supermarket'
+  | 'rv_park'
+  | 'natural_feature'
+  | 'beauty_salon'
+  | 'neighborhood'
+  | 'bus_station'
+  | 'transit_station'
+  | 'travel_agency'
+  | 'route'
+  | 'store';
+
+export enum LocationTypes {
+  RESTAURANT,
+  CAFE,
+  TOURIST_ATTRACTION,
+  MUSEUM,
+  AMUSEMENT_PARK,
+  PARK,
+  CHURCH,
+  NATURAL_FEATURE,
+  FOOD,
 }

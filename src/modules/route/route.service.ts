@@ -1,9 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { LocationDto, LocationOptions, getLocation } from 'src/common/locations';
 import { Location, LocationDocument } from 'src/schemas/locations';
-import { ActiveTime, checkExistedValue, compareTimes, handleDurationTime, haversineDistance, random } from 'src/utils';
+import {
+  ActiveTime,
+  LocationTypes,
+  TravelType,
+  checkExistedValue,
+  compareTimes,
+  handleDurationTime,
+  haversineDistance,
+  random,
+} from 'src/utils';
 import _, { range } from 'lodash';
 import { RouteOptions, getRoute } from 'src/common/routes';
 import { RouteQueryDto } from './dto';
@@ -59,13 +68,10 @@ export class RouteService {
         if (isExist === false) {
           if (compareTimes(arrivalTime, openTime, stayTime) === false) continue;
 
-          const dist = haversineDistance(
-            currentPoint.latitude,
-            currentPoint.longitude,
-            point.latitude,
-            point.longitude,
-          );
+          let dist = haversineDistance(currentPoint.latitude, currentPoint.longitude, point.latitude, point.longitude);
 
+          if (location.types.includes('museum') || location.types.includes('church')) dist *= 0.2;
+          else dist *= 0.8;
           if (dist < minDistance) {
             minDistance = dist;
             nextPoint = point;
@@ -77,12 +83,18 @@ export class RouteService {
 
       if (nextPoint) {
         currentPoint = nextPoint;
-        const pointDetail: LocationDto = {
+
+        const { rating, formatted_address, opening_hours } = locations[index];
+
+        const pointDetail = {
           ...currentPoint,
-          openTimes: locations[index].opening_hours[day],
+          openTimes: opening_hours[day],
           time: { openTime: arrivalTime, closeTime: arrivalTime + stayTime } as ActiveTime,
           name: name,
-        };
+          rating: rating,
+          address: formatted_address,
+        } as LocationDto;
+
         arrivalTime += stayTime;
         listPoints.push(currentPoint);
         listPointDetails.push(getLocation(pointDetail));
@@ -96,7 +108,8 @@ export class RouteService {
       longitude: startPoint.longitude,
       openTimes: startPoint.openTimes,
       time: { openTime: arrivalTime, closeTime: arrivalTime + stayTime } as ActiveTime,
-    });
+      address: 'End point',
+    } as LocationDto);
     listPointDetails.push(endPoint);
 
     return { listPoints, listPointDetails };
@@ -151,15 +164,16 @@ export class RouteService {
   }
 
   updateArrivalTime(routes: RouteOptions, startTime: number = 420, endTime: number = 1350, stayTime: number = 90) {
-    let arrivalTime = startTime;
+    const routeInfo = routes.route.map((location: LocationOptions, index) => {
+      const openTime = index ? 420 + 30 + (stayTime + 30) * (index - 1) : 420;
+      const closeTime = 420 + (stayTime + 30) * index;
 
-    for (let i = 1; i <= routes.route.length - 2; i++) {
-      arrivalTime += 30;
-      routes.route[i].time = { openTime: arrivalTime, closeTime: arrivalTime + stayTime } as ActiveTime;
-      arrivalTime += stayTime;
-    }
+      location.time = { openTime, closeTime } as ActiveTime;
 
-    return routes;
+      return location.travelInfo;
+    });
+
+    return routeInfo;
   }
 
   initPopulation(populationSize: number, listInitLocations: LocationOptions[]) {
@@ -361,26 +375,28 @@ export class RouteService {
 
       population = nextGeneration;
     }
-    let bestFinalRoute = getRoute(population[this.rankedRoutes(population)[0][0]]);
-    bestFinalRoute = this.updateArrivalTime(bestFinalRoute);
+    const bestFinalRoute = getRoute(population[this.rankedRoutes(population)[0][0]]);
+    const travelRoute = this.updateArrivalTime(bestFinalRoute);
     const bestDistance = bestFinalRoute.distance;
 
-    return { bestDistance, bestFinalRoute };
+    return { bestDistance, bestFinalRoute: travelRoute };
   }
 
   async createNewRoute(dto: RouteQueryDto) {
     const { latitude, longitude, startDate, endDate, minCost, maxCost, ...data } = dto;
 
-    const startPoint = getLocation({ latitude, longitude } as LocationDto);
+    const startPoint = getLocation({ latitude, longitude, name: 'Start Point', address: 'Start Point' } as LocationDto);
     const { totalDays, routesInfo } = await this.nearestNeighborAlgorithm(startDate, endDate, startPoint);
 
     const routes = routesInfo.map((route: LocationOptions[]) => {
       const { bestDistance, bestFinalRoute } = this.geneticAlgorithm(500, 250, 50, 0.005, route);
-      return { distance: bestDistance, route: bestFinalRoute.route };
+      return { distance: bestDistance, route: bestFinalRoute };
     });
 
     const newItinerary = await new this.itineraryRepo({ ...data, days: totalDays, routes: routes }).save();
 
-    return { _id: newItinerary._id, totalDays, routes };
+    const { _id, accountId, type, people, cost } = newItinerary;
+
+    return { _id, accountId: accountId || null, totalDays, type, people, cost, routes };
   }
 }
