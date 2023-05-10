@@ -10,6 +10,12 @@ export class FavoriteService {
     private readonly favoriteRepo: Model<FavoriteDocument>,
   ) {}
 
+  async checkExistedFavorite(dto: AddFavoriteDto) {
+    const data = { ...dto };
+    const favorite = await this.favoriteRepo.findOne(data);
+    return Boolean(favorite);
+  }
+
   async addToFavorite(dto: AddFavoriteDto) {
     const data = { ...dto };
     const favorite = await new this.favoriteRepo(data).save();
