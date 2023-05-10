@@ -10,14 +10,15 @@ export class FavoriteService {
     private readonly favoriteRepo: Model<FavoriteDocument>,
   ) {}
 
+  async checkExistedFavorite(dto: AddFavoriteDto) {
+    const data = { ...dto };
+    const favorite = await this.favoriteRepo.findOne(data);
+    return Boolean(favorite);
+  }
+
   async addToFavorite(dto: AddFavoriteDto) {
     const data = { ...dto };
     const favorite = await new this.favoriteRepo(data).save();
     return favorite;
   }
-
-  // async addItineraryToFavorite(accountId: string, itineraryId: string) {
-  //   const favorite = this.favoriteRepo.create({ accountId, itineraryId: null });
-  //   return favorite;
-  // }
 }

@@ -9,8 +9,11 @@ export class FavoriteController {
 
   @Post('/')
   async addToFavorite(@Body() bodyData: AddFavoriteDto) {
-    const { locationId, itineraryId } = bodyData;
-    if (!locationId && !itineraryId) throw new BadRequestException({ message: 'You must transport data', data: null });
+    if (!bodyData.locationId && !bodyData.itineraryId)
+      throw new BadRequestException({ message: 'You must transport data', data: null });
+
+    if (await this.favoriteService.checkExistedFavorite(bodyData))
+      throw new BadRequestException({ message: 'You liked', data: null });
 
     const favorite = await this.favoriteService.addToFavorite(bodyData);
     if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
