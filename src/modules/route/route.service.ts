@@ -368,7 +368,7 @@ export class RouteService {
     return { bestDistance, bestFinalRoute };
   }
 
-  async recommendRoute(dto: RouteQueryDto) {
+  async createNewRoute(dto: RouteQueryDto) {
     const { latitude, longitude, startDate, endDate, minCost, maxCost, ...data } = dto;
 
     const startPoint = getLocation({ latitude, longitude } as LocationDto);

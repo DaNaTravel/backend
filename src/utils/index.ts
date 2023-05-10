@@ -86,6 +86,13 @@ export const random = (len: number) => {
   return Math.floor(Math.random() * len) + 1;
 };
 
+export const convertTime = (value: number) => {
+  const hour = Math.floor(value / 60);
+  const minute = (value % 60) * 60;
+
+  return `${hour} : ${minute}`;
+};
+
 export enum TravelType {
   ALL,
   ARTS,
