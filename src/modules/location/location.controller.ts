@@ -1,7 +1,9 @@
-import { Controller, Get, Query, Param, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Query, Param, NotFoundException, UsePipes, ValidationPipe } from '@nestjs/common';
 import { LocationService } from './location.service';
 import { ObjectId } from 'mongoose';
 import { LocationQueryDto } from './dto';
+import { LocationType } from 'src/utils';
+import { LocationSchema } from 'src/schemas/locations';
 
 @Controller('/locations')
 export class LocationController {

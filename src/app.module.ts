@@ -5,8 +5,16 @@ import { MONGO_URI } from './constants';
 import { AccountsModule } from './modules/account/account.module';
 import { MailModule } from './modules/mail/mail.module';
 import { LocationModule } from './modules/location/location.module';
+import { RouteModule } from './modules/route/route.module';
 @Module({
-  imports: [ConfigModule.forRoot(), MongooseModule.forRoot(MONGO_URI), AccountsModule, MailModule, LocationModule],
+  imports: [
+    ConfigModule.forRoot(),
+    MongooseModule.forRoot(MONGO_URI),
+    AccountsModule,
+    MailModule,
+    LocationModule,
+    RouteModule,
+  ],
   controllers: [],
   providers: [],
 })
