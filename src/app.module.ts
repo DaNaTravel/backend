@@ -5,7 +5,7 @@ import { MONGO_URI } from './constants';
 import { AccountsModule } from './modules/account/account.module';
 import { MailModule } from './modules/mail/mail.module';
 import { LocationModule } from './modules/location/location.module';
-import { FavoriteModule } from './modules/favourite/favorite.module';
+import { FavoriteModule } from './modules/favorite/favorite.module';
 
 @Module({
   imports: [
