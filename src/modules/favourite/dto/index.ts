@@ -1,6 +1,6 @@
 import { IsMongoId, IsOptional } from 'class-validator';
 
-export class AddFavoriteDto {
+export class FavoriteDto {
   @IsMongoId()
   accountId: string;
 

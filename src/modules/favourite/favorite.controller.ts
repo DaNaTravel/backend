@@ -1,13 +1,13 @@
 import { Controller, Delete, Body, Post, BadRequestException } from '@nestjs/common';
 import { FavoriteService } from './favorite.service';
-import { AddFavoriteDto } from './dto';
+import { FavoriteDto } from './dto';
 
 @Controller('/favorites')
 export class FavoriteController {
   constructor(private readonly favoriteService: FavoriteService) {}
 
   @Post('/')
-  async addToFavorite(@Body() bodyData: AddFavoriteDto) {
+  async addToFavorite(@Body() bodyData: FavoriteDto) {
     if (!bodyData.locationId && !bodyData.itineraryId)
       throw new BadRequestException({ message: 'You must transport data', data: null });
 
@@ -23,7 +23,7 @@ export class FavoriteController {
   }
 
   @Delete('/')
-  async removeToFavorite(@Body() bodyData: AddFavoriteDto) {
+  async removeToFavorite(@Body() bodyData: FavoriteDto) {
     if (!bodyData.locationId && !bodyData.itineraryId)
       throw new BadRequestException({ message: 'You must transport data', data: null });
 
