@@ -49,18 +49,7 @@ export class FavoriteService {
           },
         );
 
-      return this.favoriteRepo.aggregate([
-        { $match: { locationId: { $exists: false } } },
-        {
-          $lookup: {
-            from: 'itineraries',
-            localField: 'itineraryId',
-            foreignField: '_id',
-            as: 'itinerary',
-          },
-        },
-        { $unwind: '$itinerary' },
-      ]);
+      return this.favoriteRepo.aggregate(aggregate);
     });
 
     const output = await Promise.all(promise);
