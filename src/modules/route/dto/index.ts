@@ -25,6 +25,7 @@ export class RouteQueryDto {
   people: number = 1;
 
   @IsOptional()
+  @Type(() => Number)
   @IsEnum(TravelType)
   type: TravelType = TravelType.ALL;
 

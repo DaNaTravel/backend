@@ -135,7 +135,7 @@ export class Pagination {
 
 export enum TravelType {
   ALL,
-  ARTS,
+  ART,
   HISTORICAL,
   CULINARY,
   RELAX,
@@ -166,13 +166,13 @@ export type LocationType =
   | 'store';
 
 export enum LocationTypes {
-  RESTAURANT,
-  CAFE,
-  TOURIST_ATTRACTION,
-  MUSEUM,
-  AMUSEMENT_PARK,
-  PARK,
-  CHURCH,
-  NATURAL_FEATURE,
-  FOOD,
+  RESTAURANT = 'restaurant',
+  CAFE = 'cafe',
+  TOURIST_ATTRACTION = 'tourist_attraction',
+  MUSEUM = 'museum',
+  AMUSEMENT_PARK = 'amusement_park',
+  PARK = 'park',
+  CHURCH = 'church',
+  NATURAL_FEATURE = 'natural_feature',
+  FOOD = 'food',
 }

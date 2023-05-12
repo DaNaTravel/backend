@@ -10,6 +10,6 @@ export class RouteController {
   @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
   @Post()
   async getLocations(@Query() dto: RouteQueryDto) {
-    return this.routeService.createNewRoute(dto);
+    return this.routeService.check(dto);
   }
 }

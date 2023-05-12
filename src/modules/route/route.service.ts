@@ -1,8 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
-import { LocationDto, LocationOptions, getLocation } from 'src/common/locations';
+import { InjectModel } from '@nestjs/mongoose';
+import _, { range } from 'lodash';
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { RouteQueryDto } from './dto';
+import { RouteOptions, getRoute } from 'src/common/routes';
 import { Location, LocationDocument } from 'src/schemas/locations';
+import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
+import { LocationDto, LocationOptions, getLocation } from 'src/common/locations';
 import {
   ActiveTime,
   LocationTypes,
@@ -11,25 +15,18 @@ import {
   compareTimes,
   handleDurationTime,
   haversineDistance,
-  random,
 } from 'src/utils';
-import _, { range } from 'lodash';
-import { RouteOptions, getRoute } from 'src/common/routes';
-import { RouteQueryDto } from './dto';
-import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
 
 @Injectable()
-export class RouteService {
+export class RouteService implements OnApplicationBootstrap {
   private locations: Location[] = [];
 
   constructor(
     @InjectModel(Location.name) private readonly locationRepo: Model<LocationDocument>,
     @InjectModel(Itinerary.name) private readonly itineraryRepo: Model<ItineraryDocument>,
-  ) {
-    this.init();
-  }
+  ) {}
 
-  private async init() {
+  async onApplicationBootstrap() {
     this.locations = await this.getLocations();
   }
 
@@ -40,7 +37,6 @@ export class RouteService {
   }
 
   getPointsByDay(
-    locations: Location[],
     startPoint: LocationOptions,
     startTime: number,
     stayTime: number,
@@ -60,7 +56,7 @@ export class RouteService {
       let name = null;
       arrivalTime += 30;
 
-      for (const [i, location] of locations.entries()) {
+      for (const [i, location] of this.locations.entries()) {
         const openTime = location.opening_hours[day];
         const point = { latitude: location.latitude, longitude: location.longitude };
         const isExist = checkExistedValue(listPoints, point) || checkExistedValue(allPoints, point);
@@ -68,10 +64,13 @@ export class RouteService {
         if (isExist === false) {
           if (compareTimes(arrivalTime, openTime, stayTime) === false) continue;
 
-          let dist = haversineDistance(currentPoint.latitude, currentPoint.longitude, point.latitude, point.longitude);
+          const dist = haversineDistance(
+            currentPoint.latitude,
+            currentPoint.longitude,
+            point.latitude,
+            point.longitude,
+          );
 
-          if (location.types.includes('museum') || location.types.includes('church')) dist *= 0.2;
-          else dist *= 0.8;
           if (dist < minDistance) {
             minDistance = dist;
             nextPoint = point;
@@ -84,7 +83,7 @@ export class RouteService {
       if (nextPoint) {
         currentPoint = nextPoint;
 
-        const { rating, formatted_address, opening_hours } = locations[index];
+        const { rating, formatted_address, opening_hours } = this.locations[index];
 
         const pointDetail = {
           ...currentPoint,
@@ -123,8 +122,6 @@ export class RouteService {
     endTime: number = 1350,
     stayTime: number = 90,
   ) {
-    const locations = await this.locationRepo.find({}).lean();
-
     const { weekdays, diffInDays } = handleDurationTime(startDate, endDate);
 
     const allPoints = [];
@@ -132,7 +129,6 @@ export class RouteService {
 
     weekdays.map((day: string) => {
       const { listPoints, listPointDetails } = this.getPointsByDay(
-        locations,
         startPoint,
         startTime,
         stayTime,
@@ -382,8 +378,10 @@ export class RouteService {
     return { bestDistance, bestFinalRoute: travelRoute };
   }
 
-  async createNewRoute(dto: RouteQueryDto) {
+  async createNewRoute(dto: RouteQueryDto, locationTypes: LocationTypes[]) {
     const { latitude, longitude, startDate, endDate, minCost, maxCost, ...data } = dto;
+
+    if (locationTypes.length) this.locations = await this.locationRepo.find({ types: { $in: locationTypes } }).lean();
 
     const startPoint = getLocation({ latitude, longitude, name: 'Start Point', address: 'Start Point' } as LocationDto);
     const { totalDays, routesInfo } = await this.nearestNeighborAlgorithm(startDate, endDate, startPoint);
@@ -393,10 +391,45 @@ export class RouteService {
       return { distance: bestDistance, route: bestFinalRoute };
     });
 
-    const newItinerary = await new this.itineraryRepo({ ...data, days: totalDays, routes: routes }).save();
+    if (routes[0].route.length > 2) {
+      const newItinerary = await new this.itineraryRepo({ ...data, days: totalDays, routes: routes }).save();
 
-    const { _id, accountId, type, people, cost } = newItinerary;
+      const { _id, accountId, type, people, cost } = newItinerary;
 
-    return { _id, accountId: accountId || null, totalDays, type, people, cost, routes };
+      return { _id, accountId: accountId || null, totalDays, type, people, cost, routes };
+    }
+
+    return null;
+  }
+
+  async check(dto: RouteQueryDto) {
+    let types: LocationTypes[] = [];
+    switch (dto.type) {
+      case TravelType.NATURAL:
+        types = [LocationTypes.NATURAL_FEATURE, LocationTypes.PARK, LocationTypes.AMUSEMENT_PARK];
+        break;
+      case TravelType.HISTORICAL:
+        types = [LocationTypes.CHURCH, LocationTypes.MUSEUM];
+        break;
+      case TravelType.ART:
+        types = [LocationTypes.MUSEUM];
+        break;
+      case TravelType.CULINARY:
+        types = [LocationTypes.CAFE, LocationTypes.RESTAURANT, LocationTypes.FOOD];
+        break;
+      case TravelType.RELAX:
+        types = [
+          LocationTypes.PARK,
+          LocationTypes.CAFE,
+          LocationTypes.TOURIST_ATTRACTION,
+          LocationTypes.RESTAURANT,
+          LocationTypes.FOOD,
+        ];
+        break;
+      default:
+        types = [];
+    }
+
+    return this.createNewRoute(dto, types);
   }
 }
