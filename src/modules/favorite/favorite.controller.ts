@@ -1,6 +1,17 @@
-import { Controller, Delete, Body, Post, BadRequestException, Param } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Body,
+  Post,
+  BadRequestException,
+  Param,
+  Get,
+  UsePipes,
+  ValidationPipe,
+  Query,
+} from '@nestjs/common';
 import { FavoriteService } from './favorite.service';
-import { FavoriteDto } from './dto';
+import { FavoriteDto, FavoriteQueryDto } from './dto';
 import { ObjectId } from 'mongoose';
 
 @Controller('/favorites')
@@ -47,8 +58,19 @@ export class FavoriteController {
     const favorite = await this.favoriteService.removeToFavorite(bodyData);
     if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
     return {
-      mesage: 'Success',
+      message: 'Success',
       data: favorite.deletedCount,
+    };
+  }
+
+  @Get()
+  @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
+  async getFavorite(@Query() dto: FavoriteQueryDto) {
+    const data = await this.favoriteService.getFavorites(dto);
+
+    return {
+      message: 'Success',
+      data: data,
     };
   }
 }

@@ -98,3 +98,14 @@ export type LocationType =
   | 'travel_agency'
   | 'route'
   | 'store';
+
+export type Category = 'location' | 'itinerary';
+
+export enum TravelType {
+  ALL,
+  ART,
+  HISTORICAL,
+  CULINARY,
+  RELAX,
+  NATURAL,
+}

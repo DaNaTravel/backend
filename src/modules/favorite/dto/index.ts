@@ -1,4 +1,6 @@
-import { IsMongoId, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsMongoId, IsOptional, IsString } from 'class-validator';
+import { Category, LocationType, TravelType } from 'src/utils';
 
 export class FavoriteDto {
   @IsMongoId()
@@ -11,4 +13,13 @@ export class FavoriteDto {
   @IsMongoId()
   @IsOptional()
   itineraryId: string;
+}
+
+export class FavoriteQueryDto {
+  @IsOptional()
+  category: Category;
+
+  @IsOptional()
+  @IsArray()
+  types: LocationType[] | TravelType[];
 }
