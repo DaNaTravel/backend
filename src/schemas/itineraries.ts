@@ -1,9 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-
 import mongoose, { HydratedDocument, ObjectId } from 'mongoose';
-
 import { TravelType } from 'src/utils';
-
 export type ItineraryDocument = HydratedDocument<Itinerary>;
 
 @Schema({ timestamps: true })

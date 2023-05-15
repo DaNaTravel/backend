@@ -6,7 +6,7 @@ import { AccountsModule } from './modules/account/account.module';
 import { MailModule } from './modules/mail/mail.module';
 import { LocationModule } from './modules/location/location.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
-
+import { RouteModule } from './modules/route/route.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -15,6 +15,7 @@ import { FavoriteModule } from './modules/favorite/favorite.module';
     MailModule,
     LocationModule,
     FavoriteModule,
+    RouteModule,
   ],
   controllers: [],
   providers: [],
