@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { AggregateOptions, FilterQuery, Model, ObjectId, PipelineStage } from 'mongoose';
+import mongoose, { Model, ObjectId, PipelineStage } from 'mongoose';
 import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
 import { FavoriteDto } from './dto';
-import { Location } from 'src/schemas/locations';
 import { Category } from 'src/utils';
 @Injectable()
 export class FavoriteService {
@@ -67,9 +66,21 @@ export class FavoriteService {
   }
 
   async addToFavorite(dto: FavoriteDto) {
-    const data = { ...dto };
-    const favorite = await new this.favoriteRepo(data).save();
-    return favorite;
+    const { accountId, locationId, itineraryId } = dto;
+    if (locationId) {
+      const favorite = await new this.favoriteRepo({
+        accountId: new mongoose.Types.ObjectId(accountId),
+        locationId: new mongoose.Types.ObjectId(locationId),
+      }).save();
+      return favorite;
+    }
+    if (itineraryId) {
+      const favorite = await new this.favoriteRepo({
+        accountId: new mongoose.Types.ObjectId(accountId),
+        itineraryId: new mongoose.Types.ObjectId(itineraryId),
+      }).save();
+      return favorite;
+    }
   }
 
   async removeToFavorite(dto: FavoriteDto) {
