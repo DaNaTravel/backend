@@ -43,6 +43,7 @@ export class RouteQueryDto {
 
 export class ItinerariesByAccountQueryDto {
   @IsString()
+  @IsOptional()
   accountId: string;
 
   @IsOptional()

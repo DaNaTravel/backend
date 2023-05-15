@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, ObjectId, PipelineStage } from 'mongoose';
 import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
-import { FavoriteDto } from './dto';
+import { FavoriteDto, ListsFavoriteDto } from './dto';
 import { Category } from 'src/utils';
 @Injectable()
 export class FavoriteService {
@@ -11,11 +11,15 @@ export class FavoriteService {
     private readonly favoriteRepo: Model<FavoriteDocument>,
   ) {}
 
-  async getFavorites(category: Category) {
+  async getFavorites(dataQuery: ListsFavoriteDto) {
+    const { accountId, category } = dataQuery;
     const array: Category[] = category ? [category] : ['itinerary', 'location'];
 
     const promise = array.map((category: Category) => {
       const aggregate: PipelineStage[] = [
+        {
+          $match: { accountId: new mongoose.Types.ObjectId(accountId) },
+        },
         {
           $lookup: {
             from: category === 'location' ? 'locations' : 'itineraries',

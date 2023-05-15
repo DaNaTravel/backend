@@ -440,6 +440,10 @@ export class RouteService implements OnApplicationBootstrap {
 
   async getItinerariesByAccountId(filterCondition: ItinerariesByAccountQueryDto) {
     const { accountId, isPublic } = filterCondition;
+    if (!accountId) {
+      const itineraries = await this.itineraryRepo.find({ isPublic }).lean();
+      return itineraries;
+    }
     if (!isPublic) {
       const itineraries = await this.itineraryRepo.find({ accountId: new mongoose.Types.ObjectId(accountId) }).lean();
       return itineraries;
