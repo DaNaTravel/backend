@@ -11,8 +11,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { FavoriteService } from './favorite.service';
-import { FavoriteDto, FavoriteQueryDto } from './dto';
+import { FavoriteDto } from './dto';
 import { ObjectId } from 'mongoose';
+import { Category } from 'src/utils';
 
 @Controller('/favorites')
 export class FavoriteController {
@@ -65,8 +66,8 @@ export class FavoriteController {
 
   @Get()
   @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
-  async getFavorite(@Query() dto: FavoriteQueryDto) {
-    const data = await this.favoriteService.getFavorites(dto);
+  async getFavorite(@Query('category') category: Category) {
+    const data = await this.favoriteService.getFavorites(category);
 
     return {
       message: 'Success',
