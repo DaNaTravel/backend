@@ -1,4 +1,4 @@
-import { Controller, Delete, Body, Post, BadRequestException, Param } from '@nestjs/common';
+import { Controller, Delete, Body, Post, BadRequestException, Param, ValidationPipe, UsePipes } from '@nestjs/common';
 import { FavoriteService } from './favorite.service';
 import { FavoriteDto } from './dto';
 import { ObjectId } from 'mongoose';
