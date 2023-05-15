@@ -1,8 +1,8 @@
-import { Model, ObjectId } from 'mongoose';
+import mongoose, { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import _, { range } from 'lodash';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { RouteQueryDto } from './dto';
+import { ItinerariesByAccountQueryDto, RouteQueryDto } from './dto';
 import { RouteOptions, getRoute } from 'src/common/routes';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
@@ -436,5 +436,12 @@ export class RouteService implements OnApplicationBootstrap {
   async getItinerary(itineraryId: ObjectId) {
     const itinerary = await this.itineraryRepo.findById(itineraryId).lean();
     return itinerary;
+  }
+
+  async getItinerariesByAccountId(filterCondition: ItinerariesByAccountQueryDto) {
+    const { accountId, isPublic } = filterCondition;
+    console.log(typeof accountId);
+    const itineraries = await this.itineraryRepo.find({ accountId: accountId }).lean();
+    return itineraries;
   }
 }

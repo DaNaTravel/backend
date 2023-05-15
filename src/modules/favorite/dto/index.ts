@@ -1,14 +1,15 @@
 import { IsMongoId, IsOptional } from 'class-validator';
+import { ObjectId } from 'mongoose';
 
 export class FavoriteDto {
   @IsMongoId()
-  accountId: string;
+  accountId: ObjectId;
 
   @IsMongoId()
   @IsOptional()
-  locationId: string;
+  locationId: ObjectId;
 
   @IsMongoId()
   @IsOptional()
-  itineraryId: string;
+  itineraryId: ObjectId;
 }

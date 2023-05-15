@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Post, Query, UsePipes, ValidationPipe, NotFoundException } from '@nestjs/common';
-import { RouteQueryDto } from './dto';
+import { ItinerariesByAccountQueryDto, RouteQueryDto } from './dto';
 import { RouteService } from './route.service';
-import { ObjectId } from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 
 @Controller('routes')
 export class RouteController {
@@ -11,6 +11,15 @@ export class RouteController {
   @Post()
   async getLocations(@Query() dto: RouteQueryDto) {
     return this.routeService.check(dto);
+  }
+
+  @Get('')
+  async getItinerariesByAccountId(@Query() dataQuery: ItinerariesByAccountQueryDto) {
+    const itineraries = await this.routeService.getItinerariesByAccountId(dataQuery);
+    return {
+      message: 'Success',
+      data: itineraries,
+    };
   }
 
   @Get('/:itineraryId')

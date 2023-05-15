@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
+import { ObjectId } from 'mongoose';
 import { TravelType } from 'src/utils';
 
 export class RouteQueryDto {
@@ -38,4 +39,13 @@ export class RouteQueryDto {
   @Type(() => Number)
   @IsNumber()
   maxCost: number;
+}
+
+export class ItinerariesByAccountQueryDto {
+  @IsMongoId()
+  accountId: ObjectId;
+
+  // @IsBoolean()
+  @IsOptional()
+  isPublic: boolean;
 }
