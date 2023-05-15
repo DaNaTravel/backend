@@ -55,9 +55,21 @@ export class FavoriteService {
   }
 
   async checkExistedFavorite(dto: FavoriteDto) {
-    const data = { ...dto };
-    const favorite = await this.favoriteRepo.findOne(data);
-    return Boolean(favorite);
+    const { accountId, locationId, itineraryId } = dto;
+    if (locationId) {
+      const favorite = await this.favoriteRepo.findOne({
+        accountId: new mongoose.Types.ObjectId(accountId),
+        locationId: new mongoose.Types.ObjectId(locationId),
+      });
+      return Boolean(favorite);
+    }
+    if (itineraryId) {
+      const favorite = await this.favoriteRepo.findOne({
+        accountId: new mongoose.Types.ObjectId(accountId),
+        itineraryId: new mongoose.Types.ObjectId(itineraryId),
+      });
+      return Boolean(favorite);
+    }
   }
 
   async checkExistedFavoriteById(id: ObjectId) {
@@ -84,9 +96,21 @@ export class FavoriteService {
   }
 
   async removeToFavorite(dto: FavoriteDto) {
-    const data = { ...dto };
-    const favorite = await this.favoriteRepo.deleteOne(data);
-    return favorite;
+    const { accountId, locationId, itineraryId } = dto;
+    if (locationId) {
+      const favorite = await this.favoriteRepo.deleteOne({
+        accountId: new mongoose.Types.ObjectId(accountId),
+        locationId: new mongoose.Types.ObjectId(locationId),
+      });
+      return favorite;
+    }
+    if (itineraryId) {
+      const favorite = await this.favoriteRepo.deleteOne({
+        accountId: new mongoose.Types.ObjectId(accountId),
+        itineraryId: new mongoose.Types.ObjectId(itineraryId),
+      });
+      return favorite;
+    }
   }
 
   async removeToFavoriteById(id: ObjectId) {
