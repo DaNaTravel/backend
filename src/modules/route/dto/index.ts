@@ -42,10 +42,9 @@ export class RouteQueryDto {
 }
 
 export class ItinerariesByAccountQueryDto {
-  @IsMongoId()
-  accountId: ObjectId;
+  @IsString()
+  accountId: string;
 
-  // @IsBoolean()
   @IsOptional()
   isPublic: boolean;
 }

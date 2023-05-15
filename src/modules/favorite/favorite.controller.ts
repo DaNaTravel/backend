@@ -40,7 +40,6 @@ export class FavoriteController {
   async removeToFavoriteById(@Param('favoriteId') favoriteId: ObjectId) {
     if ((await this.favoriteService.checkExistedFavoriteById(favoriteId)) === false)
       throw new BadRequestException({ message: "You don't like this", data: null });
-    console.log('1');
     const favorite = await this.favoriteService.removeToFavoriteById(favoriteId);
     if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
     return {
