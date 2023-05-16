@@ -1,17 +1,20 @@
-import { Controller, Get, Param, Post, Query, UsePipes, ValidationPipe, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UsePipes,
+  ValidationPipe,
+  NotFoundException,
+  ParseBoolPipe,
+} from '@nestjs/common';
 import { ItinerariesByAccountQueryDto, RouteQueryDto } from './dto';
 import { RouteService } from './route.service';
 import mongoose, { ObjectId } from 'mongoose';
-
 @Controller('routes')
 export class RouteController {
   constructor(private readonly routeService: RouteService) {}
-
-  @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
-  @Post()
-  async getLocations(@Query() dto: RouteQueryDto) {
-    return this.routeService.check(dto);
-  }
 
   @Get('')
   async getItinerariesByAccountId(@Query() dataQuery: ItinerariesByAccountQueryDto) {
