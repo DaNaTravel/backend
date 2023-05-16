@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Post, Query, UsePipes, ValidationPipe, NotFoundException } from '@nestjs/common';
-import { ItinerariesByAccountQueryDto, RouteQueryDto } from './dto';
+import { ItinerariesByAccountQueryDto, RouteQueryDto, SearchItineraryQueryDto } from './dto';
 import { RouteService } from './route.service';
 import mongoose, { ObjectId } from 'mongoose';
 
@@ -30,5 +30,10 @@ export class RouteController {
       message: 'Success',
       data: itinerary,
     };
+  }
+
+  @Get()
+  async getListLocations(@Query() query: SearchItineraryQueryDto) {
+    return this.routeService.getListItineries(query);
   }
 }

@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ObjectId } from 'mongoose';
-import { TravelType } from 'src/utils';
+import { Pagination, TravelType } from 'src/utils';
 
 export class RouteQueryDto {
   @Type(() => Number)
@@ -48,4 +48,12 @@ export class ItinerariesByAccountQueryDto {
 
   @IsOptional()
   isPublic: boolean;
+}
+
+export class SearchItineraryQueryDto extends Pagination {
+  @IsOptional()
+  keyword: string;
+
+  @IsOptional()
+  type: TravelType;
 }

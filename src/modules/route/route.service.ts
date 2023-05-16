@@ -1,8 +1,8 @@
-import mongoose, { Model, ObjectId } from 'mongoose';
+import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import _, { range } from 'lodash';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { ItinerariesByAccountQueryDto, RouteQueryDto } from './dto';
+import { ItinerariesByAccountQueryDto, RouteQueryDto, SearchItineraryQueryDto } from './dto';
 import { RouteOptions, getRoute } from 'src/common/routes';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
@@ -13,6 +13,7 @@ import {
   TravelType,
   checkExistedValue,
   compareTimes,
+  getPagination,
   handleDurationTime,
   haversineDistance,
 } from 'src/utils';
@@ -453,5 +454,43 @@ export class RouteService implements OnApplicationBootstrap {
         .lean();
       return itineraries;
     }
+  }
+
+  async getListItineries(query: SearchItineraryQueryDto) {
+    const { keyword, type } = query;
+
+    const { page, take, skip } = getPagination(query.page, query.take);
+
+    const where: FilterQuery<unknown>[] = [];
+    if (keyword && keyword.length) {
+      where.push({
+        $or: [{ name: { $regex: keyword, $options: 'i' } }, { createdAt: { $regex: keyword, $options: 'i' } }],
+      });
+    }
+
+    if (type) {
+      where.push({ type });
+    }
+
+    const [count, listItineries] = await Promise.all([
+      this.itineraryRepo.find(where.length ? { $and: where } : {}).count(),
+      this.itineraryRepo
+        .find(where.length ? { $and: where } : {}, {
+          _id: true,
+          name: true,
+          days: true,
+          cost: true,
+          people: true,
+          type: true,
+          routes: true,
+          isPublic: true,
+          accountId: true,
+        })
+        .skip(skip)
+        .limit(take)
+        .lean(),
+    ]);
+
+    return { count, page, listItineries };
   }
 }
