@@ -1,14 +1,24 @@
-import { IsMongoId, IsOptional } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
+import { Category } from 'src/utils';
 
 export class FavoriteDto {
-  @IsMongoId()
+  @IsString()
   accountId: string;
 
-  @IsMongoId()
+  @IsString()
   @IsOptional()
   locationId: string;
 
-  @IsMongoId()
+  @IsString()
   @IsOptional()
   itineraryId: string;
+}
+
+export class ListsFavoriteDto {
+  @IsString()
+  accountId: string;
+
+  @IsString()
+  @IsOptional()
+  category: Category;
 }

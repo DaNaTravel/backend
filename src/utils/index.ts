@@ -16,11 +16,9 @@ export const toUTCDayJS = (value: Date | string | number | DayJS = Date.now()) =
   return dayjs(value).utc();
 };
 
-export const convertToTimeStamp = (expireIn = 0) => {
-  const now = new Date();
-  const newTime = new Date().setMinutes(now.getMinutes() + expireIn);
-
-  return toUTCDayJS(newTime).unix();
+export const getDate = (value: Date | string | number | DayJS = Date.now(), index: number = 0) => {
+  const newValue = toUTCDayJS(value).add(index, 'day');
+  return newValue.format('dddd');
 };
 
 export type ActiveTime = {
@@ -98,3 +96,26 @@ export type LocationType =
   | 'travel_agency'
   | 'route'
   | 'store';
+
+export type Category = 'location' | 'itinerary';
+
+export enum TravelType {
+  ALL,
+  ART,
+  HISTORICAL,
+  CULINARY,
+  RELAX,
+  NATURAL,
+}
+
+export enum LocationTypes {
+  RESTAURANT = 'restaurant',
+  CAFE = 'cafe',
+  TOURIST_ATTRACTION = 'tourist_attraction',
+  MUSEUM = 'museum',
+  AMUSEMENT_PARK = 'amusement_park',
+  PARK = 'park',
+  CHURCH = 'church',
+  NATURAL_FEATURE = 'natural_feature',
+  FOOD = 'food',
+}

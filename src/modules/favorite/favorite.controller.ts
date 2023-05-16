@@ -1,7 +1,20 @@
-import { Controller, Delete, Body, Post, BadRequestException, Param } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Body,
+  Post,
+  BadRequestException,
+  Param,
+  Get,
+  UsePipes,
+  ValidationPipe,
+  Query,
+} from '@nestjs/common';
+
 import { FavoriteService } from './favorite.service';
-import { FavoriteDto } from './dto';
+import { FavoriteDto, ListsFavoriteDto } from './dto';
 import { ObjectId } from 'mongoose';
+import { Category } from 'src/utils';
 
 @Controller('/favorites')
 export class FavoriteController {
@@ -27,7 +40,6 @@ export class FavoriteController {
   async removeToFavoriteById(@Param('favoriteId') favoriteId: ObjectId) {
     if ((await this.favoriteService.checkExistedFavoriteById(favoriteId)) === false)
       throw new BadRequestException({ message: "You don't like this", data: null });
-    console.log('1');
     const favorite = await this.favoriteService.removeToFavoriteById(favoriteId);
     if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
     return {
@@ -47,8 +59,18 @@ export class FavoriteController {
     const favorite = await this.favoriteService.removeToFavorite(bodyData);
     if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
     return {
-      mesage: 'Success',
+      message: 'Success',
       data: favorite.deletedCount,
+    };
+  }
+
+  @Get()
+  async getFavorite(@Query() dataQuery: ListsFavoriteDto) {
+    const data = await this.favoriteService.getFavorites(dataQuery);
+
+    return {
+      message: 'Success',
+      data: data,
     };
   }
 }

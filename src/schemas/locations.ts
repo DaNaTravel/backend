@@ -31,10 +31,13 @@ export class Location {
   reviews: [];
 
   @Prop()
-  types: [];
+  types: string[];
 
   @Prop()
   user_ratings_total: number;
+
+  @Prop()
+  rating: number;
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);
