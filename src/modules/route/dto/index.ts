@@ -41,7 +41,7 @@ export class RouteQueryDto {
   maxCost: number;
 }
 
-export class ItinerariesByAccountQueryDto {
+export class ItinerariesByAccountQueryDto extends Pagination {
   @IsString()
   @IsOptional()
   accountId: string;
@@ -53,6 +53,9 @@ export class ItinerariesByAccountQueryDto {
 export class SearchItineraryQueryDto extends Pagination {
   @IsOptional()
   keyword: string;
+
+  @IsOptional()
+  createdAt: string;
 
   @IsOptional()
   type: TravelType;

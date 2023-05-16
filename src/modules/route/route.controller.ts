@@ -1,16 +1,15 @@
-import { Controller, Get, Param, Post, Query, UsePipes, ValidationPipe, NotFoundException } from '@nestjs/common';
-import { ItinerariesByAccountQueryDto, RouteQueryDto, SearchItineraryQueryDto } from './dto';
-import { RouteService } from './route.service';
-import mongoose, { ObjectId } from 'mongoose';
+import { ItinerariesByAccountQueryDto, SearchItineraryQueryDto } from './dto';
+import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
 
+import { RouteService } from './route.service';
+import { ObjectId } from 'mongoose';
 @Controller('routes')
 export class RouteController {
   constructor(private readonly routeService: RouteService) {}
 
-  @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
-  @Post()
-  async getLocations(@Query() dto: RouteQueryDto) {
-    return this.routeService.check(dto);
+  @Get('/search')
+  async getListItineries(@Query() query: SearchItineraryQueryDto) {
+    return this.routeService.getListItineries(query);
   }
 
   @Get('')
@@ -30,10 +29,5 @@ export class RouteController {
       message: 'Success',
       data: itinerary,
     };
-  }
-
-  @Get()
-  async getListLocations(@Query() query: SearchItineraryQueryDto) {
-    return this.routeService.getListItineries(query);
   }
 }
