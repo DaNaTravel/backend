@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ObjectId } from 'mongoose';
-import { TravelType } from 'src/utils';
+import { Pagination, TravelType } from 'src/utils';
 
 export class RouteQueryDto {
   @Type(() => Number)
@@ -41,7 +41,7 @@ export class RouteQueryDto {
   maxCost: number;
 }
 
-export class ItinerariesByAccountQueryDto {
+export class ItinerariesByAccountQueryDto extends Pagination {
   @IsString()
   @IsOptional()
   accountId: string;

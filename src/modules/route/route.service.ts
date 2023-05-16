@@ -4,6 +4,7 @@ import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { ItinerariesByAccountQueryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
+import { getPagination } from 'src/utils';
 
 @Injectable()
 export class RouteService {
@@ -19,7 +20,19 @@ export class RouteService {
     return itinerary;
   }
 
+  getPhoto(info: any) {
+    const { name, photos } = info;
+
+    const photo = photos ? photos[0].photo_reference : null;
+    return {
+      name: name,
+      photos: photo,
+    };
+  }
+
   async getItinerariesByAccountId(filterCondition: ItinerariesByAccountQueryDto) {
+    const { skip, take, page } = getPagination(filterCondition.page, filterCondition.take);
+
     const { accountId, isPublic } = filterCondition;
 
     const where: FilterQuery<unknown>[] = [];
@@ -32,10 +45,24 @@ export class RouteService {
       where.push({ isPublic: isPublic });
     }
 
-    const itineraries = await this.itineraryRepo.find(where.length ? { $and: where } : {}).lean();
+    const [count, itineraries] = await Promise.all([
+      this.itineraryRepo.count(where.length ? { $and: where } : {}),
+      this.itineraryRepo
+        .find(where.length ? { $and: where } : {})
+        .skip(skip)
+        .limit(take)
+        .lean(),
+    ]);
+
     const output = itineraries.map((item) => {
       const { routes } = item;
+
+      const address = routes.map((days: { route: any[] }) => {
+        return days.route.map((route: { description: any }) => this.getPhoto(route.description));
+      });
+
+      return { ...item, routes: address.flat() };
     });
-    return itineraries;
+    return { count, page, output };
   }
 }
