@@ -21,10 +21,11 @@ export class RouteService {
   }
 
   getPhoto(info: any) {
-    const { name, photos } = info;
+    const { _id, name, photos } = info;
 
     const photo = photos ? photos[0].photo_reference : null;
     return {
+      _id: _id || null,
       name: name,
       photos: photo,
     };
