@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Location, LocationDocument } from 'src/schemas/locations';
-import { getPagination } from 'src/utils';
-import { LocationQueryDto } from './dto';
+import { convertOpeningHours, getPagination, isValidOpeningHours } from 'src/utils';
+import { LocationDto, LocationQueryDto } from './dto';
 
 @Injectable()
 export class LocationService {
@@ -11,6 +11,25 @@ export class LocationService {
     @InjectModel(Location.name)
     private readonly locationRepo: Model<LocationDocument>,
   ) {}
+
+  async checkLocation(locationDto: LocationDto) {
+    const existingLocation = await this.locationRepo.findOne({
+      $or: [
+        { name: locationDto.name },
+        { formatted_address: locationDto.formatted_address },
+        { latitude: locationDto.latitude, longitude: locationDto.longitude },
+      ],
+    });
+    if (existingLocation) return [false, 'Location existed'];
+    locationDto.opening_hours = convertOpeningHours(locationDto.opening_hours);
+    if (isValidOpeningHours(locationDto.opening_hours) === false) return [false, 'Opening Hours is invalid'];
+    return [true];
+  }
+
+  async createLocation(locationDto: LocationDto) {
+    const location = await this.locationRepo.create(locationDto);
+    return location;
+  }
 
   async getDetailLocation(locationId: ObjectId) {
     const locationMain = await this.locationRepo.findById(locationId).lean();

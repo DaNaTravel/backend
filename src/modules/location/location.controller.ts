@@ -1,7 +1,17 @@
-import { Controller, Get, Query, Param, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Param,
+  UsePipes,
+  Body,
+  ValidationPipe,
+  BadRequestException,
+} from '@nestjs/common';
 import { LocationService } from './location.service';
 import { ObjectId } from 'mongoose';
-import { LocationQueryDto } from './dto';
+import { LocationQueryDto, LocationDto } from './dto';
 
 @Controller('/locations')
 export class LocationController {
@@ -16,9 +26,31 @@ export class LocationController {
     };
   }
 
+  @Post()
+  async createLocation(@Body() locationDto: LocationDto) {
+    const checkValidate = await this.locationService.checkLocation(locationDto);
+    if (checkValidate[0] === false) throw new BadRequestException({ message: `${checkValidate[1]}`, data: null });
+    const location = await this.locationService.createLocation(locationDto);
+    return {
+      mesage: 'Success',
+      data: location,
+    };
+  }
+
   @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
   @Get()
   async getListLocations(@Query() dto: LocationQueryDto) {
     return this.locationService.getListLocations(dto);
   }
+
+  // @Delete('/:locationId')
+  // async removeLocationById(@Param('locationId') locationId: ObjectId) {
+  //   if ((await this.locationService.checkExistedLocationById(locationId)) === false)
+  //     throw new BadRequestException({ message: "You don't like this", data: null });
+  //   const favorite = await this.locationService.removeLocationById(locationId);
+  //   if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
+  //   return {
+  //     mesage: 'Success',
+  //     data: favorite.deletedCount,
+  //   };
 }
