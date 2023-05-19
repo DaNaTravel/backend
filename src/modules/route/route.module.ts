@@ -5,6 +5,7 @@ import { Location, LocationSchema } from 'src/schemas/locations';
 import { RouteController } from './route.controller';
 import { RouteService } from './route.service';
 import { GeneticService } from './genetic.service';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
 
 @Module({
   imports: [
@@ -14,6 +15,6 @@ import { GeneticService } from './genetic.service';
     ]),
   ],
   controllers: [RouteController],
-  providers: [RouteService, GeneticService],
+  providers: [RouteService, GeneticService, JwtAuthGuard],
 })
 export class RouteModule {}

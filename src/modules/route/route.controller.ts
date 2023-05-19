@@ -10,6 +10,7 @@ import {
   ValidationPipe,
   NotFoundException,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import _ from 'lodash';
 import { ObjectId } from 'mongoose';
@@ -17,6 +18,7 @@ import { ParseBooleanPipe } from 'src/pipes';
 import { RouteService } from './route.service';
 import { GeneticService } from './genetic.service';
 import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto } from './dto';
+import { Auth, getAuth } from 'src/core/decorator';
 
 @Controller('routes')
 export class RouteController {
@@ -24,8 +26,8 @@ export class RouteController {
 
   @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
   @Post()
-  async getLocations(@Query() dto: RouteQueryDto) {
-    const routes = await this.geneticService.getRoutes(dto);
+  async getItineraries(@Query() dto: RouteQueryDto, @getAuth() auth: Auth) {
+    const routes = await this.geneticService.getRoutes(dto, auth);
 
     if (!routes)
       throw new BadRequestException({

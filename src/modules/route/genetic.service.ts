@@ -17,6 +17,7 @@ import {
   haversineDistance,
 } from 'src/utils';
 import { BEST_PARAMS, DEFAULT_BEST_PARAM, END_TIME, START_TIME, STAY_TIME } from 'src/constants';
+import { Auth } from 'src/core/decorator';
 
 @Injectable()
 export class GeneticService implements OnApplicationBootstrap {
@@ -353,7 +354,7 @@ export class GeneticService implements OnApplicationBootstrap {
     return { bestDistance, bestFinalRoute: travelRoute };
   }
 
-  async getRoutes(dto: RouteQueryDto) {
+  async getRoutes(dto: RouteQueryDto, auth: Auth) {
     let types: LocationTypes[] = [];
     switch (dto.type) {
       case TravelType.NATURAL:
