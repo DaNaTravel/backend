@@ -86,3 +86,7 @@ export const BEST_PARAMS = [
     NUM_ELITES: 50,
   },
 ];
+
+export const START_TIME = 420;
+export const END_TIME = 1350;
+export const STAY_TIME = 90;

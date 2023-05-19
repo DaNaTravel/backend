@@ -16,7 +16,7 @@ import {
   handleDurationTime,
   haversineDistance,
 } from 'src/utils';
-import { BEST_PARAMS, DEFAULT_BEST_PARAM } from 'src/constants';
+import { BEST_PARAMS, DEFAULT_BEST_PARAM, END_TIME, START_TIME, STAY_TIME } from 'src/constants';
 
 @Injectable()
 export class GeneticService implements OnApplicationBootstrap {
@@ -37,20 +37,13 @@ export class GeneticService implements OnApplicationBootstrap {
     return locations;
   }
 
-  getPointsByDay(
-    startPoint: LocationOptions,
-    startTime: number,
-    stayTime: number,
-    endTime: number,
-    day: string,
-    allPoints: any[],
-  ) {
+  getPointsByDay(startPoint: LocationOptions, day: string, allPoints: any[]) {
     let currentPoint = startPoint.location;
-    let arrivalTime = startTime;
+    let arrivalTime = START_TIME;
     const listPointDetails: LocationOptions[] = [startPoint];
     const listPoints = [startPoint.location];
 
-    while (arrivalTime + stayTime < endTime) {
+    while (arrivalTime + STAY_TIME < END_TIME) {
       let minDistance = 1 / 0;
       let nextPoint = null;
       let index = null;
@@ -62,7 +55,7 @@ export class GeneticService implements OnApplicationBootstrap {
         const isExist = checkExistedValue(listPoints, point) || checkExistedValue(allPoints, point);
 
         if (isExist === false) {
-          if (compareTimes(arrivalTime, openTime, stayTime) === false) continue;
+          if (compareTimes(arrivalTime, openTime, STAY_TIME) === false) continue;
 
           const dist = haversineDistance(
             currentPoint.latitude,
@@ -87,11 +80,11 @@ export class GeneticService implements OnApplicationBootstrap {
         const pointDetail = {
           ...currentPoint,
           openTimes: opening_hours[day],
-          time: { openTime: arrivalTime, closeTime: arrivalTime + stayTime } as ActiveTime,
+          time: { openTime: arrivalTime, closeTime: arrivalTime + STAY_TIME } as ActiveTime,
           description: this.locations[index],
         } as LocationDto;
 
-        arrivalTime += stayTime;
+        arrivalTime += STAY_TIME;
         listPoints.push(currentPoint);
         listPointDetails.push(getLocation(pointDetail));
       }
@@ -102,7 +95,7 @@ export class GeneticService implements OnApplicationBootstrap {
       latitude: startPoint.latitude,
       longitude: startPoint.longitude,
       openTimes: startPoint.openTimes,
-      time: { openTime: arrivalTime, closeTime: arrivalTime + stayTime } as ActiveTime,
+      time: { openTime: arrivalTime, closeTime: arrivalTime + STAY_TIME } as ActiveTime,
       description: { name: 'End point', address: 'End point' },
     } as LocationDto);
     listPointDetails.push(endPoint);
@@ -110,28 +103,14 @@ export class GeneticService implements OnApplicationBootstrap {
     return { listPoints, listPointDetails };
   }
 
-  async nearestNeighborAlgorithm(
-    startDate: string | Date,
-    endDate: string | Date,
-    startPoint: LocationOptions,
-    startTime: number = 420,
-    endTime: number = 1350,
-    stayTime: number = 90,
-  ) {
+  async nearestNeighborAlgorithm(startDate: string | Date, endDate: string | Date, startPoint: LocationOptions) {
     const { weekdays, diffInDays } = handleDurationTime(startDate, endDate);
 
     const allPoints = [];
     const routesInfo: LocationOptions[][] = [];
 
     weekdays.map((day: string) => {
-      const { listPoints, listPointDetails } = this.getPointsByDay(
-        startPoint,
-        startTime,
-        stayTime,
-        endTime,
-        day.toLowerCase(),
-        allPoints,
-      );
+      const { listPoints, listPointDetails } = this.getPointsByDay(startPoint, day.toLowerCase(), allPoints);
 
       allPoints.push(...listPoints);
       routesInfo.push(listPointDetails);
@@ -140,25 +119,25 @@ export class GeneticService implements OnApplicationBootstrap {
     return { totalDays: diffInDays, routesInfo: routesInfo };
   }
 
-  checkArrivalTime(routes: LocationOptions[], startTime: number = 420, endTime: number = 1350, stayTime: number = 90) {
-    let arrivalTime = startTime;
+  checkArrivalTime(routes: LocationOptions[]) {
+    let arrivalTime = START_TIME;
 
     for (let i = 1; i <= routes.length - 2; i++) {
       arrivalTime += 30;
-      const isTrue = compareTimes(arrivalTime, routes[i].openTimes, stayTime);
+      const isTrue = compareTimes(arrivalTime, routes[i].openTimes, STAY_TIME);
 
       if (isTrue === false) return false;
 
-      arrivalTime += stayTime;
+      arrivalTime += STAY_TIME;
     }
 
     return true;
   }
 
-  updateArrivalTime(routes: RouteOptions, startTime: number = 420, endTime: number = 1350, stayTime: number = 90) {
+  updateArrivalTime(routes: RouteOptions) {
     const routeInfo = routes.route.map((location: LocationOptions, index) => {
-      const openTime = index ? 420 + 30 + (stayTime + 30) * (index - 1) : 420;
-      const closeTime = 420 + (stayTime + 30) * index;
+      const openTime = index ? 420 + 30 + (STAY_TIME + 30) * (index - 1) : 420;
+      const closeTime = 420 + (STAY_TIME + 30) * index;
 
       location.time = { openTime, closeTime } as ActiveTime;
 
@@ -482,14 +461,14 @@ export class GeneticService implements OnApplicationBootstrap {
     return { _id, accountId: accountId || null, totalDays, type, people, cost, routes };
   }
 
-  async getLocationOptions(route: Point[], day: string, startTime: number, stayTime: number) {
-    let arrivalTime = startTime;
+  async getLocationOptions(route: Point[], day: string) {
+    let arrivalTime = START_TIME;
 
     const locationOptions = route.map((point: Point, index) => {
       const isExist = route[index - 1];
 
-      arrivalTime = isExist ? (arrivalTime += 30) : startTime;
-      const time = { openTime: arrivalTime, closeTime: arrivalTime + stayTime } as ActiveTime;
+      arrivalTime = isExist ? (arrivalTime += 30) : START_TIME;
+      const time = { openTime: arrivalTime, closeTime: arrivalTime + STAY_TIME } as ActiveTime;
 
       return this.getLocationOptionByPoint(point, time, day);
     });
@@ -551,23 +530,21 @@ export class GeneticService implements OnApplicationBootstrap {
   async compareItinerary(routes: Point[][], startDate: string | Date, endDate: string | Date) {
     const { weekdays } = handleDurationTime(startDate, endDate);
 
-    const promises = routes.map((route, index) =>
-      this.getLocationOptions(route, weekdays[index].toLowerCase(), 420, 90),
-    );
+    const promises = routes.map((route, index) => this.getLocationOptions(route, weekdays[index].toLowerCase()));
     const newRoutes = await Promise.all(promises);
 
     return newRoutes;
   }
 
-  checkReasonableItinerary(routes: LocationOptions[][], startTime: number = 420, stayTime: number = 90) {
+  checkReasonableItinerary(routes: LocationOptions[][]) {
     const unvalidLocations = [];
 
     for (const route of routes) {
-      let arrivalTime = startTime;
+      let arrivalTime = START_TIME;
 
       for (let i = 1; i <= route.length - 2; i++) {
         arrivalTime += 30;
-        const isTrue = compareTimes(arrivalTime, route[i].openTimes, stayTime);
+        const isTrue = compareTimes(arrivalTime, route[i].openTimes, STAY_TIME);
 
         if (isTrue === false) unvalidLocations.push(route[i].description['name'] || 'Unknown location');
       }
