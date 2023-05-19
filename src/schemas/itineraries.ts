@@ -5,9 +5,6 @@ export type ItineraryDocument = HydratedDocument<Itinerary>;
 
 @Schema({ timestamps: true })
 export class Itinerary {
-  @Prop()
-  days: number;
-
   @Prop({ default: 0 })
   cost: number;
 
@@ -28,6 +25,12 @@ export class Itinerary {
 
   @Prop({ type: mongoose.Types.ObjectId, ref: 'Account', required: false })
   accountId: ObjectId;
+
+  @Prop({ default: new Date() })
+  startDate: Date;
+
+  @Prop({ default: new Date() })
+  endDate: Date;
 }
 
 export const ItinerarySchema = SchemaFactory.createForClass(Itinerary);

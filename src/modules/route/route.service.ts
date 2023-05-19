@@ -1,10 +1,10 @@
-import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
+import { getPagination } from 'src/utils';
 import { ItinerariesByAccountQueryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
-import { getPagination } from 'src/utils';
 
 @Injectable()
 export class RouteService {
