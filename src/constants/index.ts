@@ -22,3 +22,71 @@ export const EMAIL_SENDER = config.get('EMAIL_SENDER');
 export const KEY_SENDER = config.get('KEY_SENDER');
 export const CONFIRM_EXPIRES_IN = config.getNumber('CONFIRM_EXPIRES_IN');
 export const JWT_CONFIRM_SECRET_KEY = config.get('JWT_CONFIRM_SECRET_KEY');
+
+export const DEFAULT_BEST_PARAM = {
+  MUTATION_RATE: 0.005,
+  NUM_GENS: 50,
+  POPULATION_SIZE: 500,
+  NUM_ELITES: 250,
+};
+
+export const BEST_PARAMS = [
+  {
+    MUTATION_RATE: 0,
+    NUM_GENS: 1,
+    POPULATION_SIZE: 1,
+    NUM_ELITES: 0,
+  },
+  {
+    MUTATION_RATE: 0.001,
+    NUM_GENS: 1,
+    POPULATION_SIZE: 2,
+    NUM_ELITES: 0,
+  },
+  {
+    MUTATION_RATE: 0.001,
+    NUM_GENS: 2,
+    POPULATION_SIZE: 6,
+    NUM_ELITES: 1,
+  },
+  {
+    MUTATION_RATE: 0.001,
+    NUM_GENS: 50,
+    POPULATION_SIZE: 24,
+    NUM_ELITES: 12,
+  },
+  {
+    MUTATION_RATE: 0.001,
+    NUM_GENS: 50,
+    POPULATION_SIZE: 100,
+    NUM_ELITES: 50,
+  },
+  {
+    MUTATION_RATE: 0.15,
+    NUM_GENS: 100,
+    POPULATION_SIZE: 100,
+    NUM_ELITES: 50,
+  },
+  {
+    MUTATION_RATE: 0.001,
+    NUM_GENS: 50,
+    POPULATION_SIZE: 300,
+    NUM_ELITES: 100,
+  },
+  {
+    MUTATION_RATE: 0.001,
+    NUM_GENS: 50,
+    POPULATION_SIZE: 200,
+    NUM_ELITES: 50,
+  },
+  {
+    MUTATION_RATE: 0.075,
+    NUM_GENS: 50,
+    POPULATION_SIZE: 100,
+    NUM_ELITES: 50,
+  },
+];
+
+export const START_TIME = 420;
+export const END_TIME = 1350;
+export const STAY_TIME = 90;
