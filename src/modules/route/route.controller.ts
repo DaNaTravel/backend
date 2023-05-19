@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongoose';
 import {
   Body,
   Controller,
@@ -10,10 +11,9 @@ import {
   ValidationPipe,
   NotFoundException,
   BadRequestException,
-  UseGuards,
 } from '@nestjs/common';
 import _ from 'lodash';
-import { ObjectId } from 'mongoose';
+
 import { ParseBooleanPipe } from 'src/pipes';
 import { RouteService } from './route.service';
 import { GeneticService } from './genetic.service';
@@ -116,6 +116,11 @@ export class RouteController {
       message: 'Success',
       data: newRoutes,
     };
+  }
+
+  @Get('/search')
+  async getListItineries(@Query() query: ItinerariesByAccountQueryDto) {
+    return this.routeService.getListItineries(query);
   }
 
   @Get('')

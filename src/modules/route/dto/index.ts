@@ -61,5 +61,14 @@ export class ItinerariesByAccountQueryDto extends Pagination {
   accountId: string;
 
   @IsOptional()
+  keyword: string;
+
+  @IsOptional()
   isPublic: boolean;
+
+  @IsOptional()
+  createdAt: string;
+
+  @IsOptional()
+  type: TravelType;
 }
