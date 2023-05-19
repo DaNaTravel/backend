@@ -8,6 +8,8 @@ import {
   Body,
   ValidationPipe,
   BadRequestException,
+  NotFoundException,
+  Delete,
 } from '@nestjs/common';
 import { LocationService } from './location.service';
 import { ObjectId } from 'mongoose';
@@ -43,14 +45,15 @@ export class LocationController {
     return this.locationService.getListLocations(dto);
   }
 
-  // @Delete('/:locationId')
-  // async removeLocationById(@Param('locationId') locationId: ObjectId) {
-  //   if ((await this.locationService.checkExistedLocationById(locationId)) === false)
-  //     throw new BadRequestException({ message: "You don't like this", data: null });
-  //   const favorite = await this.locationService.removeLocationById(locationId);
-  //   if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
-  //   return {
-  //     mesage: 'Success',
-  //     data: favorite.deletedCount,
-  //   };
+  @Delete('/:locationId')
+  async removeLocationById(@Param('locationId') locationId: ObjectId) {
+    if ((await this.locationService.checkExistedLocationById(locationId)) === false)
+      throw new NotFoundException({ message: 'Not found', data: null });
+    const deletedItem = await this.locationService.removeLocationById(locationId);
+    if (!deletedItem) throw new BadRequestException({ message: "Don't request to server", data: null });
+    return {
+      mesage: 'Success',
+      data: deletedItem,
+    };
+  }
 }

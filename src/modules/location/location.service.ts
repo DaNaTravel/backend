@@ -11,7 +11,14 @@ export class LocationService {
     @InjectModel(Location.name)
     private readonly locationRepo: Model<LocationDocument>,
   ) {}
-
+  async checkExistedLocationById(locationId: ObjectId) {
+    const location = await this.locationRepo.findById(locationId);
+    return Boolean(location);
+  }
+  async removeLocationById(locationId: ObjectId) {
+    const deletedItem = await this.locationRepo.deleteOne({ _id: locationId });
+    return deletedItem.deletedCount;
+  }
   async checkLocation(locationDto: LocationDto) {
     const existingLocation = await this.locationRepo.findOne({
       $or: [
