@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Location, LocationDocument } from 'src/schemas/locations';
-import { convertOpeningHours, getPagination, isValidOpeningHours } from 'src/utils';
+import { convertOpeningHours, convertOpeningHoursToWeekdayText, getPagination, isValidOpeningHours } from 'src/utils';
 import { LocationDto, LocationQueryDto } from './dto';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class LocationService {
     const deletedItem = await this.locationRepo.deleteOne({ _id: locationId });
     return deletedItem.deletedCount;
   }
-  async checkLocation(locationDto: LocationDto) {
+  async checkLocation(locationDto: LocationDto): Promise<[boolean, string | undefined]> {
     const existingLocation = await this.locationRepo.findOne({
       $or: [
         { name: locationDto.name },
@@ -30,7 +30,8 @@ export class LocationService {
     if (existingLocation) return [false, 'Location existed'];
     locationDto.opening_hours = convertOpeningHours(locationDto.opening_hours);
     if (isValidOpeningHours(locationDto.opening_hours) === false) return [false, 'Opening Hours is invalid'];
-    return [true];
+    locationDto.weekday_text = convertOpeningHoursToWeekdayText(locationDto.opening_hours);
+    return [true, undefined];
   }
 
   async createLocation(locationDto: LocationDto) {

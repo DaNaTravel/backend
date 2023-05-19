@@ -19,7 +19,7 @@ export class LocationDto {
 
   @IsArray()
   @IsOptional()
-  weekday_text: [];
+  weekday_text: string[];
 
   @IsObject()
   opening_hours: OpeningHours;
@@ -34,11 +34,5 @@ export class LocationDto {
   longitude: number;
 
   @IsArray()
-  reviews: [];
-
-  @IsArray()
   types: [];
-
-  @IsNumber()
-  user_ratings_total: number;
 }

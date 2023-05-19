@@ -175,3 +175,41 @@ export function handleTimes(time) {
     return (hour + 12) * 60 + minute;
   }
 }
+
+export const convertOpeningHoursToWeekdayText = (openingHours: {
+  [key: string]: { openTime: number; closeTime: number }[];
+}): string[] => {
+  const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const weekdayText: string[] = [];
+
+  for (const weekday of weekdays) {
+    const openingHoursForWeekday = openingHours[weekday];
+    const openingHoursText: string[] = [];
+
+    for (const { openTime, closeTime } of openingHoursForWeekday) {
+      const openingTimeFormatted = formatTime(openTime);
+      const closingTimeFormatted = formatTime(closeTime);
+      openingHoursText.push(`${openingTimeFormatted} AM – ${closingTimeFormatted} PM`);
+    }
+
+    const weekdayTextCombined = `${capitalizeFirstLetter(weekday)}: ${openingHoursText.join(', ')}`;
+    weekdayText.push(weekdayTextCombined);
+  }
+
+  return weekdayText;
+};
+
+const formatTime = (time: number): string => {
+  const hours = Math.floor(time / 60);
+  const minutes = time % 60;
+  const formattedTime = `${padZero(hours)}:${padZero(minutes)}`;
+  return formattedTime;
+};
+
+const padZero = (value: number): string => {
+  return value.toString().padStart(2, '0');
+};
+
+const capitalizeFirstLetter = (text: string): string => {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
