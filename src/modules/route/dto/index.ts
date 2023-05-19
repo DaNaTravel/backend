@@ -41,6 +41,20 @@ export class RouteQueryDto {
   maxCost: number;
 }
 
+export type Point = {
+  _id: string;
+  latitude: number;
+  longitude: number;
+};
+
+export class UpdateItineraryDto {
+  @IsOptional()
+  routes: Point[][];
+
+  @IsOptional()
+  name: string;
+}
+
 export class ItinerariesByAccountQueryDto extends Pagination {
   @IsString()
   @IsOptional()

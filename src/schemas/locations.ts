@@ -38,6 +38,9 @@ export class Location {
 
   @Prop()
   rating: number;
+
+  @Prop()
+  photos: { photo_reference: string }[];
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);

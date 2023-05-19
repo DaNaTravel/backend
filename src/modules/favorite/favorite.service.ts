@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, ObjectId, PipelineStage } from 'mongoose';
-import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
-import { FavoriteDto, ListsFavoriteDto } from './dto';
 import { Category } from 'src/utils';
+import { FavoriteDto, ListsFavoriteDto } from './dto';
+import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
+
 @Injectable()
 export class FavoriteService {
   constructor(

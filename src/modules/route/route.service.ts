@@ -1,11 +1,10 @@
-import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
+import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
+import { getPagination, handleDurationTime } from 'src/utils';
 import { ItinerariesByAccountQueryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
-import { getPagination } from 'src/utils';
-
 @Injectable()
 export class RouteService {
   private locations: Location[] = [];
@@ -23,7 +22,7 @@ export class RouteService {
   getPhoto(info: any) {
     const { name, photos } = info;
 
-    const photo = photos ? photos[0].photo_reference : null;
+    const photo = photos ? photos : null;
     return {
       name: name,
       photos: photo,
@@ -55,13 +54,15 @@ export class RouteService {
     ]);
 
     const output = itineraries.map((item) => {
-      const { routes } = item;
+      const { routes, startDate, endDate } = item;
+
+      const { diffInDays } = handleDurationTime(startDate, endDate);
 
       const address = routes.map((days: { route: any[] }) => {
         return days.route.map((route: { description: any }) => this.getPhoto(route.description));
       });
 
-      return { ...item, routes: address.flat() };
+      return { ...item, days: diffInDays, routes: address.flat() };
     });
     return { count, page, output };
   }
