@@ -47,12 +47,10 @@ export class ItinerariesByAccountQueryDto extends Pagination {
   accountId: string;
 
   @IsOptional()
-  isPublic: boolean;
-}
-
-export class SearchItineraryQueryDto extends Pagination {
-  @IsOptional()
   keyword: string;
+
+  @IsOptional()
+  isPublic: boolean;
 
   @IsOptional()
   createdAt: string;

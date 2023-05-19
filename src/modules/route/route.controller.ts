@@ -1,4 +1,4 @@
-import { ItinerariesByAccountQueryDto, SearchItineraryQueryDto } from './dto';
+import { ItinerariesByAccountQueryDto } from './dto';
 import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
 
 import { RouteService } from './route.service';
@@ -8,7 +8,7 @@ export class RouteController {
   constructor(private readonly routeService: RouteService) {}
 
   @Get('/search')
-  async getListItineries(@Query() query: SearchItineraryQueryDto) {
+  async getListItineries(@Query() query: ItinerariesByAccountQueryDto) {
     return this.routeService.getListItineries(query);
   }
 

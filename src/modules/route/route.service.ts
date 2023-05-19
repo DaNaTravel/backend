@@ -1,7 +1,7 @@
 import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
-import { ItinerariesByAccountQueryDto, SearchItineraryQueryDto } from './dto';
+import { ItinerariesByAccountQueryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
 import { getPagination } from 'src/utils';
@@ -66,7 +66,7 @@ export class RouteService {
     return { count, page, output };
   }
 
-  async getListItineries(query: SearchItineraryQueryDto) {
+  async getListItineries(query: ItinerariesByAccountQueryDto) {
     const { keyword, createdAt, type } = query;
     const { page, take, skip } = getPagination(query.page, query.take);
     const where: FilterQuery<unknown>[] = [];
