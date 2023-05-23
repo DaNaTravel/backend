@@ -43,7 +43,6 @@ export class RouteService {
     if (isPublic !== undefined) {
       where.push({ isPublic: isPublic });
     }
-
     const [count, itineraries] = await Promise.all([
       this.itineraryRepo.count(where.length ? { $and: where } : {}),
       this.itineraryRepo
@@ -52,15 +51,14 @@ export class RouteService {
         .limit(take)
         .lean(),
     ]);
-
     const output = itineraries.map((item) => {
       const { routes, startDate, endDate } = item;
-
       const { diffInDays } = handleDurationTime(startDate, endDate);
-
-      const address = routes.map((days: { route: any[] }) => {
-        return days.route.map((route: { description: any }) => this.getPhoto(route.description));
-      });
+      const address = routes
+        .filter((days) => !Array.isArray(days))
+        .map((days: { route: any[] }) =>
+          days.route.map((route: { description: any }) => this.getPhoto(route.description)),
+        );
 
       return { ...item, days: diffInDays, routes: address.flat() };
     });
