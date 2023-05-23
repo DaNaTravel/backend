@@ -43,10 +43,24 @@ export class LocationService {
     const locationMain = await this.locationRepo.findById(locationId).lean();
 
     const [type]: string[] = locationMain?.types;
-    const relatedLocations = await this.locationRepo
-      .find({ types: type, _id: { $ne: locationId } })
-      .limit(5)
-      .exec();
+    const relatedLocations = await this.locationRepo.aggregate([
+      { $match: { types: type, _id: { $ne: locationId } } },
+      {
+        $lookup: {
+          from: 'favorites',
+          localField: '_id',
+          foreignField: 'locationId',
+          as: 'favorites',
+        },
+      },
+      {
+        $addFields: {
+          totalFavorites: { $size: '$favorites' },
+        },
+      },
+      { $sort: { totalFavorites: -1 } },
+      { $limit: 5 },
+    ]);
     const locations = { ...locationMain, relatedLocations: relatedLocations };
     return locations;
   }
