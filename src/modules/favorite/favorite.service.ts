@@ -64,7 +64,7 @@ export class FavoriteService {
         if (item.itinerary) {
           return (item.itinerary = {
             ...item.itinerary,
-            days: handleDurationTime(item.itinerary.startDate, item.itinerary.startDate).diffInDays,
+            days: handleDurationTime(item.itinerary.startDate, item.itinerary.endDate).diffInDays,
           });
         }
         return item;
