@@ -67,4 +67,8 @@ export class RouteService {
     });
     return { count, page, output };
   }
+
+  async delete() {
+    return this.itineraryRepo.deleteMany({});
+  }
 }

@@ -11,6 +11,7 @@ import {
   NotFoundException,
   BadRequestException,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import _ from 'lodash';
 import { ObjectId } from 'mongoose';
@@ -18,16 +19,14 @@ import { ParseBooleanPipe } from 'src/pipes';
 import { RouteService } from './route.service';
 import { GeneticService } from './genetic.service';
 import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto } from './dto';
-import { Auth, getAuth } from 'src/core/decorator';
-
 @Controller('routes')
 export class RouteController {
   constructor(private readonly routeService: RouteService, private readonly geneticService: GeneticService) {}
 
   @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
   @Post()
-  async getItineraries(@Query() dto: RouteQueryDto, @getAuth() auth: Auth) {
-    const routes = await this.geneticService.getRoutes(dto, auth);
+  async getItineraries(@Query() dto: RouteQueryDto) {
+    const routes = await this.geneticService.getRoutes(dto);
 
     if (!routes)
       throw new BadRequestException({
@@ -115,6 +114,17 @@ export class RouteController {
     return {
       message: 'Success',
       data: newRoutes,
+    };
+  }
+
+  @Get('/check')
+  @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
+  async check(@Query() dto: RouteQueryDto) {
+    const data = await this.geneticService.check(dto);
+
+    return {
+      message: 'Success',
+      data,
     };
   }
 

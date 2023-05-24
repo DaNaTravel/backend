@@ -1,11 +1,45 @@
-import { fitness, haversineDistance } from 'src/utils';
+import { LocationTypes, TravelType, fitness, haversineDistance, typeScore } from 'src/utils';
 import { LocationOptions } from '../locations';
+import { values } from 'lodash';
 
 export class RouteOptions {
   route: LocationOptions[];
+  type: TravelType;
 
-  constructor(route: LocationOptions[]) {
+  constructor(route: LocationOptions[], type: TravelType) {
     this.route = route;
+    this.type = type;
+  }
+
+  get types() {
+    let types: LocationTypes[] = [];
+    switch (Number(this.type)) {
+      case TravelType.NATURAL:
+        types = [LocationTypes.NATURAL_FEATURE, LocationTypes.PARK, LocationTypes.AMUSEMENT_PARK];
+        break;
+      case TravelType.HISTORICAL:
+        types = [LocationTypes.CHURCH, LocationTypes.MUSEUM];
+        break;
+      case TravelType.ART:
+        types = [LocationTypes.MUSEUM];
+        break;
+      case TravelType.CULINARY:
+        types = [LocationTypes.CAFE, LocationTypes.RESTAURANT, LocationTypes.FOOD];
+        break;
+      case TravelType.RELAX:
+        types = [
+          LocationTypes.PARK,
+          LocationTypes.CAFE,
+          LocationTypes.TOURIST_ATTRACTION,
+          LocationTypes.RESTAURANT,
+          LocationTypes.FOOD,
+        ];
+        break;
+      default:
+        types = [];
+    }
+
+    return types;
   }
 
   get distance() {
@@ -22,8 +56,19 @@ export class RouteOptions {
     return pathDistance;
   }
 
+  get typeScore() {
+    let score = 0;
+    this.route.map((location) => {
+      if (location.types) {
+        score += typeScore(this.types, location.types);
+      }
+    });
+
+    return score;
+  }
+
   get fitness() {
-    return fitness(this.distance);
+    return fitness(this.distance, this.typeScore);
   }
 
   get routeInfo() {
@@ -33,6 +78,6 @@ export class RouteOptions {
   }
 }
 
-export const getRoute = (route: LocationOptions[]) => {
-  return new RouteOptions(route);
+export const getRoute = (route: LocationOptions[], type: TravelType) => {
+  return new RouteOptions(route, type);
 };

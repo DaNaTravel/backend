@@ -56,8 +56,17 @@ export const haversineDistance = (lat1: number, lng1: number, lat2: number, lng2
   return R * c;
 };
 
-export const fitness = (distance: number) => {
-  return 1 / (distance + 1);
+export const typeScore = (types: string[], locationTypes: string[]) => {
+  if (!types.length) return 0;
+
+  const number = locationTypes.filter((item) => types.includes(item));
+  if (number.length) return 0;
+
+  return 1000;
+};
+
+export const fitness = (distance: number, type: number) => {
+  return 1 / (Math.pow(distance, 4) + 1) + 10 / (Math.pow(type, 4) + 1);
 };
 
 export const handleDurationTime = (
