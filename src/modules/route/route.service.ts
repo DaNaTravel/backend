@@ -5,7 +5,6 @@ import { getPagination, handleDurationTime } from 'src/utils';
 import { ItinerariesByAccountQueryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
-
 @Injectable()
 export class RouteService {
   private locations: Location[] = [];
@@ -44,6 +43,48 @@ export class RouteService {
     if (isPublic !== undefined) {
       where.push({ isPublic: isPublic });
     }
+    const [count, itineraries] = await Promise.all([
+      this.itineraryRepo.count(where.length ? { $and: where } : {}),
+      this.itineraryRepo
+        .find(where.length ? { $and: where } : {})
+        .skip(skip)
+        .limit(take)
+        .lean(),
+    ]);
+    const output = itineraries.map((item) => {
+      const { routes, startDate, endDate } = item;
+      const { diffInDays } = handleDurationTime(startDate, endDate);
+      const address = routes
+        .filter((days) => !Array.isArray(days))
+        .map((days: { route: any[] }) =>
+          days.route.map((route: { description: any }) => this.getPhoto(route.description)),
+        );
+
+      return { ...item, days: diffInDays, routes: address.flat() };
+    });
+    return { count, page, output };
+  }
+
+  async getListItineries(query: ItinerariesByAccountQueryDto) {
+    const { keyword, createdAt, type } = query;
+    const { page, take, skip } = getPagination(query.page, query.take);
+    const where: FilterQuery<unknown>[] = [];
+    if (keyword && keyword.length) {
+      where.push({
+        $or: [{ name: { $regex: keyword, $options: 'i' } }],
+      });
+    }
+
+    if (createdAt) {
+      const covertDate = new Date(createdAt);
+      where.push({
+        $or: [{ createdAt: { $gte: covertDate } }],
+      });
+    }
+
+    if (type) {
+      where.push({ type });
+    }
 
     const [count, itineraries] = await Promise.all([
       this.itineraryRepo.count(where.length ? { $and: where } : {}),
@@ -53,17 +94,14 @@ export class RouteService {
         .limit(take)
         .lean(),
     ]);
-
     const output = itineraries.map((item) => {
-      const { routes, startDate, endDate } = item;
-
-      const { diffInDays } = handleDurationTime(startDate, endDate);
+      const { routes } = item;
 
       const address = routes.map((days: { route: any[] }) => {
         return days.route.map((route: { description: any }) => this.getPhoto(route.description));
       });
 
-      return { ...item, days: diffInDays, routes: address.flat() };
+      return { ...item, routes: address.flat() };
     });
     return { count, page, output };
   }

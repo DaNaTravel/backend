@@ -1,15 +1,25 @@
 import { IsArray, IsLatitude, IsLongitude, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 import { LocationType, OpeningHours, Pagination } from 'src/utils';
 
-export class locationDto {
+export class LocationQueryDto extends Pagination {
+  @IsOptional()
+  keyword: string;
+
+  @IsOptional()
+  types: LocationType;
+}
+
+export class LocationDto {
   @IsString()
   name: string;
 
   @IsString()
+  @IsOptional()
   overview: string;
 
   @IsArray()
-  weekday_text: [];
+  @IsOptional()
+  weekday_text: string[];
 
   @IsObject()
   opening_hours: OpeningHours;
@@ -24,19 +34,5 @@ export class locationDto {
   longitude: number;
 
   @IsArray()
-  reviews: [];
-
-  @IsArray()
   types: [];
-
-  @IsNumber()
-  user_ratings_total: number;
-}
-
-export class LocationQueryDto extends Pagination {
-  @IsOptional()
-  keyword: string;
-
-  @IsOptional()
-  types: LocationType;
 }

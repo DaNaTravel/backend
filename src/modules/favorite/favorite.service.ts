@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, ObjectId, PipelineStage } from 'mongoose';
-import { Category } from 'src/utils';
+import { Category, handleDurationTime } from 'src/utils';
 import { FavoriteDto, ListsFavoriteDto } from './dto';
 import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
 
@@ -34,8 +34,9 @@ export class FavoriteService {
         },
       ];
 
-      if (category === 'itinerary') aggregate.push({ $match: { locationId: { $exists: false } } });
-      else
+      if (category === 'itinerary') {
+        aggregate.push({ $match: { locationId: { $exists: false } } });
+      } else {
         aggregate.push(
           { $match: { itineraryId: { $exists: false } } },
           {
@@ -50,13 +51,27 @@ export class FavoriteService {
             },
           },
         );
+      }
 
       return this.favoriteRepo.aggregate(aggregate);
     });
 
     const output = await Promise.all(promise);
+    const data = [].concat(...output);
 
-    return [].concat(...output);
+    if (category === 'itinerary') {
+      data.map((item) => {
+        if (item.itinerary) {
+          return (item.itinerary = {
+            ...item.itinerary,
+            days: handleDurationTime(item.itinerary.startDate, item.itinerary.endDate).diffInDays,
+          });
+        }
+        return item;
+      });
+    }
+
+    return data;
   }
 
   async checkExistedFavorite(dto: FavoriteDto) {

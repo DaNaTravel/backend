@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongoose';
 import {
   Body,
   Controller,
@@ -10,11 +11,9 @@ import {
   ValidationPipe,
   NotFoundException,
   BadRequestException,
-  UseGuards,
-  Req,
 } from '@nestjs/common';
 import _ from 'lodash';
-import { ObjectId } from 'mongoose';
+
 import { ParseBooleanPipe } from 'src/pipes';
 import { RouteService } from './route.service';
 import { GeneticService } from './genetic.service';
