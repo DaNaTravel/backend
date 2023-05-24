@@ -62,9 +62,12 @@ export class FavoriteService {
     if (category === 'itinerary') {
       data.map((item) => {
         if (item.itinerary) {
+          console.log(item.itinerary.startDate);
+          console.log(item.itinerary.startDate);
+          console.log(handleDurationTime(item.itinerary.startDate, item.itinerary.endDate).diffInDays);
           return (item.itinerary = {
             ...item.itinerary,
-            days: handleDurationTime(item.itinerary.startDate, item.itinerary.startDate).diffInDays,
+            days: handleDurationTime(item.itinerary.startDate, item.itinerary.endDate).diffInDays,
           });
         }
         return item;
