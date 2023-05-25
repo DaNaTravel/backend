@@ -90,3 +90,4 @@ export const BEST_PARAMS = [
 export const START_TIME = 420;
 export const END_TIME = 1350;
 export const STAY_TIME = 90;
+export const DAY_IN_MILISECONDS = 1000 * 60 * 60 * 24;

@@ -3,9 +3,6 @@ import { Category } from 'src/utils';
 
 export class FavoriteDto {
   @IsString()
-  accountId: string;
-
-  @IsString()
   @IsOptional()
   locationId: string;
 

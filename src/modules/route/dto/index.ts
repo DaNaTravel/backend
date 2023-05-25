@@ -56,13 +56,13 @@ export class UpdateItineraryDto {
 
   @IsOptional()
   name: string;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  isPublic: boolean;
 }
 
 export class ItinerariesByAccountQueryDto extends Pagination {
-  @IsString()
-  @IsOptional()
-  accountId: string;
-
   @IsOptional()
   keyword: string;
 

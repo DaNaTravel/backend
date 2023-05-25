@@ -17,6 +17,7 @@ import {
   haversineDistance,
 } from 'src/utils';
 import { BEST_PARAMS, DEFAULT_BEST_PARAM, END_TIME, START_TIME, STAY_TIME } from 'src/constants';
+import { Auth } from 'src/core/decorator';
 
 @Injectable()
 export class GeneticService implements OnApplicationBootstrap {
@@ -355,7 +356,7 @@ export class GeneticService implements OnApplicationBootstrap {
     return { bestDistance, bestFinalRoute: travelRoute, fitness: bestFitness };
   }
 
-  async getRoutes(dto: RouteQueryDto) {
+  async getRoutes(dto: RouteQueryDto, auth: Auth) {
     let types: LocationTypes[] = [];
     switch (dto.type) {
       case TravelType.NATURAL:
@@ -383,7 +384,7 @@ export class GeneticService implements OnApplicationBootstrap {
         types = [];
     }
 
-    return this.createNewRoute(dto, types);
+    return this.createNewRoute(dto, types, auth);
   }
 
   async checkExistedItinerary(_id: string) {
@@ -421,7 +422,7 @@ export class GeneticService implements OnApplicationBootstrap {
     return routes;
   }
 
-  async createNewRoute(dto: RouteQueryDto, locationTypes: LocationTypes[]) {
+  async createNewRoute(dto: RouteQueryDto, locationTypes: LocationTypes[], auth: Auth) {
     const { latitude, longitude, startDate, endDate, ...data } = dto;
 
     if (locationTypes.length)
@@ -451,16 +452,21 @@ export class GeneticService implements OnApplicationBootstrap {
     if (routesInfo[0].length < 3) return null;
     const routes = this.getBestRoute(routesInfo);
 
+    if (!auth._id) {
+      return { _id: null, accountId: null, totalDays, type: dto.type, people: dto.people, cost: 0, routes };
+    }
+
     const newItinerary = await new this.itineraryRepo({
       ...data,
       startDate: startDate,
       endDate: endDate,
       routes: routes,
+      accountId: auth._id,
     }).save();
 
     const { _id, accountId, type, people, cost } = newItinerary;
 
-    return { _id, accountId: accountId || null, totalDays, type, people, cost, routes };
+    return { _id, accountId, totalDays, type, people, cost, routes };
   }
 
   async getLocationOptions(route: Point[], day: string) {
@@ -507,7 +513,7 @@ export class GeneticService implements OnApplicationBootstrap {
     return locationOption;
   }
 
-  async updateItinerary(routes: LocationOptions[][], name: string, routeId: string) {
+  async updateItinerary(routes: LocationOptions[][], name: string, isPublic: boolean, routeId: string) {
     const newRoutes = routes.map((route) => {
       const routeOption = getRoute(route, this.type);
       return { distance: routeOption.distance, route: routeOption.routeInfo };
@@ -515,11 +521,12 @@ export class GeneticService implements OnApplicationBootstrap {
 
     const data = {
       name,
+      isPublic,
       routes: newRoutes,
     };
 
     const updatedItinerary = await this.itineraryRepo
-      .updateOne({ _id: new mongoose.Types.ObjectId(routeId) }, { ...data }, { new: true })
+      .findOneAndUpdate({ _id: new mongoose.Types.ObjectId(routeId) }, { ...data }, { new: true })
       .lean();
 
     const { _id, accountId, type, people, cost, startDate, endDate } = updatedItinerary;

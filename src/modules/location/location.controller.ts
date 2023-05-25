@@ -10,14 +10,25 @@ import {
   BadRequestException,
   NotFoundException,
   Delete,
+  UseGuards,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { LocationService } from './location.service';
 import { ObjectId } from 'mongoose';
+import { Role } from 'src/utils';
+import { Auth, GetAuth } from 'src/core/decorator';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
+import { LocationService } from './location.service';
 import { LocationQueryDto, LocationDto } from './dto';
 
 @Controller('/locations')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
+
+  @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
+  @Get()
+  async getListLocations(@Query() dto: LocationQueryDto) {
+    return this.locationService.getListLocations(dto);
+  }
 
   @Get('/:locationId')
   async getDetailLocation(@Param('locationId') locationId: ObjectId) {
@@ -29,27 +40,33 @@ export class LocationController {
   }
 
   @Post()
-  async createLocation(@Body() locationDto: LocationDto) {
+  @UseGuards(JwtAuthGuard)
+  async createLocation(@Body() locationDto: LocationDto, @GetAuth() auth: Auth) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
+
     const checkValidate = await this.locationService.checkLocation(locationDto);
     if (checkValidate[0] === false) throw new BadRequestException({ message: `${checkValidate[1]}`, data: null });
+
     const location = await this.locationService.createLocation(locationDto);
+
     return {
       mesage: 'Success',
       data: location,
     };
   }
 
-  @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
-  @Get()
-  async getListLocations(@Query() dto: LocationQueryDto) {
-    return this.locationService.getListLocations(dto);
-  }
-
   @Delete('/:locationId')
-  async removeLocationById(@Param('locationId') locationId: ObjectId) {
-    if ((await this.locationService.checkExistedLocationById(locationId)) === false)
-      throw new NotFoundException({ message: 'Not found', data: null });
+  @UseGuards(JwtAuthGuard)
+  async removeLocationById(@Param('locationId') locationId: ObjectId, @GetAuth() auth: Auth) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission to delete location', data: null });
+
+    const isExistedLocation = await this.locationService.checkExistedLocationById(locationId);
+    if (isExistedLocation === false) throw new NotFoundException({ message: 'Not found', data: null });
+
     const deletedItem = await this.locationService.removeLocationById(locationId);
+
     if (!deletedItem) throw new BadRequestException({ message: "Don't request to server", data: null });
     return {
       mesage: 'Success',

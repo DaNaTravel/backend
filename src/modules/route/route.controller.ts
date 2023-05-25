@@ -11,21 +11,28 @@ import {
   ValidationPipe,
   NotFoundException,
   BadRequestException,
+  UseGuards,
+  UnauthorizedException,
+  Delete,
 } from '@nestjs/common';
 import _ from 'lodash';
-
 import { ParseBooleanPipe } from 'src/pipes';
 import { RouteService } from './route.service';
 import { GeneticService } from './genetic.service';
+import { Auth, GetAuth } from 'src/core/decorator';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
+import { OptionalAuthGuard } from 'src/guards/optional-jwt.guard';
 import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto } from './dto';
+
 @Controller('routes')
 export class RouteController {
   constructor(private readonly routeService: RouteService, private readonly geneticService: GeneticService) {}
 
   @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
   @Post()
-  async getItineraries(@Query() dto: RouteQueryDto) {
-    const routes = await this.geneticService.getRoutes(dto);
+  @UseGuards(OptionalAuthGuard)
+  async getItineraries(@Query() dto: RouteQueryDto, @GetAuth() auth: Auth) {
+    const routes = await this.geneticService.getRoutes(dto, auth);
 
     if (!routes)
       throw new BadRequestException({
@@ -40,47 +47,56 @@ export class RouteController {
   }
 
   @Patch('/:id')
-  async updateLocation(
+  @UseGuards(JwtAuthGuard)
+  async updateItinerary(
     @Param('id') id: string,
     @Body() dto: UpdateItineraryDto,
     @Query('checked', ParseBooleanPipe) checked: boolean,
+    @GetAuth() auth: Auth,
   ) {
-    const { routes, name } = dto;
+    const permission = await this.routeService.hasPermission(auth, id);
+    if (permission) throw new UnauthorizedException({ message: permission.message, data: null });
 
-    routes.map((route) =>
-      route.map((location) => {
-        const isTrue = Boolean(location._id) || Boolean(location.latitude && location.longitude);
+    const { routes, name, isPublic } = dto;
 
-        if (isTrue === false)
-          throw new BadRequestException({
-            message: 'A Location must have _id or coordinates.',
-            data: null,
-          });
-      }),
-    );
+    if (routes && routes.length) {
+      routes.map((route) =>
+        route.map((location) => {
+          const isTrue = Boolean(location._id) || Boolean(location.latitude && location.longitude);
 
-    const itinerary = await this.geneticService.checkExistedItinerary(id);
-    if (Boolean(itinerary) === false)
-      throw new BadRequestException({
-        message: 'There is no itinerary.',
-        data: null,
-      });
+          if (isTrue === false)
+            throw new BadRequestException({
+              message: 'A Location must have _id or coordinates.',
+              data: null,
+            });
+        }),
+      );
 
-    const { startDate, endDate } = itinerary;
+      const itinerary = await this.geneticService.checkExistedItinerary(id);
+      if (Boolean(itinerary) === false)
+        throw new BadRequestException({
+          message: 'There is no itinerary.',
+          data: null,
+        });
 
-    const compareItinerary = await this.geneticService.compareItinerary(routes, startDate, endDate);
+      const { startDate, endDate } = itinerary;
 
-    if (checked === false) return this.geneticService.updateItinerary(compareItinerary, name, id);
+      const compareItinerary = await this.geneticService.compareItinerary(routes, startDate, endDate);
 
-    const reasonableItinerary = this.geneticService.checkReasonableItinerary(compareItinerary);
+      if (checked === false) return this.geneticService.updateItinerary(compareItinerary, name, isPublic, id);
 
-    if (reasonableItinerary.length)
-      throw new BadRequestException({
-        message: `${reasonableItinerary.toString()}`,
-        data: null,
-      });
+      const reasonableItinerary = this.geneticService.checkReasonableItinerary(compareItinerary);
 
-    return this.geneticService.updateItinerary(compareItinerary, name, id);
+      if (reasonableItinerary.length)
+        throw new BadRequestException({
+          message: `${reasonableItinerary.toString()}`,
+          data: null,
+        });
+
+      return this.geneticService.updateItinerary(compareItinerary, name, isPublic, id);
+    }
+
+    return this.routeService.updateItinerary(dto, id);
   }
 
   @Post('/:id/generate')
@@ -128,8 +144,9 @@ export class RouteController {
   }
 
   @Get('')
-  async getItinerariesByAccountId(@Query() dataQuery: ItinerariesByAccountQueryDto) {
-    const itineraries = await this.routeService.getItinerariesByAccountId(dataQuery);
+  @UseGuards(JwtAuthGuard)
+  async getItinerariesByAccountId(@Query() dataQuery: ItinerariesByAccountQueryDto, @GetAuth() auth: Auth) {
+    const itineraries = await this.routeService.getItinerariesByAccountId(dataQuery, auth);
     return {
       message: 'Success',
       data: itineraries,
@@ -143,6 +160,25 @@ export class RouteController {
     return {
       message: 'Success',
       data: itinerary,
+    };
+  }
+
+  @Delete('/:itineraryId')
+  @UseGuards(JwtAuthGuard)
+  async deleteItinerary(@Param('itineraryId') itineraryId: string, @GetAuth() auth: Auth) {
+    const permission = await this.routeService.hasPermission(auth, itineraryId);
+    if (permission) throw new UnauthorizedException({ message: permission.message, data: null });
+
+    const isExistedItinerary = await this.geneticService.checkExistedItinerary(itineraryId);
+
+    if (Boolean(isExistedItinerary) === false)
+      throw new NotFoundException({ message: 'Itinerary not found', data: null });
+
+    const output = await this.routeService.deleteItinerary(itineraryId);
+
+    return {
+      message: 'Success',
+      data: output,
     };
   }
 }

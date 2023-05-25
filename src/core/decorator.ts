@@ -8,7 +8,7 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
 export type Auth = { _id: string; role: Role };
 
-export const getAuth = createParamDecorator((_: unknown, context: ExecutionContext) => {
+export const GetAuth = createParamDecorator((_: unknown, context: ExecutionContext) => {
   const ctx = context.switchToHttp().getRequest();
   return ctx.user as Auth;
 });
