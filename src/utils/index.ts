@@ -56,8 +56,17 @@ export const haversineDistance = (lat1: number, lng1: number, lat2: number, lng2
   return R * c;
 };
 
-export const fitness = (distance: number) => {
-  return 1 / (distance + 1);
+export const typeScore = (types: string[], locationTypes: string[]) => {
+  if (!types.length) return 0;
+
+  const number = locationTypes.filter((item) => types.includes(item));
+  if (number.length) return 0;
+
+  return 1000;
+};
+
+export const fitness = (distance: number, type: number) => {
+  return 1 / (Math.pow(distance, 4) + 1) + 10 / (Math.pow(type, 4) + 1);
 };
 
 export const handleDurationTime = (
@@ -183,16 +192,14 @@ export enum LocationTypes {
   FOOD = 'food',
 }
 
-export const isValidOpeningHours = (openingHours) => {
+export const isValidOpeningHours = (openingHours: any) => {
   const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-  // Kiểm tra xem tất cả các ngày trong tuần đều có trong dữ liệu openingHours
   const hasAllWeekdays = weekdays.every((weekday) => openingHours.hasOwnProperty(weekday));
   if (!hasAllWeekdays) {
     return false;
   }
 
-  // Kiểm tra thời gian mở và đóng của mỗi ngày
   for (const weekday in openingHours) {
     const dayOpeningHours = openingHours[weekday];
     if (!Array.isArray(dayOpeningHours) || dayOpeningHours.length === 0) {
@@ -209,12 +216,10 @@ export const isValidOpeningHours = (openingHours) => {
   return true;
 };
 
-export function convertOpeningHours(openingHours) {
-  // Lặp qua từng ngày trong openingHours
+export function convertOpeningHours(openingHours: any) {
   for (const day in openingHours) {
     if (openingHours.hasOwnProperty(day)) {
       const timeSlots = openingHours[day];
-      // Lặp qua từng khoảng thời gian trong mỗi ngày
       for (const slot of timeSlots) {
         slot.openTime = handleTimes(slot.openTime);
         slot.closeTime = handleTimes(slot.closeTime);
@@ -224,7 +229,7 @@ export function convertOpeningHours(openingHours) {
   return openingHours;
 }
 
-export function handleTimes(time) {
+export function handleTimes(time: string) {
   const timeComponents = time.split(' ');
   const hourMinute = timeComponents[0].split(':');
   const hour = parseInt(hourMinute[0]);

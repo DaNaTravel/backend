@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, ObjectId, PipelineStage } from 'mongoose';
-import { Category, handleDurationTime } from 'src/utils';
+import { Category, DayJS, Role, handleDurationTime } from 'src/utils';
 import { FavoriteDto, ListsFavoriteDto } from './dto';
 import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
+import { DAY_IN_MILISECONDS } from 'src/constants';
+import { Auth } from 'src/core/decorator';
 
 @Injectable()
 export class FavoriteService {
@@ -12,14 +14,15 @@ export class FavoriteService {
     private readonly favoriteRepo: Model<FavoriteDocument>,
   ) {}
 
-  async getFavorites(dataQuery: ListsFavoriteDto) {
-    const { accountId, category } = dataQuery;
+  async getFavorites(category: Category, auth: Auth) {
+    const { _id } = auth;
+
     const array: Category[] = category ? [category] : ['itinerary', 'location'];
 
     const promise = array.map((category: Category) => {
       const aggregate: PipelineStage[] = [
         {
-          $match: { accountId: new mongoose.Types.ObjectId(accountId) },
+          $match: { accountId: new mongoose.Types.ObjectId(_id) },
         },
         {
           $lookup: {
@@ -35,7 +38,35 @@ export class FavoriteService {
       ];
 
       if (category === 'itinerary') {
-        aggregate.push({ $match: { locationId: { $exists: false } } });
+        aggregate.push(
+          { $match: { locationId: { $exists: false } } },
+          {
+            $project: {
+              _id: 1,
+              accountId: 1,
+              name: '$itinerary.name',
+              cost: '$itinerary.cost',
+              people: '$itinerary.people',
+              type: '$itinerary.type',
+              startDate: '$itinerary.startDate',
+              endDate: '$itinerary.endDate',
+              days: {
+                $let: {
+                  vars: {
+                    diffInDays: {
+                      $divide: [
+                        { $subtract: [{ $toDate: '$itinerary.endDate' }, { $toDate: '$itinerary.startDate' }] },
+                        DAY_IN_MILISECONDS,
+                      ],
+                    },
+                  },
+                  in: { $add: ['$$diffInDays', 1] },
+                },
+              },
+              routes: '$itinerary.routes',
+            },
+          },
+        );
       } else {
         aggregate.push(
           { $match: { itineraryId: { $exists: false } } },
@@ -59,33 +90,37 @@ export class FavoriteService {
     const output = await Promise.all(promise);
     const data = [].concat(...output);
 
-    if (category === 'itinerary') {
-      data.map((item) => {
-        if (item.itinerary) {
-          return (item.itinerary = {
-            ...item.itinerary,
-            days: handleDurationTime(item.itinerary.startDate, item.itinerary.endDate).diffInDays,
-          });
-        }
-        return item;
-      });
-    }
-
     return data;
   }
 
-  async checkExistedFavorite(dto: FavoriteDto) {
-    const { accountId, locationId, itineraryId } = dto;
+  async hasPermissionDeleteFavorite(auth: Auth, favoriteId: ObjectId) {
+    const favorite = await this.favoriteRepo.findOne({ _id: favoriteId }).lean();
+
+    const { _id, role } = auth;
+
+    if (role !== Role.ADMIN) {
+      if (favorite.accountId.toString() !== _id)
+        return { message: 'You do not have permission to delete this favorite' };
+    }
+
+    return null;
+  }
+
+  async checkExistedFavorite(dto: FavoriteDto, auth: Auth) {
+    const { locationId, itineraryId } = dto;
+    const { _id } = auth;
+
     if (locationId) {
       const favorite = await this.favoriteRepo.findOne({
-        accountId: new mongoose.Types.ObjectId(accountId),
+        accountId: new mongoose.Types.ObjectId(_id),
         locationId: new mongoose.Types.ObjectId(locationId),
       });
       return Boolean(favorite);
     }
+
     if (itineraryId) {
       const favorite = await this.favoriteRepo.findOne({
-        accountId: new mongoose.Types.ObjectId(accountId),
+        accountId: new mongoose.Types.ObjectId(_id),
         itineraryId: new mongoose.Types.ObjectId(itineraryId),
       });
       return Boolean(favorite);
@@ -97,43 +132,48 @@ export class FavoriteService {
     return Boolean(favorite);
   }
 
-  async addToFavorite(dto: FavoriteDto) {
-    const { accountId, locationId, itineraryId } = dto;
+  async addFavorite(dto: FavoriteDto, auth: Auth) {
+    const { locationId, itineraryId } = dto;
+    const { _id } = auth;
+
     if (locationId) {
       const favorite = await new this.favoriteRepo({
-        accountId: new mongoose.Types.ObjectId(accountId),
+        accountId: new mongoose.Types.ObjectId(_id),
         locationId: new mongoose.Types.ObjectId(locationId),
       }).save();
       return favorite;
     }
     if (itineraryId) {
       const favorite = await new this.favoriteRepo({
-        accountId: new mongoose.Types.ObjectId(accountId),
+        accountId: new mongoose.Types.ObjectId(_id),
         itineraryId: new mongoose.Types.ObjectId(itineraryId),
       }).save();
       return favorite;
     }
   }
 
-  async removeToFavorite(dto: FavoriteDto) {
-    const { accountId, locationId, itineraryId } = dto;
+  async removeFavorite(dto: FavoriteDto, auth: Auth) {
+    const { locationId, itineraryId } = dto;
+    const { _id } = auth;
+
     if (locationId) {
       const favorite = await this.favoriteRepo.deleteOne({
-        accountId: new mongoose.Types.ObjectId(accountId),
+        accountId: new mongoose.Types.ObjectId(_id),
         locationId: new mongoose.Types.ObjectId(locationId),
       });
       return favorite;
     }
+
     if (itineraryId) {
       const favorite = await this.favoriteRepo.deleteOne({
-        accountId: new mongoose.Types.ObjectId(accountId),
+        accountId: new mongoose.Types.ObjectId(_id),
         itineraryId: new mongoose.Types.ObjectId(itineraryId),
       });
       return favorite;
     }
   }
 
-  async removeToFavoriteById(id: ObjectId) {
+  async removeFavoriteById(id: ObjectId) {
     const favorite = await this.favoriteRepo.deleteOne({ _id: id });
 
     return favorite;

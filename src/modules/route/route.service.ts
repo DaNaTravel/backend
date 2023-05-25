@@ -1,10 +1,11 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
 import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
-import { getPagination, handleDurationTime } from 'src/utils';
-import { ItinerariesByAccountQueryDto } from './dto';
+import { Role, getPagination, handleDurationTime } from 'src/utils';
+import { ItinerariesByAccountQueryDto, UpdateItineraryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
+import { Auth } from 'src/core/decorator';
 @Injectable()
 export class RouteService {
   private locations: Location[] = [];
@@ -29,15 +30,15 @@ export class RouteService {
     };
   }
 
-  async getItinerariesByAccountId(filterCondition: ItinerariesByAccountQueryDto) {
+  async getItinerariesByAccountId(filterCondition: ItinerariesByAccountQueryDto, auth: Auth) {
     const { skip, take, page } = getPagination(filterCondition.page, filterCondition.take);
 
-    const { accountId, isPublic } = filterCondition;
+    const { isPublic } = filterCondition;
 
     const where: FilterQuery<unknown>[] = [];
 
-    if (accountId) {
-      where.push({ accountId: new mongoose.Types.ObjectId(accountId) });
+    if (auth._id) {
+      where.push({ accountId: new mongoose.Types.ObjectId(auth._id) });
     }
 
     if (isPublic !== undefined) {
@@ -51,6 +52,7 @@ export class RouteService {
         .limit(take)
         .lean(),
     ]);
+
     const output = itineraries.map((item) => {
       const { routes, startDate, endDate } = item;
       const { diffInDays } = handleDurationTime(startDate, endDate);
@@ -62,6 +64,7 @@ export class RouteService {
 
       return { ...item, days: diffInDays, routes: address.flat() };
     });
+
     return { count, page, output };
   }
 
@@ -103,6 +106,35 @@ export class RouteService {
 
       return { ...item, routes: address.flat() };
     });
+
     return { count, page, output };
+  }
+
+  async hasPermission(auth: Auth, itineraryId: string) {
+    const itinerary = await this.itineraryRepo.findOne({ _id: new mongoose.Types.ObjectId(itineraryId) }).lean();
+
+    const { _id, role } = auth;
+
+    if (role !== Role.ADMIN) {
+      if (itinerary.accountId.toString() !== _id) return { message: 'You do not have permission to do this function.' };
+    }
+
+    return null;
+  }
+
+  async updateItinerary(dto: UpdateItineraryDto, id: string) {
+    const updatedItinerary = await this.itineraryRepo
+      .findOneAndUpdate({ _id: new mongoose.Types.ObjectId(id) }, { ...dto }, { new: true })
+      .lean();
+
+    const { _id, name, isPublic } = updatedItinerary;
+
+    return { _id, name, isPublic };
+  }
+
+  async deleteItinerary(id: string) {
+    const output = await this.itineraryRepo.deleteOne({ _id: new mongoose.Types.ObjectId(id) }).lean();
+
+    return output;
   }
 }
