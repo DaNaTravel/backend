@@ -49,6 +49,32 @@ export class AccountUpdateDto {
   avatar: string = AVATAR_DEFAULT;
 }
 
+export class passwordDto {
+  @IsString()
+  @MinLength(8)
+  @MaxLength(50)
+  @Matches(/([A-Za-z]+[0-9]|[0-9]+[A-Za-z])[A-Za-z0-9]*/, {
+    message: 'Password must include at least 1 number and 1 character',
+  })
+  currentPassword: string;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(50)
+  @Matches(/([A-Za-z]+[0-9]|[0-9]+[A-Za-z])[A-Za-z0-9]*/, {
+    message: 'Password must include at least 1 number and 1 character',
+  })
+  newPassword: string;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(50)
+  @Matches(/([A-Za-z]+[0-9]|[0-9]+[A-Za-z])[A-Za-z0-9]*/, {
+    message: 'Password must include at least 1 number and 1 character',
+  })
+  confirmPassword: string;
+}
+
 export class SignInDto {
   @IsEmail()
   @MaxLength(100)

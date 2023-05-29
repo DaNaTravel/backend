@@ -3,7 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
-import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, AccountUpdateDto } from './dto';
+import {
+  AccountCreateDto,
+  GoogleAccountDto,
+  SignInDto,
+  FacebookAccountDto,
+  AccountUpdateDto,
+  passwordDto,
+} from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
 import { JwtService } from '@nestjs/jwt';
@@ -172,5 +179,19 @@ export class AccountService {
       .select('-__v -updatedAt -createdAt -password -isConfirmed -role ');
     console.log(updatedProfile);
     return updatedProfile;
+  }
+
+  async changePassword(id: string, data: passwordDto) {
+    const account = await this.accountRepo.findById(id);
+    const isCorrect = compareHash(data.currentPassword, account.password);
+    if (isCorrect) {
+      if (data.currentPassword == data.newPassword)
+        return [false, 'New password must be different from the old password'];
+      else if (data.newPassword === data.confirmPassword) {
+        const password = hashPassword(data.confirmPassword);
+        await this.accountRepo.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(id) }, { password }, { new: true });
+        return [true];
+      } else return [false, 'Password not match'];
+    } else return [false, 'Password incorrect'];
   }
 }

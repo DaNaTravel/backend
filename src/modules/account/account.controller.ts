@@ -24,6 +24,7 @@ import {
   FacebookAccountDto,
   EmailConfirmationDto,
   AccountUpdateDto,
+  passwordDto,
 } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
@@ -245,6 +246,17 @@ export class AccountController {
     return {
       message: 'Success',
       data: updatedProfile,
+    };
+  }
+
+  @Patch('/change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(@GetAuth() auth: Auth, @Body() data: passwordDto) {
+    const updatedInfo = await this.accountService.changePassword(auth._id, data);
+    if (updatedInfo[0] === false) throw new BadRequestException(updatedInfo[1]);
+    return {
+      message: 'Success',
+      data: null,
     };
   }
 }
