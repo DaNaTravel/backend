@@ -21,6 +21,9 @@ import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, Emai
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from './token.service';
+import { ObjectId } from 'mongoose';
+import { Auth, GetAuth } from 'src/core/decorator';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
 
 @Controller('/accounts')
 export class AccountController {
@@ -166,7 +169,7 @@ export class AccountController {
         data: null,
       });
     }
-    const emailUpdated = await this.accountService.updateConfirmEmail(email);
+    await this.accountService.updateConfirmEmail(email);
 
     return {
       message: 'Email is confirmed',
@@ -211,6 +214,17 @@ export class AccountController {
     return {
       message: 'Reset assword error',
       data: null,
+    };
+  }
+
+  @Get('/profile')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@GetAuth() auth: Auth) {
+    const profile = await this.accountService.getProfile(auth._id);
+    if (!profile) throw new BadRequestException('Bad Request');
+    return {
+      message: 'Success',
+      data: profile,
     };
   }
 }

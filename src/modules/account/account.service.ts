@@ -7,7 +7,6 @@ import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto } fro
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
 import { JwtService } from '@nestjs/jwt';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common/exceptions';
 
 @Injectable()
 export class AccountService {
@@ -34,6 +33,7 @@ export class AccountService {
 
     const newAccount = await new this.accountRepo({
       ...data,
+      phone: null,
       password: passwordHash,
     }).save();
 
@@ -157,5 +157,12 @@ export class AccountService {
     await this.accountRepo.findOneAndUpdate({ email }, { password: passwordHash }, { new: true }).lean();
 
     return newPassword;
+  }
+
+  async getProfile(id: string) {
+    const profile = await this.accountRepo
+      .findById(id)
+      .select('-__v -updatedAt -createdAt -password -isConfirmed -role ');
+    return profile;
   }
 }
