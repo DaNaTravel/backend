@@ -122,7 +122,7 @@ export class LocationService {
           },
           { $skip: skip },
           { $limit: take },
-          { $project: { favorites: false } }, // Loại bỏ trường favorites sau khi đã sắp xếp
+          { $project: { favorites: false } },
         ])
         .exec(),
     ]);
