@@ -89,17 +89,7 @@ export class FavoriteService {
 
     const output = await Promise.all(promise);
     const data = [].concat(...output);
-    if (category === 'itinerary') {
-      data.map((item) => {
-        if (item.itinerary) {
-          return (item.itinerary = {
-            ...item.itinerary,
-            days: handleDurationTime(item.itinerary.startDate, item.itinerary.endDate).diffInDays,
-          });
-        }
-        return item;
-      });
-    }
+
     return data;
   }
 
