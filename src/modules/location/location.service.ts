@@ -94,22 +94,37 @@ export class LocationService {
     const [count, listLocations] = await Promise.all([
       this.locationRepo.find(where.length ? { $and: where } : {}).count(),
       this.locationRepo
-        .find(where.length ? { $and: where } : {}, {
-          _id: true,
-          name: true,
-          overview: true,
-          photos: true,
-          weekday_text: true,
-          formatted_address: true,
-          latitude: true,
-          longitude: true,
-          reviews: true,
-          types: true,
-          user_ratings_total: true,
-        })
-        .skip(skip)
-        .limit(take)
-        .lean(),
+        .aggregate([
+          { $match: where.length ? { $and: where } : {} },
+          {
+            $lookup: {
+              from: 'favorites',
+              localField: '_id',
+              foreignField: 'locationId',
+              as: 'favorites',
+            },
+          },
+          { $sort: { 'favorites.length': -1 } },
+          {
+            $project: {
+              _id: true,
+              name: true,
+              overview: true,
+              photos: true,
+              weekday_text: true,
+              formatted_address: true,
+              latitude: true,
+              longitude: true,
+              reviews: true,
+              types: true,
+              user_ratings_total: true,
+            },
+          },
+          { $skip: skip },
+          { $limit: take },
+          { $project: { favorites: false } }, // Loại bỏ trường favorites sau khi đã sắp xếp
+        ])
+        .exec(),
     ]);
 
     return { count, page, listLocations };
