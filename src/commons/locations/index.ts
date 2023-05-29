@@ -9,9 +9,10 @@ export class LocationOptions {
   travelTime: string;
   cost: number;
   description: any;
+  types: string[];
 
   constructor(location: LocationDto) {
-    const { latitude, longitude, openTimes, time, cost, description } = location;
+    const { latitude, longitude, openTimes, time, cost, description, types } = location;
 
     this.latitude = latitude;
     this.longitude = longitude;
@@ -19,6 +20,7 @@ export class LocationOptions {
     this.time = time;
     this.cost = cost;
     this.description = description;
+    this.types = types;
   }
 
   set times(time: ActiveTime) {
@@ -48,6 +50,7 @@ export class LocationOptions {
       latitude: this.latitude,
       longitude: this.longitude,
       address: this.description.formatted_address || null,
+      types: this.types,
       openTimes: openTimes,
       rating: this.description.rating || null,
       photos: this.description.photos ? this.description.photos[0].photo_reference : null,
@@ -85,4 +88,8 @@ export class LocationDto {
 
   @IsOptional()
   description: any;
+
+  @IsOptional()
+  @IsArray()
+  types: string[];
 }
