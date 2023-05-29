@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
-import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto } from './dto';
+import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, AccountUpdateDto } from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
 import { JwtService } from '@nestjs/jwt';
@@ -164,5 +164,13 @@ export class AccountService {
       .findById(id)
       .select('-__v -updatedAt -createdAt -password -isConfirmed -role ');
     return profile;
+  }
+
+  async updatedProfile(id: string, changedInfo: AccountUpdateDto) {
+    const updatedProfile = await this.accountRepo
+      .findOneAndUpdate({ _id: new mongoose.Types.ObjectId(id) }, { ...changedInfo }, { new: true })
+      .select('-__v -updatedAt -createdAt -password -isConfirmed -role ');
+    console.log(updatedProfile);
+    return updatedProfile;
   }
 }

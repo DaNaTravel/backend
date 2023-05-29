@@ -30,6 +30,25 @@ export class AccountCreateDto {
   avatar: string = AVATAR_DEFAULT;
 }
 
+export class AccountUpdateDto {
+  @IsEmail()
+  @IsOptional()
+  @MaxLength(100)
+  email: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(200)
+  @Matches(/^(?=.{1,40}$)[a-zA-Z]+(?:[-'\s][a-zA-Z]+)*$/, {
+    message: 'Name contains only alphabets',
+  })
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  avatar: string = AVATAR_DEFAULT;
+}
+
 export class SignInDto {
   @IsEmail()
   @MaxLength(100)

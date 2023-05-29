@@ -6,7 +6,7 @@ import {
   Get,
   UseGuards,
   Req,
-  Param,
+  Patch,
   UnauthorizedException,
   NotFoundException,
   Query,
@@ -17,11 +17,17 @@ import { Role } from 'src/utils';
 import { AccountService } from './account.service';
 import { GoogleAuthGuard } from '../../guards/google.guard';
 import { RefreshAuthGuard } from 'src/guards/refresh.guard';
-import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, EmailConfirmationDto } from './dto';
+import {
+  AccountCreateDto,
+  GoogleAccountDto,
+  SignInDto,
+  FacebookAccountDto,
+  EmailConfirmationDto,
+  AccountUpdateDto,
+} from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from './token.service';
-import { ObjectId } from 'mongoose';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 
@@ -225,6 +231,20 @@ export class AccountController {
     return {
       message: 'Success',
       data: profile,
+    };
+  }
+
+  @Patch('/profile')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(@GetAuth() auth: Auth, @Body() changedInfo: AccountUpdateDto) {
+    if (!Object.keys(changedInfo).length) {
+      throw new BadRequestException('No changes found');
+    }
+    const updatedProfile = await this.accountService.updatedProfile(auth._id, changedInfo);
+    if (!updatedProfile) throw new BadRequestException('Bad Request');
+    return {
+      message: 'Success',
+      data: updatedProfile,
     };
   }
 }
