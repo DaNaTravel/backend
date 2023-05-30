@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model, ObjectId } from 'mongoose';
+import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
 import {
@@ -10,10 +10,12 @@ import {
   FacebookAccountDto,
   AccountUpdateDto,
   PasswordDto,
+  AccountQueryDto,
 } from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
 import { JwtService } from '@nestjs/jwt';
+import { getPagination } from 'src/utils';
 
 @Injectable()
 export class AccountService {
@@ -208,6 +210,37 @@ export class AccountService {
       })
       .exec();
     return deletedAccounts.deletedCount;
+  }
+
+  async getListUsers(query: AccountQueryDto) {
+    const { keyword } = query;
+
+    const { page, take, skip } = getPagination(query.page, query.take);
+
+    const where: FilterQuery<unknown>[] = [];
+    if (keyword && keyword.length) {
+      where.push({
+        $or: [{ name: { $regex: keyword, $options: 'i' } }, { email: { $regex: keyword, $options: 'i' } }],
+      });
+    }
+
+    const [count, listAccount] = await Promise.all([
+      this.accountRepo.find(where.length ? { $and: where } : {}).count(),
+      this.accountRepo
+        .find(where.length ? { $and: where } : {}, {
+          _id: true,
+          email: true,
+          name: true,
+          role: true,
+          isConfirmed: true,
+          isActive: true,
+        })
+        .skip(skip)
+        .limit(take)
+        .lean(),
+    ]);
+
+    return { count, page, listAccount };
   }
 
   // async getDataDashboard() {}

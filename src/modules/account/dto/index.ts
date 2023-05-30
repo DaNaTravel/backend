@@ -10,7 +10,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Role } from 'src/utils';
+import { Pagination, Role } from 'src/utils';
 import { AVATAR_DEFAULT } from '../../../constants';
 import { ObjectId } from 'mongoose';
 
@@ -157,4 +157,9 @@ export class BlockedAccountBodyDto {
 export class DeletedAccountBodyDto {
   @IsArray()
   deletedIds: ObjectId[];
+}
+
+export class AccountQueryDto extends Pagination {
+  @IsOptional()
+  keyword: string;
 }

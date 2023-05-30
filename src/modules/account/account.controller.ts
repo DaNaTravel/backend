@@ -28,6 +28,7 @@ import {
   PasswordDto,
   BlockedAccountBodyDto,
   DeletedAccountBodyDto,
+  AccountQueryDto,
 } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
@@ -284,6 +285,19 @@ export class AccountController {
       throw new UnauthorizedException({ message: 'You do not have permission', data: null });
     const data = await this.accountService.deleteAccounts(body.deletedIds);
     if (!data) throw new BadRequestException('Request fail!!!');
+    return {
+      message: 'Success',
+      data: data,
+    };
+  }
+
+  @Get('/all')
+  @UseGuards(JwtAuthGuard)
+  async getListUsers(@GetAuth() auth: Auth, @Query() dto: AccountQueryDto) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+    const data = await this.accountService.getListUsers(dto);
+    if (!data) throw new BadRequestException('Bad Request');
     return {
       message: 'Success',
       data: data,
