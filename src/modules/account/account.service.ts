@@ -176,9 +176,9 @@ export class AccountService {
     return profile;
   }
 
-  async updatedProfile(id: string, changedInfo: AccountUpdateDto) {
+  async updatedProfile(id: string | ObjectId, changedInfo: AccountUpdateDto) {
     const updatedProfile = await this.accountRepo
-      .findOneAndUpdate({ _id: new mongoose.Types.ObjectId(id) }, { ...changedInfo }, { new: true })
+      .findByIdAndUpdate(id, { ...changedInfo }, { new: true })
       .select('-__v -updatedAt -createdAt -password -isConfirmed -role ');
     console.log(updatedProfile);
     return updatedProfile;

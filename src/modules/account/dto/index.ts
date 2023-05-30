@@ -42,6 +42,10 @@ export class AccountCreateDto {
 }
 
 export class AccountUpdateDto {
+  @IsMongoId()
+  @IsOptional()
+  accountId: ObjectId;
+
   @IsEmail()
   @IsOptional()
   @MaxLength(100)
