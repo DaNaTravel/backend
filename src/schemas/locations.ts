@@ -34,6 +34,18 @@ export class Location {
   types: string[];
 
   @Prop()
+  stayTime: number;
+
+  @Prop()
+  delayTime: number;
+
+  @Prop()
+  cost: number;
+
+  @Prop()
+  period: string[];
+
+  @Prop()
   user_ratings_total: number;
 
   @Prop()

@@ -356,37 +356,6 @@ export class GeneticService implements OnApplicationBootstrap {
     return { bestDistance, bestFinalRoute: travelRoute, fitness: bestFitness };
   }
 
-  async getRoutes(dto: RouteQueryDto, auth: Auth) {
-    let types: LocationTypes[] = [];
-    switch (dto.type) {
-      case TravelType.NATURAL:
-        types = [LocationTypes.NATURAL_FEATURE, LocationTypes.PARK, LocationTypes.AMUSEMENT_PARK];
-        break;
-      case TravelType.HISTORICAL:
-        types = [LocationTypes.CHURCH, LocationTypes.MUSEUM];
-        break;
-      case TravelType.ART:
-        types = [LocationTypes.MUSEUM];
-        break;
-      case TravelType.CULINARY:
-        types = [LocationTypes.CAFE, LocationTypes.RESTAURANT, LocationTypes.FOOD];
-        break;
-      case TravelType.RELAX:
-        types = [
-          LocationTypes.PARK,
-          LocationTypes.CAFE,
-          LocationTypes.TOURIST_ATTRACTION,
-          LocationTypes.RESTAURANT,
-          LocationTypes.FOOD,
-        ];
-        break;
-      default:
-        types = [];
-    }
-
-    return this.createNewRoute(dto, types, auth);
-  }
-
   async checkExistedItinerary(_id: string) {
     const itinerary = await this.itineraryRepo.findOne({ _id }).lean();
 
@@ -422,38 +391,30 @@ export class GeneticService implements OnApplicationBootstrap {
     return routes;
   }
 
-  async createNewRoute(dto: RouteQueryDto, locationTypes: LocationTypes[], auth: Auth) {
+  async createNewRoute(dto: RouteQueryDto, auth: Auth) {
     const { latitude, longitude, startDate, endDate, ...data } = dto;
 
-    if (locationTypes.length)
-      this.locations = await this.locationRepo
-        .find(
-          { types: { $in: locationTypes } },
-          {
-            _id: true,
-            name: true,
-            latitude: true,
-            longitude: true,
-            rating: true,
-            formatted_address: true,
-            opening_hours: true,
-            photos: true,
-          },
-        )
-        .lean();
+    this.locations = await this.locationRepo
+      .find(
+        {},
+        {
+          _id: true,
+          name: true,
+          latitude: true,
+          longitude: true,
+          rating: true,
+          formatted_address: true,
+          opening_hours: true,
+          photos: true,
+        },
+      )
+      .lean();
 
-    const startPoint = getLocation({
-      latitude,
-      longitude,
-      description: { name: 'Start Point', address: 'Start Point' },
-    } as LocationDto);
-    const { totalDays, routesInfo } = await this.nearestNeighborAlgorithm(startDate, endDate, startPoint);
-
-    if (routesInfo[0].length < 3) return null;
-    const routes = this.getBestRoute(routesInfo);
+    const routes = this.generateBestRoutes(dto);
+    const { diffInDays } = handleDurationTime(startDate, endDate);
 
     if (!auth._id) {
-      return { _id: null, accountId: null, totalDays, type: dto.type, people: dto.people, cost: 0, routes };
+      return { _id: null, accountId: null, totalDays: diffInDays, type: dto.type, people: dto.people, cost: 0, routes };
     }
 
     const newItinerary = await new this.itineraryRepo({
@@ -466,7 +427,7 @@ export class GeneticService implements OnApplicationBootstrap {
 
     const { _id, accountId, type, people, cost } = newItinerary;
 
-    return { _id, accountId, totalDays, type, people, cost, routes };
+    return { _id, accountId, totalDays: diffInDays, type, people, cost, routes };
   }
 
   async getLocationOptions(route: Point[], day: string) {
@@ -614,7 +575,7 @@ export class GeneticService implements OnApplicationBootstrap {
     return listPointDetails;
   }
 
-  async check(dto: RouteQueryDto) {
+  generateBestRoutes(dto: RouteQueryDto) {
     const { latitude, longitude, startDate, endDate, type, ...data } = dto;
     this.type = type;
 
@@ -669,6 +630,6 @@ export class GeneticService implements OnApplicationBootstrap {
       return sortedRoutes[0];
     });
 
-    return { _id: null, accountId: null, totalDays: diffInDays, type, people: 2, cost: 0, routes: routes };
+    return routes;
   }
 }

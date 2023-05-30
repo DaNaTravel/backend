@@ -2,7 +2,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
 import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Role, getPagination, handleDurationTime } from 'src/utils';
-import { ItinerariesByAccountQueryDto, UpdateItineraryDto } from './dto';
+import { ACCESS, ItinerariesByAccountQueryDto, UpdateItineraryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
 import { Auth } from 'src/core/decorator';
@@ -33,11 +33,11 @@ export class RouteService {
   async getItinerariesByAccountId(filterCondition: ItinerariesByAccountQueryDto, auth: Auth) {
     const { skip, take, page } = getPagination(filterCondition.page, filterCondition.take);
 
-    const { isPublic } = filterCondition;
+    const { isPublic, access } = filterCondition;
 
     const where: FilterQuery<unknown>[] = [];
 
-    if (auth._id) {
+    if (access === ACCESS.private && auth._id) {
       where.push({ accountId: new mongoose.Types.ObjectId(auth._id) });
     }
 

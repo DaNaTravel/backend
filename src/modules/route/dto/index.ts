@@ -62,6 +62,11 @@ export class UpdateItineraryDto {
   isPublic: boolean;
 }
 
+export enum ACCESS {
+  public = 'public',
+  private = 'private',
+}
+
 export class ItinerariesByAccountQueryDto extends Pagination {
   @IsOptional()
   keyword: string;
@@ -74,4 +79,8 @@ export class ItinerariesByAccountQueryDto extends Pagination {
 
   @IsOptional()
   type: TravelType;
+
+  @IsOptional()
+  @IsEnum(ACCESS)
+  access = ACCESS.public;
 }
