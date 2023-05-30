@@ -22,7 +22,7 @@ import { GeneticService } from './genetic.service';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { OptionalAuthGuard } from 'src/guards/optional-jwt.guard';
-import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto } from './dto';
+import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto, ACCESS } from './dto';
 
 @Controller('routes')
 export class RouteController {
@@ -32,8 +32,7 @@ export class RouteController {
   @Post()
   @UseGuards(OptionalAuthGuard)
   async getItineraries(@Query() dto: RouteQueryDto, @GetAuth() auth: Auth) {
-    const routes = await this.geneticService.getRoutes(dto, auth);
-
+    const routes = await this.geneticService.createNewRoute(dto, auth);
     if (!routes)
       throw new BadRequestException({
         message: 'There is no suitable route.',
@@ -132,20 +131,12 @@ export class RouteController {
     };
   }
 
-  @Get('/check')
-  @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
-  async check(@Query() dto: RouteQueryDto) {
-    const data = await this.geneticService.check(dto);
-
-    return {
-      message: 'Success',
-      data,
-    };
-  }
-
   @Get('')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   async getItinerariesByAccountId(@Query() dataQuery: ItinerariesByAccountQueryDto, @GetAuth() auth: Auth) {
+    if (dataQuery.access === ACCESS.private && Boolean(auth._id) === false)
+      throw new UnauthorizedException({ message: `Please sign in to view your itinraries.`, data: null });
+
     const itineraries = await this.routeService.getItinerariesByAccountId(dataQuery, auth);
     return {
       message: 'Success',

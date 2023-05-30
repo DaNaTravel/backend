@@ -26,8 +26,8 @@ export const JWT_CONFIRM_SECRET_KEY = config.get('JWT_CONFIRM_SECRET_KEY');
 export const DEFAULT_BEST_PARAM = {
   MUTATION_RATE: 0.005,
   NUM_GENS: 50,
-  POPULATION_SIZE: 500,
-  NUM_ELITES: 250,
+  POPULATION_SIZE: 10,
+  NUM_ELITES: 5,
 };
 
 export const BEST_PARAMS = [
@@ -89,5 +89,6 @@ export const BEST_PARAMS = [
 
 export const START_TIME = 420;
 export const END_TIME = 1350;
-export const STAY_TIME = 90;
+export const STAY_TIME = 120;
+export const ARRIVAl_TIME = 30;
 export const DAY_IN_MILISECONDS = 1000 * 60 * 60 * 24;

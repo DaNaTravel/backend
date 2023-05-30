@@ -66,7 +66,7 @@ export const typeScore = (types: string[], locationTypes: string[]) => {
 };
 
 export const fitness = (distance: number, type: number) => {
-  return 1 / (Math.pow(distance, 4) + 1) + 10 / (Math.pow(type, 4) + 1);
+  return 5 / (Math.pow(distance, 4) + 1) + 2 / (Math.pow(type, 4) + 1);
 };
 
 export const handleDurationTime = (

@@ -10,13 +10,15 @@ export class LocationOptions {
   cost: number;
   description: any;
   types: string[];
+  stayTime: number;
 
   constructor(location: LocationDto) {
-    const { latitude, longitude, openTimes, time, cost, description, types } = location;
+    const { latitude, longitude, openTimes, time, cost, description, types, stayTime } = location;
 
     this.latitude = latitude;
     this.longitude = longitude;
     this.openTimes = openTimes;
+    this.stayTime = stayTime;
     this.time = time;
     this.cost = cost;
     this.description = description;
@@ -92,4 +94,7 @@ export class LocationDto {
   @IsOptional()
   @IsArray()
   types: string[];
+
+  @IsOptional()
+  stayTime: number;
 }
