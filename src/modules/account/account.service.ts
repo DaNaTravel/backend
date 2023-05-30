@@ -201,5 +201,14 @@ export class AccountService {
     return blockedAccount;
   }
 
+  async deleteAccounts(blockedIds: ObjectId[]) {
+    const deletedAccounts = await this.accountRepo
+      .deleteMany({
+        _id: { $in: blockedIds },
+      })
+      .exec();
+    return deletedAccounts.deletedCount;
+  }
+
   // async getDataDashboard() {}
 }

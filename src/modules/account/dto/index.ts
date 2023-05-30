@@ -154,7 +154,7 @@ export class BlockedAccountBodyDto {
   blockedId: ObjectId;
 }
 
-// export class DeletedAccountBodyDto {
-//   @IsArray()
-//   deletedIds: ObjectId[];
-// }
+export class DeletedAccountBodyDto {
+  @IsArray()
+  deletedIds: ObjectId[];
+}

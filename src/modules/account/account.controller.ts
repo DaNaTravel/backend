@@ -10,7 +10,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   Query,
-  // Delete,
+  Delete,
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { Request } from 'express';
@@ -27,14 +27,13 @@ import {
   AccountUpdateDto,
   PasswordDto,
   BlockedAccountBodyDto,
-  // DeletedAccountBodyDto,
+  DeletedAccountBodyDto,
 } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from './token.service';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
-import { ObjectId } from 'mongoose';
 
 @Controller('/accounts')
 export class AccountController {
@@ -278,18 +277,18 @@ export class AccountController {
     };
   }
 
-  // @Delete('/delete')
-  // @UseGuards(JwtAuthGuard)
-  // async deleteAccounts(@GetAuth() auth: Auth, @Body() body: DeletedAccountBodyDto) {
-  //   if (auth.role !== Role.ADMIN)
-  //     throw new UnauthorizedException({ message: 'You do not have permission', data: null });
-  //   const data = await this.accountService.deleteAccounts(body);
-  //   if (!data) throw new BadRequestException('Request fail!!!');
-  //   return {
-  //     message: 'Success',
-  //     data: data?.isActive,
-  //   };
-  // }
+  @Delete('/delete')
+  @UseGuards(JwtAuthGuard)
+  async deleteAccounts(@GetAuth() auth: Auth, @Body() body: DeletedAccountBodyDto) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+    const data = await this.accountService.deleteAccounts(body.deletedIds);
+    if (!data) throw new BadRequestException('Request fail!!!');
+    return {
+      message: 'Success',
+      data: data,
+    };
+  }
 
   // @Get('/dashboard')
   // @UseGuards(JwtAuthGuard)
