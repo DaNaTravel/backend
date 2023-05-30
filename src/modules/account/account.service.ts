@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, ObjectId } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
 import {
@@ -9,7 +9,7 @@ import {
   SignInDto,
   FacebookAccountDto,
   AccountUpdateDto,
-  passwordDto,
+  PasswordDto,
 } from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
@@ -41,6 +41,7 @@ export class AccountService {
     const newAccount = await new this.accountRepo({
       ...data,
       phone: null,
+      isActive: true,
       password: passwordHash,
     }).save();
 
@@ -181,7 +182,7 @@ export class AccountService {
     return updatedProfile;
   }
 
-  async changePassword(id: string, data: passwordDto) {
+  async changePassword(id: string, data: PasswordDto) {
     const account = await this.accountRepo.findById(id);
     const isCorrect = compareHash(data.currentPassword, account.password);
     if (isCorrect) {
@@ -194,4 +195,11 @@ export class AccountService {
       } else return [false, 'Password not match'];
     } else return [false, 'Password incorrect'];
   }
+
+  async blockAccount(blockedId: ObjectId) {
+    const blockedAccount = await this.accountRepo.findByIdAndUpdate(blockedId, { isActive: false }, { new: true });
+    return blockedAccount;
+  }
+
+  // async getDataDashboard() {}
 }

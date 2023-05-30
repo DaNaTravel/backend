@@ -10,6 +10,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   Query,
+  // Delete,
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { Request } from 'express';
@@ -24,13 +25,16 @@ import {
   FacebookAccountDto,
   EmailConfirmationDto,
   AccountUpdateDto,
-  passwordDto,
+  PasswordDto,
+  BlockedAccountBodyDto,
+  // DeletedAccountBodyDto,
 } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from './token.service';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
+import { ObjectId } from 'mongoose';
 
 @Controller('/accounts')
 export class AccountController {
@@ -251,7 +255,7 @@ export class AccountController {
 
   @Patch('/change-password')
   @UseGuards(JwtAuthGuard)
-  async changePassword(@GetAuth() auth: Auth, @Body() data: passwordDto) {
+  async changePassword(@GetAuth() auth: Auth, @Body() data: PasswordDto) {
     const updatedInfo = await this.accountService.changePassword(auth._id, data);
     if (updatedInfo[0] === false) throw new BadRequestException(updatedInfo[1]);
     return {
@@ -259,4 +263,45 @@ export class AccountController {
       data: null,
     };
   }
+
+  @Patch('/block')
+  @UseGuards(JwtAuthGuard)
+  async blockAccount(@GetAuth() auth: Auth, @Body() body: BlockedAccountBodyDto) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+    console.log(body.blockedId);
+    const data = await this.accountService.blockAccount(body.blockedId);
+    if (!data) throw new BadRequestException('Request fail!!!');
+    return {
+      message: 'Success',
+      data: data?.isActive,
+    };
+  }
+
+  // @Delete('/delete')
+  // @UseGuards(JwtAuthGuard)
+  // async deleteAccounts(@GetAuth() auth: Auth, @Body() body: DeletedAccountBodyDto) {
+  //   if (auth.role !== Role.ADMIN)
+  //     throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+  //   const data = await this.accountService.deleteAccounts(body);
+  //   if (!data) throw new BadRequestException('Request fail!!!');
+  //   return {
+  //     message: 'Success',
+  //     data: data?.isActive,
+  //   };
+  // }
+
+  // @Get('/dashboard')
+  // @UseGuards(JwtAuthGuard)
+  // async getDataDashboard(@GetAuth() auth: Auth, @Query() query: dashboardQueryDto) {
+  //   if (auth.role !== Role.ADMIN)
+  //     throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
+
+  //   const data = await this.accountService.getDataDashboard(query);
+  //   if (!data) throw new BadRequestException('Bad Request');
+  //   return {
+  //     message: 'Success',
+  //     data: data,
+  //   };
+  // }
 }

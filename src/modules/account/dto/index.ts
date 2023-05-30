@@ -1,6 +1,18 @@
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsMongoId,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { Role } from 'src/utils';
 import { AVATAR_DEFAULT } from '../../../constants';
+import { ObjectId } from 'mongoose';
 
 export class AccountCreateDto {
   @IsEmail()
@@ -49,7 +61,7 @@ export class AccountUpdateDto {
   avatar: string = AVATAR_DEFAULT;
 }
 
-export class passwordDto {
+export class PasswordDto {
   @IsString()
   @MinLength(8)
   @MaxLength(50)
@@ -129,10 +141,20 @@ export class FacebookAccountDto {
   avatar: string = AVATAR_DEFAULT;
 }
 
-export class resetPasswordTokenDto {
-  @IsString()
-  token: string;
+export class DashboardQueryDto {
+  @IsOptional()
+  month: number;
 
-  @IsBoolean()
-  isUsed: false;
+  @IsOptional()
+  year: number;
 }
+
+export class BlockedAccountBodyDto {
+  @IsMongoId()
+  blockedId: ObjectId;
+}
+
+// export class DeletedAccountBodyDto {
+//   @IsArray()
+//   deletedIds: ObjectId[];
+// }

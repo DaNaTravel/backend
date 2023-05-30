@@ -8,7 +8,6 @@ export type DayJS = dayjs.Dayjs;
 
 export enum Role {
   ADMIN,
-  OWNER,
   TRAVELER,
 }
 
