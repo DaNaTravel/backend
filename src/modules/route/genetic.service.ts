@@ -410,7 +410,7 @@ export class GeneticService implements OnApplicationBootstrap {
       )
       .lean();
 
-    const routes = this.getBestRoutes2(dto);
+    const routes = this.generateBestRoutes(dto);
     const { diffInDays } = handleDurationTime(startDate, endDate);
 
     if (!auth._id) {
@@ -575,7 +575,7 @@ export class GeneticService implements OnApplicationBootstrap {
     return listPointDetails;
   }
 
-  getBestRoutes2(dto: RouteQueryDto) {
+  generateBestRoutes(dto: RouteQueryDto) {
     const { latitude, longitude, startDate, endDate, type, ...data } = dto;
     this.type = type;
 
