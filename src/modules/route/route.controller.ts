@@ -156,7 +156,7 @@ export class RouteController {
     const itinerary = await this.routeService.getItinerary(itineraryId);
     if (!itinerary) throw new NotFoundException('Itinerary not found!');
 
-    if (!auth && itinerary.isPublic === false) throw new BadRequestException('You must not view this itinerary');
+    if (!auth && itinerary.isPublic === false) throw new UnauthorizedException('You must not view this itinerary');
     return {
       message: 'Success',
       data: itinerary,
