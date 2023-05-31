@@ -54,19 +54,21 @@ export class AccountService {
     const existedEmail = await this.accountRepo.findOne({ email: account.email }).lean();
 
     if (existedEmail) {
-      const { password, ...data } = existedEmail;
-      const isCorrect = compareHash(account.password, password);
+      if (existedEmail.isActive) {
+        const { password, ...data } = existedEmail;
+        const isCorrect = compareHash(account.password, password);
 
-      if (isCorrect) {
-        const payload = { _id: data._id, role: data.role };
+        if (isCorrect) {
+          const payload = { _id: data._id, role: data.role };
 
-        const { token, refreshToken } = await this.tokenService.generateToken(payload);
+          const { token, refreshToken } = await this.tokenService.generateToken(payload);
 
-        return {
-          _id: data._id,
-          token: token,
-          refreshToken: refreshToken,
-        };
+          return {
+            _id: data._id,
+            token: token,
+            refreshToken: refreshToken,
+          };
+        }
       }
     }
 
@@ -92,7 +94,9 @@ export class AccountService {
     let payload: any = {};
 
     if (existedEmail) {
-      payload = { _id: existedEmail._id, role: existedEmail.role };
+      if (existedEmail.isActive) {
+        payload = { _id: existedEmail._id, role: existedEmail.role };
+      } else return null;
     } else {
       const password = generate({
         length: 15,
