@@ -4,13 +4,14 @@ import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
 import {
-  AccountCreateDto,
+  AccountRegisterDto,
   GoogleAccountDto,
   SignInDto,
   FacebookAccountDto,
   AccountUpdateDto,
   PasswordDto,
   AccountQueryDto,
+  AccountCreateDto,
 } from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
@@ -36,7 +37,7 @@ export class AccountService {
     return account;
   }
 
-  async createAccount(account: AccountCreateDto) {
+  async registerAccount(account: AccountRegisterDto) {
     const { password, ...data } = account;
     const passwordHash = hashPassword(password);
 
@@ -251,6 +252,21 @@ export class AccountService {
     ]);
 
     return { count, page, listAccount };
+  }
+
+  async createAccount(account: AccountCreateDto) {
+    const { password, ...data } = account;
+    const passwordHash = hashPassword(password);
+
+    const newAccount = await new this.accountRepo({
+      ...data,
+      phone: null,
+      isActive: true,
+      isConfirmed: true,
+      password: passwordHash,
+    }).save();
+
+    return { _id: newAccount._id, role: newAccount.role };
   }
 
   // async getDataDashboard() {}

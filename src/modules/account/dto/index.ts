@@ -13,7 +13,7 @@ import { Pagination, Role } from 'src/utils';
 import { AVATAR_DEFAULT } from '../../../constants';
 import { ObjectId } from 'mongoose';
 
-export class AccountCreateDto {
+export class AccountRegisterDto {
   @IsEmail()
   @MaxLength(100)
   email: string;
@@ -41,6 +41,33 @@ export class AccountCreateDto {
   avatar: string = AVATAR_DEFAULT;
 }
 
+export class AccountCreateDto {
+  @IsEmail()
+  @MaxLength(100)
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(50)
+  @Matches(/([A-Za-z]+[0-9]|[0-9]+[A-Za-z])[A-Za-z0-9]*/, {
+    message: 'Password must include at least 1 number and 1 character',
+  })
+  password: string;
+
+  @IsString()
+  @MaxLength(200)
+  @Matches(/^(?=.{1,40}$)[a-zA-Z]+(?:[-'\s][a-zA-Z]+)*$/, {
+    message: 'Name contains only alphabets',
+  })
+  name: string;
+
+  @IsEnum(Role)
+  role: Role;
+
+  @IsOptional()
+  @IsString()
+  avatar: string = AVATAR_DEFAULT;
+}
 export class AccountUpdateDto {
   @IsMongoId()
   @IsOptional()

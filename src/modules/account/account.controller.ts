@@ -27,9 +27,9 @@ import {
   EmailConfirmationDto,
   AccountUpdateDto,
   PasswordDto,
-  BlockedAccountBodyDto,
   DeletedAccountBodyDto,
   AccountQueryDto,
+  AccountRegisterDto,
 } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
@@ -47,7 +47,7 @@ export class AccountController {
   ) {}
 
   @Post()
-  async createNewUser(@Body() account: AccountCreateDto) {
+  async registerNewUser(@Body() account: AccountRegisterDto) {
     const { email, role } = account;
 
     if (role === Role.ADMIN)
@@ -63,7 +63,7 @@ export class AccountController {
         data: null,
       });
 
-    const newAccount = await this.accountService.createAccount(account);
+    const newAccount = await this.accountService.registerAccount(account);
     await this.mailService.sendEmailConfirm(email, newAccount._id);
 
     return {
@@ -311,6 +311,26 @@ export class AccountController {
     return {
       message: 'Success',
       data: updatedProfile,
+    };
+  }
+
+  @Post('/create')
+  @UseGuards(JwtAuthGuard)
+  async createNewUser(@GetAuth() auth: Auth, @Body() account: AccountCreateDto) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+
+    const isExistEmail = await this.accountService.checkExistEmail(account.email);
+    if (isExistEmail)
+      throw new BadRequestException({
+        message: 'Email is existed',
+        data: null,
+      });
+
+    const newAccount = await this.accountService.createAccount(account);
+    return {
+      message: 'Success',
+      data: newAccount,
     };
   }
 
