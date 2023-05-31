@@ -29,7 +29,6 @@ import {
   PasswordDto,
   DeletedAccountBodyDto,
   AccountQueryDto,
-  AccountRegisterDto,
 } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
@@ -47,7 +46,7 @@ export class AccountController {
   ) {}
 
   @Post()
-  async registerNewUser(@Body() account: AccountRegisterDto) {
+  async registerNewUser(@Body() account: AccountCreateDto) {
     const { email, role } = account;
 
     if (role === Role.ADMIN)

@@ -4,7 +4,6 @@ import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
 import {
-  AccountRegisterDto,
   GoogleAccountDto,
   SignInDto,
   FacebookAccountDto,
@@ -37,12 +36,13 @@ export class AccountService {
     return account;
   }
 
-  async registerAccount(account: AccountRegisterDto) {
-    const { password, ...data } = account;
+  async registerAccount(account: AccountCreateDto) {
+    const { password, role, ...data } = account;
     const passwordHash = hashPassword(password);
 
     const newAccount = await new this.accountRepo({
       ...data,
+      role: 1,
       phone: null,
       isActive: true,
       password: passwordHash,
