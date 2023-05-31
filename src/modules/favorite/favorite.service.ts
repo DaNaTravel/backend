@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, ObjectId, PipelineStage } from 'mongoose';
-import { Category, DayJS, Role, handleDurationTime } from 'src/utils';
-import { FavoriteDto, ListsFavoriteDto } from './dto';
+import { Category, Role, handleDurationTime } from 'src/utils';
+import { FavoriteDto } from './dto';
 import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
 import { DAY_IN_MILISECONDS } from 'src/constants';
 import { Auth } from 'src/core/decorator';
@@ -175,7 +175,6 @@ export class FavoriteService {
 
   async removeFavoriteById(id: ObjectId) {
     const favorite = await this.favoriteRepo.deleteOne({ _id: id });
-
     return favorite;
   }
 }

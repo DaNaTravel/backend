@@ -75,7 +75,7 @@ export class FavoriteController {
   }
 
   @Get()
-  async getFavorite(@Query('category') category: Category, @GetAuth() auth: Auth) {
+  async getFavorites(@Query('category') category: Category, @GetAuth() auth: Auth) {
     const data = await this.favoriteService.getFavorites(category, auth);
 
     return {

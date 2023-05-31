@@ -10,6 +10,7 @@ import {
   BadRequestException,
   NotFoundException,
   Delete,
+  Patch,
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -18,7 +19,7 @@ import { Role } from 'src/utils';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { LocationService } from './location.service';
-import { LocationQueryDto, LocationDto } from './dto';
+import { LocationQueryDto, LocationDto, LocationUpdateDto } from './dto';
 
 @Controller('/locations')
 export class LocationController {
@@ -71,6 +72,28 @@ export class LocationController {
     return {
       mesage: 'Success',
       data: deletedItem,
+    };
+  }
+
+  @Patch('/update/:locationId')
+  @UseGuards(JwtAuthGuard)
+  async updateProfileUser(
+    @GetAuth() auth: Auth,
+    @Param('locationId') locationId: ObjectId,
+    @Body() changedInfo: LocationUpdateDto,
+  ) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+
+    if (!Object.keys(changedInfo).length) {
+      throw new BadRequestException('No changes found');
+    }
+
+    const updatedProfile = await this.locationService.updatedLocation(locationId, changedInfo);
+    if (!updatedProfile) throw new BadRequestException('Bad Request');
+    return {
+      message: 'Success',
+      data: updatedProfile,
     };
   }
 }
