@@ -24,6 +24,10 @@ export class LocationDto {
   @IsObject()
   opening_hours: OpeningHours;
 
+  @IsArray()
+  @IsOptional()
+  photos: { photo_reference: string }[];
+
   @IsString()
   formatted_address: string;
 
@@ -34,5 +38,43 @@ export class LocationDto {
   longitude: number;
 
   @IsArray()
+  types: [];
+}
+
+export class LocationUpdateDto {
+  @IsString()
+  @IsOptional()
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  overview: string;
+
+  @IsArray()
+  @IsOptional()
+  weekday_text: string[];
+
+  @IsObject()
+  @IsOptional()
+  opening_hours: OpeningHours;
+
+  @IsArray()
+  @IsOptional()
+  photos: { photo_reference: string }[];
+
+  @IsString()
+  @IsOptional()
+  formatted_address: string;
+
+  @IsLatitude()
+  @IsOptional()
+  latitude: number;
+
+  @IsLongitude()
+  @IsOptional()
+  longitude: number;
+
+  @IsArray()
+  @IsOptional()
   types: [];
 }

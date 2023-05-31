@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { convertOpeningHours, convertOpeningHoursToWeekdayText, getPagination, isValidOpeningHours } from 'src/utils';
-import { LocationDto, LocationQueryDto } from './dto';
+import { LocationDto, LocationQueryDto, LocationUpdateDto } from './dto';
 
 @Injectable()
 export class LocationService {
@@ -144,5 +144,12 @@ export class LocationService {
     ]);
 
     return { count, page, listLocations };
+  }
+
+  async updatedLocation(locationId: ObjectId, changedInfo: LocationUpdateDto) {
+    const updatedProfile = await this.locationRepo
+      .findByIdAndUpdate(locationId, { ...changedInfo }, { new: true })
+      .select('-__v -updatedAt -createdAt');
+    return updatedProfile;
   }
 }

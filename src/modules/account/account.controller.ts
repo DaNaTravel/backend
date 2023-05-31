@@ -6,6 +6,7 @@ import {
   Get,
   UseGuards,
   Req,
+  Param,
   Patch,
   UnauthorizedException,
   NotFoundException,
@@ -35,6 +36,7 @@ import { MailService } from '../mail/mail.service';
 import { TokenService } from './token.service';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
+import { ObjectId } from 'mongoose';
 
 @Controller('/accounts')
 export class AccountController {
@@ -304,9 +306,13 @@ export class AccountController {
     };
   }
 
-  @Patch('/admin')
+  @Patch('/admin/update/:accountId')
   @UseGuards(JwtAuthGuard)
-  async updateProfileUser(@GetAuth() auth: Auth, @Body() changedInfo: AccountUpdateDto) {
+  async updateProfileUser(
+    @GetAuth() auth: Auth,
+    @Param('accountId') accountId: ObjectId,
+    @Body() changedInfo: AccountUpdateDto,
+  ) {
     if (auth.role !== Role.ADMIN)
       throw new UnauthorizedException({ message: 'You do not have permission', data: null });
 
@@ -314,9 +320,7 @@ export class AccountController {
       throw new BadRequestException('No changes found');
     }
 
-    const id = changedInfo.accountId;
-    delete changedInfo.accountId;
-    const updatedProfile = await this.accountService.updatedProfile(id, changedInfo);
+    const updatedProfile = await this.accountService.updatedProfile(accountId, changedInfo);
     if (!updatedProfile) throw new BadRequestException('Bad Request');
     return {
       message: 'Success',

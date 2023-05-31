@@ -180,7 +180,6 @@ export class AccountService {
     const updatedProfile = await this.accountRepo
       .findByIdAndUpdate(id, { ...changedInfo }, { new: true })
       .select('-__v -updatedAt -createdAt -password -isConfirmed -role ');
-    console.log(updatedProfile);
     return updatedProfile;
   }
 
