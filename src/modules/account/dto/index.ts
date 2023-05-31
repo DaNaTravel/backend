@@ -62,6 +62,9 @@ export class AccountUpdateDto {
   @IsOptional()
   @IsString()
   avatar: string = AVATAR_DEFAULT;
+
+  @IsOptional()
+  isActive: boolean;
 }
 
 export class PasswordDto {

@@ -266,34 +266,20 @@ export class AccountController {
     };
   }
 
-  @Patch('/block')
-  @UseGuards(JwtAuthGuard)
-  async blockAccount(@GetAuth() auth: Auth, @Body() body: BlockedAccountBodyDto) {
-    if (auth.role !== Role.ADMIN)
-      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
-    console.log(body.blockedId);
-    const data = await this.accountService.blockAccount(body.blockedId);
-    if (!data) throw new BadRequestException('Request fail!!!');
-    return {
-      message: 'Success',
-      data: data?.isActive,
-    };
-  }
-
   @Delete('/delete')
   @UseGuards(JwtAuthGuard)
   async deleteAccounts(@GetAuth() auth: Auth, @Body() body: DeletedAccountBodyDto) {
     if (auth.role !== Role.ADMIN)
       throw new UnauthorizedException({ message: 'You do not have permission', data: null });
     const data = await this.accountService.deleteAccounts(body.deletedIds);
-    if (!data) throw new BadRequestException('Request fail!!!');
+    if (!data) throw new BadRequestException('Bad Request');
     return {
       message: 'Success',
       data: data,
     };
   }
 
-  @Get('/all')
+  @Get('/')
   @UseGuards(JwtAuthGuard)
   async getListUsers(@GetAuth() auth: Auth, @Query() dto: AccountQueryDto) {
     if (auth.role !== Role.ADMIN)
