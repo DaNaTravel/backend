@@ -48,22 +48,6 @@ export class LocationService {
     return location;
   }
 
-  async handleDataLocation() {
-    try {
-      const locations = await this.locationRepo.find().exec();
-      for (const location of locations) {
-        const updatedName = location.name.charAt(0).toUpperCase() + location.name.slice(1);
-        const updatedCost = location.cost < 1000 ? location.cost * 1000 : location.cost;
-
-        await this.locationRepo.updateOne({ _id: location._id }, { $set: { name: updatedName, cost: updatedCost } });
-      }
-
-      console.log('Location model have been updated.');
-    } catch (error) {
-      console.error('Error: ', error);
-    }
-  }
-
   async getDetailLocation(locationId: ObjectId) {
     const locationMain = await this.locationRepo.findById(locationId).lean();
 

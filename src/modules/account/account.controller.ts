@@ -266,7 +266,7 @@ export class AccountController {
     };
   }
 
-  @Delete('/delete')
+  @Delete()
   @UseGuards(JwtAuthGuard)
   async deleteAccounts(@GetAuth() auth: Auth, @Body() body: DeletedAccountBodyDto) {
     if (auth.role !== Role.ADMIN)
