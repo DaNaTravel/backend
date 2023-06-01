@@ -82,5 +82,5 @@ export class ItinerariesByAccountQueryDto extends Pagination {
 
   @IsOptional()
   @IsEnum(ACCESS)
-  access = ACCESS.public;
+  access: ACCESS = ACCESS.public;
 }

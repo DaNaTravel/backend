@@ -18,6 +18,7 @@ import {
 } from 'src/utils';
 import { BEST_PARAMS, DEFAULT_BEST_PARAM, END_TIME, START_TIME, STAY_TIME } from 'src/constants';
 import { Auth } from 'src/core/decorator';
+import { timeStamp } from 'console';
 
 @Injectable()
 export class GeneticService implements OnApplicationBootstrap {
@@ -389,16 +390,18 @@ export class GeneticService implements OnApplicationBootstrap {
     const routes = routesInfo.map((route: LocationOptions[], index) => {
       const length = route.length;
 
-      if (length < 3) return [];
+      if (length < 3) return { distance: 0, cost: 0, route: null };
 
       if (length < 4) {
         const routeOptions = getRoute(route, this.type);
+
         const { data, cost } = routeOptions.routeInfo;
+
         return { distance: routeOptions.distance, cost: cost, route: data };
       }
 
       let bestParams = DEFAULT_BEST_PARAM;
-      if (length < 12) bestParams = BEST_PARAMS[length - 3];
+      if (length < 12) bestParams = BEST_PARAMS[length - 4];
 
       const { bestDistance, bestFinalRoute, cost } = this.geneticAlgorithm(
         bestParams.POPULATION_SIZE,
@@ -457,47 +460,75 @@ export class GeneticService implements OnApplicationBootstrap {
   }
 
   async getLocationOptions(route: Point[], day: string) {
+    const output: LocationOptions[] = [];
     let arrivalTime = START_TIME;
 
-    const locationOptions = route.map((point: Point, index) => {
+    for (const [index, point] of route.entries()) {
+      let locationOptions: LocationOptions = null;
+
       const isExist = route[index - 1];
 
-      arrivalTime = isExist ? (arrivalTime += 30) : START_TIME;
-      const time = { openTime: arrivalTime, closeTime: arrivalTime + STAY_TIME } as ActiveTime;
+      arrivalTime += isExist ? 30 : 0;
 
-      return this.getLocationOptionByPoint(point, time, day);
-    });
+      if (point._id) {
+        const location = await this.getLocationOptionByPoint(point._id);
 
-    const output = await Promise.all(locationOptions);
+        const { latitude, longitude, stayTime, delayTime, cost, types, opening_hours } = location;
+
+        const openTimes = opening_hours[day];
+        const stayDuration = stayTime + delayTime;
+
+        locationOptions = getLocation({
+          latitude,
+          longitude,
+          stayTime: stayDuration,
+          time: { openTime: arrivalTime, closeTime: arrivalTime + stayDuration } as ActiveTime,
+          cost,
+          types,
+          openTimes,
+        } as LocationDto);
+
+        arrivalTime += stayDuration;
+      } else {
+        const { latitude, longitude } = point;
+
+        locationOptions = getLocation({
+          latitude: latitude,
+          longitude: longitude,
+          stayTime: 0,
+          time: { openTime: arrivalTime, closeTime: arrivalTime } as ActiveTime,
+          cost: 0,
+          types: null,
+          openTimes: null,
+        } as LocationDto);
+      }
+
+      output.push(locationOptions);
+    }
 
     return output;
   }
 
-  async getLocationOptionByPoint(point: Point, time: ActiveTime, day: string) {
-    const location = point._id
-      ? await this.locationRepo
-          .findOne(
-            { _id: new mongoose.Types.ObjectId(point._id) },
-            { reviews: false, user_ratings_total: false, updatedAt: false, overview: false, weekday_text: false },
-          )
-          .lean()
-      : {
-          latitude: point.latitude,
-          longitude: point.longitude,
-          opening_hours: null,
-          name: 'Start point',
-          address: 'Start point',
-        };
-
-    const locationOption: LocationOptions = getLocation({
-      latitude: location.latitude,
-      longitude: location.longitude,
-      openTimes: location.opening_hours ? location.opening_hours[day] : null,
-      time: time,
-      description: location,
-    } as LocationDto);
-
-    return locationOption;
+  async getLocationOptionByPoint(_id: string) {
+    const location = await this.locationRepo
+      .findOne(
+        { _id },
+        {
+          _id: true,
+          name: true,
+          latitude: true,
+          longitude: true,
+          rating: true,
+          formatted_address: true,
+          opening_hours: true,
+          photos: true,
+          stayTime: true,
+          delayTime: true,
+          cost: true,
+        },
+      )
+      .lean();
+    return location;
   }
 
   async updateItinerary(routes: LocationOptions[][], name: string, isPublic: boolean, routeId: string) {
@@ -526,7 +557,10 @@ export class GeneticService implements OnApplicationBootstrap {
   async compareItinerary(routes: Point[][], startDate: string | Date, endDate: string | Date) {
     const { weekdays } = handleDurationTime(startDate, endDate);
 
-    const promises = routes.map((route, index) => this.getLocationOptions(route, weekdays[index].toLowerCase()));
+    const promises = routes.map((route, index) => {
+      const day = weekdays[index].toLowerCase();
+      return this.getLocationOptions(route, day);
+    });
     const newRoutes = await Promise.all(promises);
 
     return newRoutes;
@@ -540,7 +574,7 @@ export class GeneticService implements OnApplicationBootstrap {
 
       for (let i = 1; i <= route.length - 2; i++) {
         arrivalTime += 30;
-        const isTrue = compareTimes(arrivalTime, route[i].openTimes, STAY_TIME);
+        const isTrue = compareTimes(arrivalTime, route[i].openTimes, route[i].stayTime);
 
         if (isTrue === false) unvalidLocations.push(route[i].description['name'] || 'Unknown location');
       }
@@ -649,14 +683,14 @@ export class GeneticService implements OnApplicationBootstrap {
         const route = population[item.index];
         const length = route.length;
 
-        if (length < 3) return { distance: 0, route: null, fitness: 0 };
+        if (length < 3) return { distance: 0, cost: 0, route: null, fitness: 0 };
 
         if (length < 4) {
           const routeOptions = getRoute(route, this.type);
 
           const { data, cost } = routeOptions.routeInfo;
 
-          return { distance: routeOptions.distance, route: data, cost: cost, fitness: routeOptions.fitness };
+          return { distance: routeOptions.distance, cost: cost, route: data, fitness: routeOptions.fitness };
         }
 
         let bestParams = DEFAULT_BEST_PARAM;

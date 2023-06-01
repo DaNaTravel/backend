@@ -133,12 +133,16 @@ export class RouteController {
 
   @Get('')
   @UseGuards(OptionalAuthGuard)
+  @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
   async getItinerariesByAccountId(@Query() dataQuery: ItinerariesByAccountQueryDto, @GetAuth() auth: Auth) {
-    const isPublic = dataQuery.isPublic === 'true' ? true : false;
-    const conditionPublic = dataQuery.access ? dataQuery.access === ACCESS.public && isPublic === false : true;
+    const isPublic = dataQuery.isPublic === 'false' ? false : true;
+    const conditionPublic = dataQuery.access === ACCESS.public && isPublic === false;
 
     if (conditionPublic === true)
-      throw new UnauthorizedException({ message: `Please sign in to view your itinraries.`, data: null });
+      throw new UnauthorizedException({
+        message: `You don't have permission to view private itineraries.`,
+        data: null,
+      });
 
     if (dataQuery.access === ACCESS.private && Boolean(auth._id) === false)
       throw new UnauthorizedException({ message: `Please sign in to view your itinraries.`, data: null });

@@ -97,15 +97,6 @@ export class LocationService {
         .aggregate([
           { $match: where.length ? { $and: where } : {} },
           {
-            $lookup: {
-              from: 'favorites',
-              localField: '_id',
-              foreignField: 'locationId',
-              as: 'favorites',
-            },
-          },
-          { $sort: { 'favorites.length': -1 } },
-          {
             $project: {
               _id: true,
               name: true,

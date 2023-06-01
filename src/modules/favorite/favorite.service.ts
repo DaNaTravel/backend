@@ -112,16 +112,16 @@ export class FavoriteService {
 
     if (locationId) {
       const favorite = await this.favoriteRepo.findOne({
-        accountId: new mongoose.Types.ObjectId(_id),
-        locationId: new mongoose.Types.ObjectId(locationId),
+        accountId: _id,
+        locationId: locationId,
       });
       return Boolean(favorite);
     }
 
     if (itineraryId) {
       const favorite = await this.favoriteRepo.findOne({
-        accountId: new mongoose.Types.ObjectId(_id),
-        itineraryId: new mongoose.Types.ObjectId(itineraryId),
+        accountId: _id,
+        itineraryId: itineraryId,
       });
       return Boolean(favorite);
     }
@@ -158,16 +158,16 @@ export class FavoriteService {
 
     if (locationId) {
       const favorite = await this.favoriteRepo.deleteOne({
-        accountId: new mongoose.Types.ObjectId(_id),
-        locationId: new mongoose.Types.ObjectId(locationId),
+        accountId: _id,
+        locationId: locationId,
       });
       return favorite;
     }
 
     if (itineraryId) {
       const favorite = await this.favoriteRepo.deleteOne({
-        accountId: new mongoose.Types.ObjectId(_id),
-        itineraryId: new mongoose.Types.ObjectId(itineraryId),
+        accountId: _id,
+        itineraryId: itineraryId,
       });
       return favorite;
     }

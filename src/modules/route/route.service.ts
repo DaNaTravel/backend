@@ -38,12 +38,13 @@ export class RouteService {
     const where: FilterQuery<unknown>[] = [];
 
     if (access === ACCESS.private && auth._id) {
-      where.push({ accountId: new mongoose.Types.ObjectId(auth._id) });
+      where.push({ accountId: auth._id });
     }
 
     if (isPublic !== undefined) {
       where.push({ isPublic: isPublic });
     }
+
     const [count, itineraries] = await Promise.all([
       this.itineraryRepo.count(where.length ? { $and: where } : {}),
       this.itineraryRepo
