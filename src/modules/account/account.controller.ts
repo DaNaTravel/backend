@@ -29,6 +29,7 @@ import {
   PasswordDto,
   DeletedAccountBodyDto,
   AccountQueryDto,
+  DashboardQueryDto,
 } from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
@@ -36,6 +37,7 @@ import { TokenService } from './token.service';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { ObjectId } from 'mongoose';
+import { start } from 'repl';
 
 @Controller('/accounts')
 export class AccountController {
@@ -335,11 +337,31 @@ export class AccountController {
 
   @Get('/dashboard')
   @UseGuards(JwtAuthGuard)
-  async getDataDashboard(@GetAuth() auth: Auth, @Query() query: dashboardQueryDto) {
+  async getDataDashboard(@GetAuth() auth: Auth, @Query() query: DashboardQueryDto) {
     if (auth.role !== Role.ADMIN)
       throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
 
-    const data = await this.accountService.getDataDashboard(query);
+    let startDate = new Date(query.startDate);
+    startDate.setUTCHours(0, 0, 0, 0);
+    let endDate = new Date(query.endDate);
+    endDate.setUTCHours(23, 59, 59, 999);
+
+    if (!query.startDate || !query.endDate) {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = date.getMonth();
+
+      const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
+      firstDayOfMonth.setUTCHours(0, 0, 0, 0);
+
+      const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0));
+      lastDayOfMonth.setUTCHours(23, 59, 59, 999);
+
+      startDate = firstDayOfMonth;
+      endDate = lastDayOfMonth;
+    }
+
+    const data = await this.accountService.getDataDashboard(startDate, endDate);
     if (!data) throw new BadRequestException('Bad Request');
     return {
       message: 'Success',

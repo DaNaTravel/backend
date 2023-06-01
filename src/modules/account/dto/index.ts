@@ -1,5 +1,7 @@
 import {
   IsArray,
+  IsDate,
+  IsDateString,
   IsEmail,
   IsEnum,
   IsMongoId,
@@ -146,11 +148,13 @@ export class FacebookAccountDto {
 }
 
 export class DashboardQueryDto {
+  @IsString()
   @IsOptional()
-  month: number;
+  startDate: string;
 
+  @IsString()
   @IsOptional()
-  year: number;
+  endDate: string;
 }
 
 export class BlockedAccountBodyDto {

@@ -11,6 +11,7 @@ import {
   PasswordDto,
   AccountQueryDto,
   AccountCreateDto,
+  DashboardQueryDto,
 } from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
@@ -269,5 +270,28 @@ export class AccountService {
     return { _id: newAccount._id, role: newAccount.role };
   }
 
-  async getDataDashboard() {}
+  async getDataDashboard(startDate: Date, endDate: Date) {
+    const result = await this.accountRepo.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' },
+            day: { $dayOfMonth: '$createdAt' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    return result;
+  }
 }
