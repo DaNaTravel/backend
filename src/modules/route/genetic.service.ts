@@ -448,7 +448,7 @@ export class GeneticService implements OnApplicationBootstrap {
       startDate: startDate,
       endDate: endDate,
       routes: routes,
-      accountId: new mongoose.Types.ObjectId(auth._id),
+      accountId: auth._id,
     }).save();
 
     const { _id, accountId, type, people, cost } = newItinerary;
