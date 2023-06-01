@@ -72,7 +72,7 @@ export class ItinerariesByAccountQueryDto extends Pagination {
   keyword: string;
 
   @IsOptional()
-  isPublic: boolean | string = 'true';
+  isPublic: boolean | string;
 
   @IsOptional()
   createdAt: string;

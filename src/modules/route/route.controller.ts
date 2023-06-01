@@ -135,7 +135,7 @@ export class RouteController {
   @UseGuards(OptionalAuthGuard)
   @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
   async getItinerariesByAccountId(@Query() dataQuery: ItinerariesByAccountQueryDto, @GetAuth() auth: Auth) {
-    const isPublic = dataQuery.isPublic === 'true' ? true : false;
+    const isPublic = dataQuery.isPublic === 'false' ? false : true;
     const conditionPublic = dataQuery.access === ACCESS.public && isPublic === false;
 
     if (conditionPublic === true)
