@@ -22,7 +22,7 @@ export class FavoriteService {
     const promise = array.map((category: Category) => {
       const aggregate: PipelineStage[] = [
         {
-          $match: { accountId: _id },
+          $match: { accountId: new mongoose.Types.ObjectId(_id) },
         },
         {
           $lookup: {
