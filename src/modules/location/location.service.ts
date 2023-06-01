@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, ObjectId } from 'mongoose';
-import { LocationDto, LocationQueryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
+import { LocationDto, LocationQueryDto, LocationUpdateDto } from './dto';
 import { convertOpeningHours, convertOpeningHoursToWeekdayText, getPagination, isValidOpeningHours } from 'src/utils';
 
 @Injectable()
@@ -52,13 +52,25 @@ export class LocationService {
     const locationMain = await this.locationRepo.findById(locationId).lean();
 
     const [type]: string[] = locationMain?.types;
-    const relatedLocations = await this.locationRepo
-      .find({ types: type, _id: { $ne: locationId } })
-      .limit(5)
-      .exec();
-
+    const relatedLocations = await this.locationRepo.aggregate([
+      { $match: { types: type, _id: { $ne: locationId } } },
+      {
+        $lookup: {
+          from: 'favorites',
+          localField: '_id',
+          foreignField: 'locationId',
+          as: 'favorites',
+        },
+      },
+      {
+        $addFields: {
+          totalFavorites: { $size: '$favorites' },
+        },
+      },
+      { $sort: { totalFavorites: -1 } },
+      { $limit: 5 },
+    ]);
     const locations = { ...locationMain, relatedLocations: relatedLocations };
-
     return locations;
   }
 
@@ -82,27 +94,46 @@ export class LocationService {
     const [count, listLocations] = await Promise.all([
       this.locationRepo.find(where.length ? { $and: where } : {}).count(),
       this.locationRepo
-        .find(where.length ? { $and: where } : {}, {
-          _id: true,
-          name: true,
-          overview: true,
-          photos: true,
-          weekday_text: true,
-          formatted_address: true,
-          latitude: true,
-          longitude: true,
-          reviews: true,
-          types: true,
-          user_ratings_total: true,
-          stayTime: true,
-          delayTime: true,
-          cost: true,
-        })
-        .skip(skip)
-        .limit(take)
-        .lean(),
+        .aggregate([
+          { $match: where.length ? { $and: where } : {} },
+          {
+            $lookup: {
+              from: 'favorites',
+              localField: '_id',
+              foreignField: 'locationId',
+              as: 'favorites',
+            },
+          },
+          { $sort: { 'favorites.length': -1 } },
+          {
+            $project: {
+              _id: true,
+              name: true,
+              overview: true,
+              photos: true,
+              weekday_text: true,
+              formatted_address: true,
+              latitude: true,
+              longitude: true,
+              reviews: true,
+              types: true,
+              user_ratings_total: true,
+            },
+          },
+          { $skip: skip },
+          { $limit: take },
+          { $project: { favorites: false } },
+        ])
+        .exec(),
     ]);
 
     return { count, page, listLocations };
+  }
+
+  async updatedLocation(locationId: ObjectId, changedInfo: LocationUpdateDto) {
+    const updatedProfile = await this.locationRepo
+      .findByIdAndUpdate(locationId, { ...changedInfo }, { new: true })
+      .select('-__v -updatedAt -createdAt');
+    return updatedProfile;
   }
 }

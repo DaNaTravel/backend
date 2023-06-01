@@ -134,6 +134,12 @@ export class RouteController {
   @Get('')
   @UseGuards(OptionalAuthGuard)
   async getItinerariesByAccountId(@Query() dataQuery: ItinerariesByAccountQueryDto, @GetAuth() auth: Auth) {
+    const isPublic = dataQuery.isPublic === 'true' ? true : false;
+    const conditionPublic = dataQuery.access ? dataQuery.access === ACCESS.public && isPublic === false : true;
+
+    if (conditionPublic === true)
+      throw new UnauthorizedException({ message: `Please sign in to view your itinraries.`, data: null });
+
     if (dataQuery.access === ACCESS.private && Boolean(auth._id) === false)
       throw new UnauthorizedException({ message: `Please sign in to view your itinraries.`, data: null });
 

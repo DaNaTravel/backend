@@ -1,13 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
-import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto } from './dto';
+import {
+  AccountCreateDto,
+  GoogleAccountDto,
+  SignInDto,
+  FacebookAccountDto,
+  AccountUpdateDto,
+  PasswordDto,
+  AccountQueryDto,
+} from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
 import { JwtService } from '@nestjs/jwt';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common/exceptions';
+import { getPagination } from 'src/utils';
 
 @Injectable()
 export class AccountService {
@@ -34,6 +42,8 @@ export class AccountService {
 
     const newAccount = await new this.accountRepo({
       ...data,
+      phone: null,
+      isActive: true,
       password: passwordHash,
     }).save();
 
@@ -44,19 +54,21 @@ export class AccountService {
     const existedEmail = await this.accountRepo.findOne({ email: account.email }).lean();
 
     if (existedEmail) {
-      const { password, ...data } = existedEmail;
-      const isCorrect = compareHash(account.password, password);
+      if (existedEmail.isActive) {
+        const { password, ...data } = existedEmail;
+        const isCorrect = compareHash(account.password, password);
 
-      if (isCorrect) {
-        const payload = { _id: data._id, role: data.role };
+        if (isCorrect) {
+          const payload = { _id: data._id, role: data.role };
 
-        const { token, refreshToken } = await this.tokenService.generateToken(payload);
+          const { token, refreshToken } = await this.tokenService.generateToken(payload);
 
-        return {
-          _id: data._id,
-          token: token,
-          refreshToken: refreshToken,
-        };
+          return {
+            _id: data._id,
+            token: token,
+            refreshToken: refreshToken,
+          };
+        }
       }
     }
 
@@ -82,7 +94,9 @@ export class AccountService {
     let payload: any = {};
 
     if (existedEmail) {
-      payload = { _id: existedEmail._id, role: existedEmail.role };
+      if (existedEmail.isActive) {
+        payload = { _id: existedEmail._id, role: existedEmail.role };
+      } else return null;
     } else {
       const password = generate({
         length: 15,
@@ -158,4 +172,86 @@ export class AccountService {
 
     return newPassword;
   }
+
+  async getProfile(id: string) {
+    const profile = await this.accountRepo
+      .findById(id)
+      .select('-__v -updatedAt -createdAt -password -isConfirmed -role ');
+    return profile;
+  }
+
+  async updatedProfile(id: string | ObjectId, changedInfo: AccountUpdateDto) {
+    const updatedProfile = await this.accountRepo
+      .findByIdAndUpdate(id, { ...changedInfo }, { new: true })
+      .select('-__v -updatedAt -createdAt -password -isConfirmed -role ');
+    return updatedProfile;
+  }
+
+  async changePassword(id: string, data: PasswordDto) {
+    const account = await this.accountRepo.findById(id);
+    const isCorrect = compareHash(data.currentPassword, account.password);
+
+    if (!isCorrect) {
+      return [false, 'Password incorrect'];
+    }
+
+    if (data.currentPassword === data.newPassword) {
+      return [false, 'New password must be different from the old password'];
+    }
+
+    if (data.newPassword !== data.confirmPassword) {
+      return [false, 'Password does not match'];
+    }
+
+    const password = hashPassword(data.confirmPassword);
+    await this.accountRepo.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(id) }, { password }, { new: true });
+    return [true];
+  }
+
+  async blockAccount(blockedId: ObjectId) {
+    const blockedAccount = await this.accountRepo.findByIdAndUpdate(blockedId, { isActive: false }, { new: true });
+    return blockedAccount;
+  }
+
+  async deleteAccounts(blockedIds: ObjectId[]) {
+    const deletedAccounts = await this.accountRepo
+      .deleteMany({
+        _id: { $in: blockedIds },
+      })
+      .exec();
+    return deletedAccounts.deletedCount;
+  }
+
+  async getListUsers(query: AccountQueryDto) {
+    const { keyword } = query;
+
+    const { page, take, skip } = getPagination(query.page, query.take);
+
+    const where: FilterQuery<unknown>[] = [];
+    if (keyword && keyword.length) {
+      where.push({
+        $or: [{ name: { $regex: keyword, $options: 'i' } }, { email: { $regex: keyword, $options: 'i' } }],
+      });
+    }
+
+    const [count, listAccount] = await Promise.all([
+      this.accountRepo.find(where.length ? { $and: where } : {}).count(),
+      this.accountRepo
+        .find(where.length ? { $and: where } : {}, {
+          _id: true,
+          email: true,
+          name: true,
+          role: true,
+          isConfirmed: true,
+          isActive: true,
+        })
+        .skip(skip)
+        .limit(take)
+        .lean(),
+    ]);
+
+    return { count, page, listAccount };
+  }
+
+  // async getDataDashboard() {}
 }

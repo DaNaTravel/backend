@@ -7,9 +7,11 @@ import {
   UseGuards,
   Req,
   Param,
+  Patch,
   UnauthorizedException,
   NotFoundException,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { Request } from 'express';
@@ -17,10 +19,24 @@ import { Role } from 'src/utils';
 import { AccountService } from './account.service';
 import { GoogleAuthGuard } from '../../guards/google.guard';
 import { RefreshAuthGuard } from 'src/guards/refresh.guard';
-import { AccountCreateDto, GoogleAccountDto, SignInDto, FacebookAccountDto, EmailConfirmationDto } from './dto';
+import {
+  AccountCreateDto,
+  GoogleAccountDto,
+  SignInDto,
+  FacebookAccountDto,
+  EmailConfirmationDto,
+  AccountUpdateDto,
+  PasswordDto,
+  BlockedAccountBodyDto,
+  DeletedAccountBodyDto,
+  AccountQueryDto,
+} from './dto';
 import { FacebookAuthGuard } from 'src/guards/facebook.guard';
 import { MailService } from '../mail/mail.service';
 import { TokenService } from './token.service';
+import { Auth, GetAuth } from 'src/core/decorator';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
+import { ObjectId } from 'mongoose';
 
 @Controller('/accounts')
 export class AccountController {
@@ -166,7 +182,7 @@ export class AccountController {
         data: null,
       });
     }
-    const emailUpdated = await this.accountService.updateConfirmEmail(email);
+    await this.accountService.updateConfirmEmail(email);
 
     return {
       message: 'Email is confirmed',
@@ -213,4 +229,102 @@ export class AccountController {
       data: null,
     };
   }
+
+  @Get('/profile')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@GetAuth() auth: Auth) {
+    const profile = await this.accountService.getProfile(auth._id);
+    if (!profile) throw new BadRequestException('Bad Request');
+    return {
+      message: 'Success',
+      data: profile,
+    };
+  }
+
+  @Patch('/profile')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(@GetAuth() auth: Auth, @Body() changedInfo: AccountUpdateDto) {
+    if (!Object.keys(changedInfo).length) {
+      throw new BadRequestException('No changes found');
+    }
+    const updatedProfile = await this.accountService.updatedProfile(auth._id, changedInfo);
+    if (!updatedProfile) throw new BadRequestException('Bad Request');
+    return {
+      message: 'Success',
+      data: updatedProfile,
+    };
+  }
+
+  @Patch('/change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(@GetAuth() auth: Auth, @Body() data: PasswordDto) {
+    const updatedInfo = await this.accountService.changePassword(auth._id, data);
+    if (updatedInfo[0] === false) throw new BadRequestException(updatedInfo[1]);
+    return {
+      message: 'Success',
+      data: null,
+    };
+  }
+
+  @Delete()
+  @UseGuards(JwtAuthGuard)
+  async deleteAccounts(@GetAuth() auth: Auth, @Body() body: DeletedAccountBodyDto) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+    const data = await this.accountService.deleteAccounts(body.deletedIds);
+    if (!data) throw new BadRequestException('Bad Request');
+    return {
+      message: 'Success',
+      data: data,
+    };
+  }
+
+  @Get('/')
+  @UseGuards(JwtAuthGuard)
+  async getListUsers(@GetAuth() auth: Auth, @Query() dto: AccountQueryDto) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+    const data = await this.accountService.getListUsers(dto);
+    if (!data) throw new BadRequestException('Bad Request');
+    return {
+      message: 'Success',
+      data: data,
+    };
+  }
+
+  @Patch('/admin/update/:accountId')
+  @UseGuards(JwtAuthGuard)
+  async updateProfileUser(
+    @GetAuth() auth: Auth,
+    @Param('accountId') accountId: ObjectId,
+    @Body() changedInfo: AccountUpdateDto,
+  ) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+
+    if (!Object.keys(changedInfo).length) {
+      throw new BadRequestException('No changes found');
+    }
+
+    const updatedProfile = await this.accountService.updatedProfile(accountId, changedInfo);
+    if (!updatedProfile) throw new BadRequestException('Bad Request');
+    return {
+      message: 'Success',
+      data: updatedProfile,
+    };
+  }
+
+  // @Get('/dashboard')
+  // @UseGuards(JwtAuthGuard)
+  // async getDataDashboard(@GetAuth() auth: Auth, @Query() query: dashboardQueryDto) {
+  //   if (auth.role !== Role.ADMIN)
+  //     throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
+
+  //   const data = await this.accountService.getDataDashboard(query);
+  //   if (!data) throw new BadRequestException('Bad Request');
+  //   return {
+  //     message: 'Success',
+  //     data: data,
+  //   };
+  // }
 }
