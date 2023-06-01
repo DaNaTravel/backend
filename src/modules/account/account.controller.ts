@@ -333,17 +333,17 @@ export class AccountController {
     };
   }
 
-  // @Get('/dashboard')
-  // @UseGuards(JwtAuthGuard)
-  // async getDataDashboard(@GetAuth() auth: Auth, @Query() query: dashboardQueryDto) {
-  //   if (auth.role !== Role.ADMIN)
-  //     throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
+  @Get('/dashboard')
+  @UseGuards(JwtAuthGuard)
+  async getDataDashboard(@GetAuth() auth: Auth, @Query() query: dashboardQueryDto) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
 
-  //   const data = await this.accountService.getDataDashboard(query);
-  //   if (!data) throw new BadRequestException('Bad Request');
-  //   return {
-  //     message: 'Success',
-  //     data: data,
-  //   };
-  // }
+    const data = await this.accountService.getDataDashboard(query);
+    if (!data) throw new BadRequestException('Bad Request');
+    return {
+      message: 'Success',
+      data: data,
+    };
+  }
 }

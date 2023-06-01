@@ -37,7 +37,7 @@ export class AccountService {
   }
 
   async registerAccount(account: AccountCreateDto) {
-    const { password, role, ...data } = account;
+    const { password, ...data } = account;
     const passwordHash = hashPassword(password);
 
     const newAccount = await new this.accountRepo({
@@ -269,5 +269,5 @@ export class AccountService {
     return { _id: newAccount._id, role: newAccount.role };
   }
 
-  // async getDataDashboard() {}
+  async getDataDashboard() {}
 }
