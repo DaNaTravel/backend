@@ -23,7 +23,7 @@ export class Itinerary {
   @Prop({ required: false })
   name: string;
 
-  @Prop({ type: mongoose.Types.ObjectId, ref: 'Account', required: false })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: false })
   accountId: ObjectId;
 
   @Prop({ default: new Date() })

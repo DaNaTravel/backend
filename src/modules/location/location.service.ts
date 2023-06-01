@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, ObjectId } from 'mongoose';
+import { LocationDto, LocationQueryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { convertOpeningHours, convertOpeningHoursToWeekdayText, getPagination, isValidOpeningHours } from 'src/utils';
-import { LocationDto, LocationQueryDto } from './dto';
 
 @Injectable()
 export class LocationService {
@@ -94,6 +94,9 @@ export class LocationService {
           reviews: true,
           types: true,
           user_ratings_total: true,
+          stayTime: true,
+          delayTime: true,
+          cost: true,
         })
         .skip(skip)
         .limit(take)

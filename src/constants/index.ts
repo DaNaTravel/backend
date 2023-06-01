@@ -26,8 +26,8 @@ export const JWT_CONFIRM_SECRET_KEY = config.get('JWT_CONFIRM_SECRET_KEY');
 export const DEFAULT_BEST_PARAM = {
   MUTATION_RATE: 0.005,
   NUM_GENS: 50,
-  POPULATION_SIZE: 10,
-  NUM_ELITES: 5,
+  POPULATION_SIZE: 100,
+  NUM_ELITES: 50,
 };
 
 export const BEST_PARAMS = [
@@ -70,8 +70,8 @@ export const BEST_PARAMS = [
   {
     MUTATION_RATE: 0.001,
     NUM_GENS: 50,
-    POPULATION_SIZE: 300,
-    NUM_ELITES: 100,
+    POPULATION_SIZE: 100,
+    NUM_ELITES: 50,
   },
   {
     MUTATION_RATE: 0.001,

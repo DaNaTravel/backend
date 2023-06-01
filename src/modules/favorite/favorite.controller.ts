@@ -11,11 +11,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ObjectId } from 'mongoose';
-import { FavoriteService } from './favorite.service';
 import { FavoriteDto } from './dto';
 import { Category } from 'src/utils';
-import { GetAuth, Auth } from '../../core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
+import { GetAuth, Auth } from '../../core/decorator';
+import { FavoriteService } from './favorite.service';
 
 @Controller('/favorites')
 @UseGuards(JwtAuthGuard)
@@ -23,6 +23,7 @@ export class FavoriteController {
   constructor(private readonly favoriteService: FavoriteService) {}
 
   @Post('/')
+  @UseGuards(JwtAuthGuard)
   async addToFavorite(@Body() bodyData: FavoriteDto, @GetAuth() auth: Auth) {
     const isValidRequest = Boolean(bodyData.locationId) || Boolean(bodyData.itineraryId);
     if (isValidRequest === false) throw new BadRequestException({ message: 'You must transport data', data: null });
@@ -40,6 +41,7 @@ export class FavoriteController {
   }
 
   @Delete('/:favoriteId')
+  @UseGuards(JwtAuthGuard)
   async removeToFavoriteById(@Param('favoriteId') favoriteId: ObjectId, @GetAuth() auth: Auth) {
     const isExistedFavorite = await this.favoriteService.checkExistedFavoriteById(favoriteId);
     if (isExistedFavorite === false)
@@ -58,6 +60,7 @@ export class FavoriteController {
   }
 
   @Delete('/')
+  @UseGuards(JwtAuthGuard)
   async removeFavorite(@Body() bodyData: FavoriteDto, @GetAuth() auth: Auth) {
     if (!bodyData.locationId && !bodyData.itineraryId)
       throw new BadRequestException({ message: 'You must transport data', data: null });
@@ -75,6 +78,7 @@ export class FavoriteController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async getFavorite(@Query('category') category: Category, @GetAuth() auth: Auth) {
     const data = await this.favoriteService.getFavorites(category, auth);
 
