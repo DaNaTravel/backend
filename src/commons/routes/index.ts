@@ -68,13 +68,17 @@ export class RouteOptions {
   }
 
   get fitness() {
-    return fitness(this.distance, this.typeScore);
+    return fitness(this.distance, this.typeScore, this.cost);
+  }
+
+  get cost() {
+    const total = this.route.reduce((accumulator, location) => accumulator + location.cost, 0);
+    return total;
   }
 
   get routeInfo() {
-    const output = this.route.map((location) => location.travelInfo);
-
-    return output;
+    const data = this.route.map((location) => location.travelInfo);
+    return { cost: this.cost, data: data };
   }
 }
 

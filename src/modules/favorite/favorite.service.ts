@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, ObjectId, PipelineStage } from 'mongoose';
-import { Category, Role, handleDurationTime } from 'src/utils';
+import { Category, Role } from 'src/utils';
 import { FavoriteDto } from './dto';
-import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
-import { DAY_IN_MILISECONDS } from 'src/constants';
 import { Auth } from 'src/core/decorator';
+import { DAY_IN_MILISECONDS } from 'src/constants';
+import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
 
 @Injectable()
 export class FavoriteService {
@@ -138,15 +138,15 @@ export class FavoriteService {
 
     if (locationId) {
       const favorite = await new this.favoriteRepo({
-        accountId: new mongoose.Types.ObjectId(_id),
-        locationId: new mongoose.Types.ObjectId(locationId),
+        accountId: _id,
+        locationId: locationId,
       }).save();
       return favorite;
     }
     if (itineraryId) {
       const favorite = await new this.favoriteRepo({
-        accountId: new mongoose.Types.ObjectId(_id),
-        itineraryId: new mongoose.Types.ObjectId(itineraryId),
+        accountId: _id,
+        itineraryId: itineraryId,
       }).save();
       return favorite;
     }

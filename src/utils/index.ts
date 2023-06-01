@@ -1,7 +1,7 @@
-import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsPositive } from 'class-validator';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import { Type } from 'class-transformer';
+import { IsNumber, IsOptional, IsPositive } from 'class-validator';
 dayjs.extend(utc);
 
 export type DayJS = dayjs.Dayjs;
@@ -61,11 +61,11 @@ export const typeScore = (types: string[], locationTypes: string[]) => {
   const number = locationTypes.filter((item) => types.includes(item));
   if (number.length) return 0;
 
-  return 1000;
+  return 10000;
 };
 
-export const fitness = (distance: number, type: number) => {
-  return 5 / (Math.pow(distance, 4) + 1) + 2 / (Math.pow(type, 4) + 1);
+export const fitness = (distance: number, type: number, cost: number) => {
+  return 5 / (Math.pow(distance, 2) + 1) + 2 / (Math.pow(type, 2) + 1) + 2 / (Math.pow(cost, 2) + 1);
 };
 
 export const handleDurationTime = (
@@ -280,4 +280,10 @@ const padZero = (value: number): string => {
 
 const capitalizeFirstLetter = (text: string): string => {
   return text.charAt(0).toUpperCase() + text.slice(1);
+};
+
+export const permutations = (num: number) => {
+  const output = num === 0 || num === 1 ? 1 : num * permutations(num - 1);
+
+  return output;
 };

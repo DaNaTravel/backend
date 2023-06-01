@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Location, LocationDocument } from 'src/schemas/locations';
-import { convertOpeningHours, convertOpeningHoursToWeekdayText, getPagination, isValidOpeningHours } from 'src/utils';
 import { LocationDto, LocationQueryDto, LocationUpdateDto } from './dto';
+import { convertOpeningHours, convertOpeningHoursToWeekdayText, getPagination, isValidOpeningHours } from 'src/utils';
 
 @Injectable()
 export class LocationService {
@@ -110,14 +110,16 @@ export class LocationService {
               _id: true,
               name: true,
               overview: true,
-              photos: true,
-              weekday_text: true,
               formatted_address: true,
               latitude: true,
               longitude: true,
-              reviews: true,
               types: true,
+              cost: true,
+              stayTime: { $add: ['$stayTime', '$delayTime'] },
               user_ratings_total: true,
+              reviews: true,
+              photos: true,
+              weekday_text: true,
             },
           },
           { $skip: skip },

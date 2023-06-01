@@ -17,10 +17,10 @@ export class LocationOptions {
 
     this.latitude = latitude;
     this.longitude = longitude;
-    this.openTimes = openTimes;
+    this.openTimes = openTimes || null;
     this.stayTime = stayTime;
     this.time = time;
-    this.cost = cost;
+    this.cost = cost || 0;
     this.description = description;
     this.types = types;
   }
@@ -41,8 +41,8 @@ export class LocationOptions {
       return { openTime, closeTime };
     });
 
-    const arrival = convertTime(this.time.openTime);
-    const departure = convertTime(this.time.closeTime);
+    const arrival = convertTime(this.time?.openTime);
+    const departure = convertTime(this.time?.closeTime);
 
     const travelTime = { arrival, departure };
 
@@ -54,6 +54,7 @@ export class LocationOptions {
       address: this.description.formatted_address || null,
       types: this.types,
       openTimes: openTimes,
+      stayTime: this.stayTime,
       rating: this.description.rating || null,
       photos: this.description.photos ? this.description.photos[0].photo_reference : null,
     };
