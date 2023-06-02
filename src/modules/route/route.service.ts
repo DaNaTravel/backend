@@ -45,14 +45,42 @@ export class RouteService {
       where.push({ isPublic: isPublic });
     }
 
-    const [count, itineraries] = await Promise.all([
-      this.itineraryRepo.count(where.length ? { $and: where } : {}),
-      this.itineraryRepo
+    const isPublicWithFavorites = access === ACCESS.public && isPublic === true;
+
+    let countPromise: any;
+    let itinerariesPromise: any;
+
+    if (isPublicWithFavorites) {
+      where.push({ isPublic: isPublic });
+
+      const topFavoriteIds = await this.itineraryRepo.aggregate([
+        { $match: { isPublic: true } },
+        { $project: { _id: 1 } },
+        { $lookup: { from: 'favorites', localField: '_id', foreignField: 'itineraryId', as: 'favorites' } },
+        { $addFields: { favoriteCount: { $size: '$favorites' } } },
+        { $sort: { favoriteCount: -1 } },
+        { $limit: 10 },
+      ]);
+
+      const topFavoriteItineraryIds = topFavoriteIds.map((favorite) => favorite._id);
+
+      countPromise = this.itineraryRepo.count({
+        _id: { $in: topFavoriteItineraryIds },
+        ...(where.length ? { $and: where } : {}),
+      });
+      itinerariesPromise = this.itineraryRepo
+        .find({ _id: { $in: topFavoriteItineraryIds }, ...(where.length ? { $and: where } : {}) })
+        .lean();
+    } else {
+      countPromise = this.itineraryRepo.count(where.length ? { $and: where } : {});
+      itinerariesPromise = this.itineraryRepo
         .find(where.length ? { $and: where } : {})
         .skip(skip)
         .limit(take)
-        .lean(),
-    ]);
+        .lean();
+    }
+
+    const [count, itineraries] = await Promise.all([countPromise, itinerariesPromise]);
 
     const output = itineraries.map((item) => {
       const { routes, startDate, endDate } = item;
