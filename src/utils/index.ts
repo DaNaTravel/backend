@@ -287,3 +287,13 @@ export const permutations = (num: number) => {
 
   return output;
 };
+
+export const getPhoto = (info: any) => {
+  const { name, photos } = info;
+
+  const photo = photos ? photos : null;
+  return {
+    name: name,
+    photos: photo,
+  };
+};

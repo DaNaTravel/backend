@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, ObjectId, PipelineStage } from 'mongoose';
-import { Category, Role } from 'src/utils';
+import { Category, Role, getPhoto } from 'src/utils';
 import { FavoriteDto } from './dto';
 import { Auth } from 'src/core/decorator';
 import { DAY_IN_MILISECONDS } from 'src/constants';
@@ -13,7 +13,6 @@ export class FavoriteService {
     @InjectModel(Favorite.name)
     private readonly favoriteRepo: Model<FavoriteDocument>,
   ) {}
-
   async getFavorites(category: Category, auth: Auth) {
     const { _id } = auth;
 
@@ -88,8 +87,18 @@ export class FavoriteService {
     });
 
     const output = await Promise.all(promise);
-    const data = [].concat(...output);
+    let data = [].concat(...output);
+    if (category === 'itinerary') {
+      data = data.map((item) => {
+        const { routes } = item;
 
+        const address = routes.map((days: { route: any[] }) => {
+          return days.route.map((route: { description: any }) => getPhoto(route.description));
+        });
+
+        return { ...item, routes: address.flat() };
+      });
+    }
     return data;
   }
 

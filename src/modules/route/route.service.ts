@@ -1,7 +1,7 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
 import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
-import { Role, getPagination, handleDurationTime } from 'src/utils';
+import { Role, getPagination, getPhoto, handleDurationTime } from 'src/utils';
 import { ACCESS, ItinerariesByAccountQueryDto, UpdateItineraryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
@@ -18,16 +18,6 @@ export class RouteService {
   async getItinerary(itineraryId: ObjectId) {
     const itinerary = await this.itineraryRepo.findById(itineraryId).lean();
     return itinerary;
-  }
-
-  getPhoto(info: any) {
-    const { name, photos } = info;
-
-    const photo = photos ? photos : null;
-    return {
-      name: name,
-      photos: photo,
-    };
   }
 
   async getItinerariesByAccountId(filterCondition: ItinerariesByAccountQueryDto, auth: Auth) {
@@ -87,9 +77,7 @@ export class RouteService {
       const { diffInDays } = handleDurationTime(startDate, endDate);
       const address = routes
         .filter((days) => !Array.isArray(days))
-        .map((days: { route: any[] }) =>
-          days.route.map((route: { description: any }) => this.getPhoto(route.description)),
-        );
+        .map((days: { route: any[] }) => days.route.map((route: { description: any }) => getPhoto(route.description)));
 
       return { ...item, days: diffInDays, routes: address.flat() };
     });
@@ -130,7 +118,7 @@ export class RouteService {
       const { routes } = item;
 
       const address = routes.map((days: { route: any[] }) => {
-        return days.route.map((route: { description: any }) => this.getPhoto(route.description));
+        return days.route.map((route: { description: any }) => getPhoto(route.description));
       });
 
       return { ...item, routes: address.flat() };
