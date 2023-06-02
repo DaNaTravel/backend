@@ -38,9 +38,11 @@ export class RouteQueryDto {
   @Type(() => Number)
   @IsNumber()
   maxCost: number;
+}
 
+export class RouteBodyDto {
   @IsOptional()
-  locations: Point[];
+  points: string[];
 }
 
 export type Point = {

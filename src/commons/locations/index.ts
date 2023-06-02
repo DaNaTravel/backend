@@ -47,7 +47,7 @@ export class LocationOptions {
     const travelTime = { arrival, departure };
 
     const description = {
-      _id: this.description._id,
+      _id: this.description._id || null,
       name: this.description.name,
       latitude: this.latitude,
       longitude: this.longitude,
