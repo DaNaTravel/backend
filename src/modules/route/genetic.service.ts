@@ -1,6 +1,6 @@
+import _, { range } from 'lodash';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import _, { random, range } from 'lodash';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { Point, RouteQueryDto } from './dto';
 import { RouteOptions, getRoute } from 'src/commons/routes';
@@ -9,15 +9,16 @@ import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
 import { LocationDto, LocationOptions, getLocation } from 'src/commons/locations';
 import {
   ActiveTime,
-  LocationTypes,
   TravelType,
   checkExistedValue,
   compareTimes,
   handleDurationTime,
   haversineDistance,
+  permutations,
 } from 'src/utils';
 import { BEST_PARAMS, DEFAULT_BEST_PARAM, END_TIME, START_TIME, STAY_TIME } from 'src/constants';
 import { Auth } from 'src/core/decorator';
+import { timeStamp } from 'console';
 
 @Injectable()
 export class GeneticService implements OnApplicationBootstrap {
@@ -126,11 +127,11 @@ export class GeneticService implements OnApplicationBootstrap {
 
     for (let i = 1; i <= routes.length - 2; i++) {
       arrivalTime += 30;
-      const isTrue = compareTimes(arrivalTime, routes[i].openTimes, STAY_TIME);
+      const isTrue = compareTimes(arrivalTime, routes[i].openTimes, routes[i].stayTime);
 
       if (isTrue === false) return false;
 
-      arrivalTime += STAY_TIME;
+      arrivalTime += routes[i].stayTime;
     }
 
     return true;
@@ -138,14 +139,23 @@ export class GeneticService implements OnApplicationBootstrap {
 
   updateArrivalTime(routes: RouteOptions) {
     const routeInfo = routes.route.map((location: LocationOptions, index) => {
-      const openTime = index ? 420 + 30 + (STAY_TIME + 30) * (index - 1) : 420;
-      const closeTime = 420 + (STAY_TIME + 30) * index;
+      const isExist = Boolean(routes.route[index - 1]);
+      let openTime = 420;
+      let closeTime = 420;
 
+      if (isExist) {
+        const preLocation = routes.route[index - 1];
+        const preTime = preLocation.time;
+
+        const { stayTime } = location;
+
+        openTime = preTime.closeTime + 30;
+        closeTime = openTime + stayTime;
+      }
       location.time = { openTime, closeTime } as ActiveTime;
 
       return location.travelInfo;
     });
-
     return routeInfo;
   }
 
@@ -153,6 +163,8 @@ export class GeneticService implements OnApplicationBootstrap {
     const population = [];
 
     const listSamples = Array.from({ length: listInitLocations.length - 2 }, (_, i) => i + 1);
+    let count = 0;
+    const maxCount = permutations(listInitLocations.length - 2);
 
     while (population.length < populationSize) {
       if (listInitLocations) {
@@ -168,8 +180,10 @@ export class GeneticService implements OnApplicationBootstrap {
 
         if (isTrue) population.push(newRoutes);
       }
-    }
 
+      count += 1;
+      if (count === maxCount) break;
+    }
     return population;
   }
 
@@ -334,6 +348,15 @@ export class GeneticService implements OnApplicationBootstrap {
   ) {
     let population = this.initPopulation(populationSize, listInitLocations);
 
+    if (population.length === 0) {
+      return { bestDistance: 0, bestFinalRoute: null, fitness: 0 };
+    }
+
+    if (population.length < populationSize) {
+      populationSize = population.length;
+      numElites = Math.floor(population.length / 2);
+    }
+
     const bestRouteByGen = [];
     const bestFitnessByGen = [];
     const bestDistanceByGen = [];
@@ -352,8 +375,9 @@ export class GeneticService implements OnApplicationBootstrap {
     const travelRoute = this.updateArrivalTime(bestFinalRoute);
     const bestDistance = bestFinalRoute.distance;
     const bestFitness = bestFinalRoute.fitness;
+    const bestCost = bestFinalRoute.cost;
 
-    return { bestDistance, bestFinalRoute: travelRoute, fitness: bestFitness };
+    return { bestDistance, bestFinalRoute: travelRoute, cost: bestCost, fitness: bestFitness };
   }
 
   async checkExistedItinerary(_id: string) {
@@ -366,18 +390,20 @@ export class GeneticService implements OnApplicationBootstrap {
     const routes = routesInfo.map((route: LocationOptions[], index) => {
       const length = route.length;
 
-      if (length < 3) return [];
+      if (length < 3) return { distance: 0, cost: 0, route: null };
 
       if (length < 4) {
         const routeOptions = getRoute(route, this.type);
 
-        return { distance: routeOptions.distance, route: routeOptions.routeInfo };
+        const { data, cost } = routeOptions.routeInfo;
+
+        return { distance: routeOptions.distance, cost: cost, route: data };
       }
 
       let bestParams = DEFAULT_BEST_PARAM;
-      if (length < 12) bestParams = BEST_PARAMS[length - 3];
+      if (length < 12) bestParams = BEST_PARAMS[length - 4];
 
-      const { bestDistance, bestFinalRoute } = this.geneticAlgorithm(
+      const { bestDistance, bestFinalRoute, cost } = this.geneticAlgorithm(
         bestParams.POPULATION_SIZE,
         bestParams.NUM_ELITES,
         bestParams.NUM_GENS,
@@ -385,7 +411,7 @@ export class GeneticService implements OnApplicationBootstrap {
         route,
       );
 
-      return { distance: bestDistance, route: bestFinalRoute };
+      return { distance: bestDistance, cost: cost, route: bestFinalRoute };
     });
 
     return routes;
@@ -406,6 +432,9 @@ export class GeneticService implements OnApplicationBootstrap {
           formatted_address: true,
           opening_hours: true,
           photos: true,
+          stayTime: true,
+          delayTime: true,
+          cost: true,
         },
       )
       .lean();
@@ -431,47 +460,76 @@ export class GeneticService implements OnApplicationBootstrap {
   }
 
   async getLocationOptions(route: Point[], day: string) {
+    const output: LocationOptions[] = [];
     let arrivalTime = START_TIME;
 
-    const locationOptions = route.map((point: Point, index) => {
+    for (const [index, point] of route.entries()) {
+      let locationOptions: LocationOptions = null;
+
       const isExist = route[index - 1];
 
-      arrivalTime = isExist ? (arrivalTime += 30) : START_TIME;
-      const time = { openTime: arrivalTime, closeTime: arrivalTime + STAY_TIME } as ActiveTime;
+      arrivalTime += isExist ? 30 : 0;
 
-      return this.getLocationOptionByPoint(point, time, day);
-    });
+      if (point._id) {
+        const location = await this.getLocationOptionByPoint(point._id);
 
-    const output = await Promise.all(locationOptions);
+        const { latitude, longitude, stayTime, delayTime, cost, types, opening_hours } = location;
+
+        const openTimes = opening_hours[day];
+        const stayDuration = stayTime + delayTime;
+
+        locationOptions = getLocation({
+          latitude,
+          longitude,
+          stayTime: stayDuration,
+          time: { openTime: arrivalTime, closeTime: arrivalTime + stayDuration } as ActiveTime,
+          cost,
+          types,
+          openTimes,
+          description: location,
+        } as LocationDto);
+
+        arrivalTime += stayDuration;
+      } else {
+        const { latitude, longitude } = point;
+
+        locationOptions = getLocation({
+          latitude: latitude,
+          longitude: longitude,
+          stayTime: 0,
+          time: { openTime: arrivalTime, closeTime: arrivalTime } as ActiveTime,
+          cost: 0,
+          types: null,
+          openTimes: null,
+        } as LocationDto);
+      }
+
+      output.push(locationOptions);
+    }
 
     return output;
   }
 
-  async getLocationOptionByPoint(point: Point, time: ActiveTime, day: string) {
-    const location = point._id
-      ? await this.locationRepo
-          .findOne(
-            { _id: new mongoose.Types.ObjectId(point._id) },
-            { reviews: false, user_ratings_total: false, updatedAt: false, overview: false, weekday_text: false },
-          )
-          .lean()
-      : {
-          latitude: point.latitude,
-          longitude: point.longitude,
-          opening_hours: null,
-          name: 'Start point',
-          address: 'Start point',
-        };
-
-    const locationOption: LocationOptions = getLocation({
-      latitude: location.latitude,
-      longitude: location.longitude,
-      openTimes: location.opening_hours ? location.opening_hours[day] : null,
-      time: time,
-      description: location,
-    } as LocationDto);
-
-    return locationOption;
+  async getLocationOptionByPoint(_id: string) {
+    const location = await this.locationRepo
+      .findOne(
+        { _id },
+        {
+          _id: true,
+          name: true,
+          latitude: true,
+          longitude: true,
+          rating: true,
+          formatted_address: true,
+          opening_hours: true,
+          photos: true,
+          stayTime: true,
+          delayTime: true,
+          cost: true,
+        },
+      )
+      .lean();
+    return location;
   }
 
   async updateItinerary(routes: LocationOptions[][], name: string, isPublic: boolean, routeId: string) {
@@ -500,7 +558,10 @@ export class GeneticService implements OnApplicationBootstrap {
   async compareItinerary(routes: Point[][], startDate: string | Date, endDate: string | Date) {
     const { weekdays } = handleDurationTime(startDate, endDate);
 
-    const promises = routes.map((route, index) => this.getLocationOptions(route, weekdays[index].toLowerCase()));
+    const promises = routes.map((route, index) => {
+      const day = weekdays[index].toLowerCase();
+      return this.getLocationOptions(route, day);
+    });
     const newRoutes = await Promise.all(promises);
 
     return newRoutes;
@@ -514,7 +575,7 @@ export class GeneticService implements OnApplicationBootstrap {
 
       for (let i = 1; i <= route.length - 2; i++) {
         arrivalTime += 30;
-        const isTrue = compareTimes(arrivalTime, route[i].openTimes, STAY_TIME);
+        const isTrue = compareTimes(arrivalTime, route[i].openTimes, route[i].stayTime);
 
         if (isTrue === false) unvalidLocations.push(route[i].description['name'] || 'Unknown location');
       }
@@ -533,40 +594,53 @@ export class GeneticService implements OnApplicationBootstrap {
     let arrivalTime = START_TIME;
     const listPointDetails: LocationOptions[] = [startPoint];
     const listPoints = [startPoint.location];
-    while (arrivalTime + START_TIME < END_TIME) {
-      const randomLocation = _.sampleSize(this.locations, 1)[0];
-      const lat = randomLocation.latitude;
-      const lng = randomLocation.longitude;
-      const types = randomLocation.types;
+    let locations = [...this.locations];
 
-      const openTime = randomLocation.opening_hours[day];
-      const point = { latitude: lat, longitude: lng };
+    while (true) {
+      arrivalTime += 30;
+
+      if (locations.length === 0 || arrivalTime > END_TIME) break;
+
+      const randomIndex = Math.floor(Math.random() * locations.length);
+      const randomLocation = locations[randomIndex];
+
+      const { latitude, longitude, types, stayTime, delayTime, opening_hours, cost } = randomLocation;
+
+      const stayDuration = stayTime + delayTime;
+      const openTime = opening_hours[day];
+      const point = { latitude, longitude };
+
+      if (arrivalTime + stayDuration > END_TIME) continue;
+
       const isExist = checkExistedValue(listPoints, point) || checkExistedValue(allPoints, point);
 
       if (isExist === false) {
-        if (compareTimes(arrivalTime, openTime, STAY_TIME) === false) continue;
+        if (compareTimes(arrivalTime, openTime, stayDuration) === false) continue;
 
         const pointDetail = {
           ...point,
           openTimes: openTime,
-          time: { openTime: arrivalTime, closeTime: arrivalTime + STAY_TIME } as ActiveTime,
+          stayTime: stayDuration,
+          cost: cost,
+          time: { openTime: arrivalTime, closeTime: arrivalTime + stayDuration } as ActiveTime,
           description: randomLocation,
           types,
         } as LocationDto;
 
-        arrivalTime += STAY_TIME;
+        arrivalTime += stayDuration;
         listPoints.push(point);
         listPointDetails.push(getLocation(pointDetail));
       }
-    }
 
-    listPoints.push(startPoint.location);
+      locations = locations.filter((_, index) => index !== randomIndex);
+    }
 
     const endPoint = getLocation({
       latitude: startPoint.latitude,
       longitude: startPoint.longitude,
+      stayTime: 0,
       openTimes: startPoint.openTimes,
-      time: { openTime: arrivalTime, closeTime: arrivalTime + STAY_TIME } as ActiveTime,
+      time: { openTime: arrivalTime, closeTime: arrivalTime } as ActiveTime,
       description: { name: 'End point', address: 'End point' },
     } as LocationDto);
 
@@ -582,6 +656,7 @@ export class GeneticService implements OnApplicationBootstrap {
     const startPoint = getLocation({
       latitude,
       longitude,
+      stayTime: 0,
       description: { name: 'Start Point', address: 'Start Point' },
     } as LocationDto);
 
@@ -591,7 +666,7 @@ export class GeneticService implements OnApplicationBootstrap {
     const routes = weekdays.map((day: string) => {
       const population: LocationOptions[][] = [];
 
-      while (population.length < 2000) {
+      while (population.length < 1000) {
         const route = this.check1(startPoint, day.toLowerCase(), allPoints);
         population.push(route);
       }
@@ -607,9 +682,22 @@ export class GeneticService implements OnApplicationBootstrap {
 
       const bestRoutes = max.map((item) => {
         const route = population[item.index];
-        let bestParams = DEFAULT_BEST_PARAM;
+        const length = route.length;
 
-        const { bestDistance, bestFinalRoute, fitness } = this.geneticAlgorithm(
+        if (length < 3) return { distance: 0, cost: 0, route: null, fitness: 0 };
+
+        if (length < 4) {
+          const routeOptions = getRoute(route, this.type);
+
+          const { data, cost } = routeOptions.routeInfo;
+
+          return { distance: routeOptions.distance, cost: cost, route: data, fitness: routeOptions.fitness };
+        }
+
+        let bestParams = DEFAULT_BEST_PARAM;
+        if (length < 12) bestParams = BEST_PARAMS[length - 4];
+
+        const { bestDistance, bestFinalRoute, fitness, cost } = this.geneticAlgorithm(
           bestParams.POPULATION_SIZE,
           bestParams.NUM_ELITES,
           bestParams.NUM_GENS,
@@ -617,7 +705,7 @@ export class GeneticService implements OnApplicationBootstrap {
           route,
         );
 
-        return { distance: bestDistance, route: bestFinalRoute, fitness: fitness };
+        return { distance: bestDistance, cost: cost, route: bestFinalRoute, fitness: fitness };
       });
 
       const sortedRoutes = bestRoutes.sort((a, b) => b.fitness - a.fitness);
