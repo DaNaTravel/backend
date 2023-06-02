@@ -486,6 +486,7 @@ export class GeneticService implements OnApplicationBootstrap {
           cost,
           types,
           openTimes,
+          description: location,
         } as LocationDto);
 
         arrivalTime += stayDuration;

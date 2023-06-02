@@ -86,11 +86,14 @@ export class RouteController {
 
       const reasonableItinerary = this.geneticService.checkReasonableItinerary(compareItinerary);
 
-      if (reasonableItinerary.length)
+      if (reasonableItinerary.length) {
+        const key = reasonableItinerary.length > 1 ? 'are' : 'is';
+
         throw new BadRequestException({
-          message: `${reasonableItinerary.toString()}`,
+          message: `${reasonableItinerary.toString()} ${key} not operational during that time frame.`,
           data: null,
         });
+      }
 
       return this.geneticService.updateItinerary(compareItinerary, name, isPublic, id);
     }
