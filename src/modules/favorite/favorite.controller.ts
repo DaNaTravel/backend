@@ -54,7 +54,7 @@ export class FavoriteController {
 
     if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
     return {
-      mesage: 'Success',
+      message: 'Success',
       data: favorite.deletedCount,
     };
   }
