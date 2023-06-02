@@ -4,10 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JWT_REFRESH_SECRET_KEY } from 'src/constants';
 
 @Injectable()
-export class RefreshTokenStrategy extends PassportStrategy(
-  Strategy,
-  'jwt-refresh',
-) {
+export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

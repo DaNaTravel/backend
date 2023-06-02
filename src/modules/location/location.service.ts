@@ -129,29 +129,4 @@ export class LocationService {
       .select('-__v -updatedAt -createdAt');
     return updatedProfile;
   }
-
-  async getDataDashboard(startDate: Date, endDate: Date) {
-    const result = await this.locationRepo.aggregate([
-      {
-        $match: {
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' },
-            day: { $dayOfMonth: '$createdAt' },
-          },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    return result;
-  }
 }

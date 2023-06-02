@@ -11,7 +11,6 @@ import {
   PasswordDto,
   AccountQueryDto,
   AccountCreateDto,
-  DashboardQueryDto,
 } from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
@@ -126,8 +125,7 @@ export class AccountService {
 
   async checkConfirmedEmail(email: string) {
     const account = await this.accountRepo.findOne({ email }).lean();
-
-    return account.isConfirmed;
+    return Boolean(account.isConfirmed);
   }
 
   async updateConfirmEmail(email: string) {
@@ -268,30 +266,5 @@ export class AccountService {
     }).save();
 
     return { _id: newAccount._id, role: newAccount.role };
-  }
-
-  async getDataDashboard(startDate: Date, endDate: Date) {
-    const result = await this.accountRepo.aggregate([
-      {
-        $match: {
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' },
-            day: { $dayOfMonth: '$createdAt' },
-          },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    return result;
   }
 }

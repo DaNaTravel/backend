@@ -147,16 +147,6 @@ export class FacebookAccountDto {
   avatar: string = AVATAR_DEFAULT;
 }
 
-export class DashboardQueryDto {
-  @IsString()
-  @IsOptional()
-  startDate: string;
-
-  @IsString()
-  @IsOptional()
-  endDate: string;
-}
-
 export class BlockedAccountBodyDto {
   @IsMongoId()
   blockedId: ObjectId;
