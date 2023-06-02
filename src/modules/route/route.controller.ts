@@ -22,7 +22,7 @@ import { GeneticService } from './genetic.service';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { OptionalAuthGuard } from 'src/guards/optional-jwt.guard';
-import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto, ACCESS } from './dto';
+import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto, ACCESS, RouteBodyDto } from './dto';
 
 @Controller('routes')
 export class RouteController {
@@ -31,8 +31,8 @@ export class RouteController {
   @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
   @Post()
   @UseGuards(OptionalAuthGuard)
-  async getItineraries(@Query() dto: RouteQueryDto, @GetAuth() auth: Auth) {
-    const routes = await this.geneticService.createNewRoute(dto, auth);
+  async getItineraries(@Query() dto: RouteQueryDto, @GetAuth() auth: Auth, @Body() points: RouteBodyDto) {
+    const routes = await this.geneticService.createNewRoute(dto, auth, points);
     if (!routes)
       throw new BadRequestException({
         message: 'There is no suitable route.',

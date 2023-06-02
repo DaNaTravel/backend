@@ -2,7 +2,7 @@ import _, { range } from 'lodash';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { Point, RouteQueryDto } from './dto';
+import { Point, RouteBodyDto, RouteQueryDto } from './dto';
 import { RouteOptions, getRoute } from 'src/commons/routes';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
@@ -417,7 +417,7 @@ export class GeneticService implements OnApplicationBootstrap {
     return routes;
   }
 
-  async createNewRoute(dto: RouteQueryDto, auth: Auth) {
+  async createNewRoute(dto: RouteQueryDto, auth: Auth, points: RouteBodyDto) {
     const { latitude, longitude, startDate, endDate, ...data } = dto;
 
     this.locations = await this.locationRepo
@@ -439,7 +439,7 @@ export class GeneticService implements OnApplicationBootstrap {
       )
       .lean();
 
-    const routes = this.generateBestRoutes(dto);
+    const routes = await this.generateBestRoutes(dto, points);
     const { diffInDays } = handleDurationTime(startDate, endDate);
 
     if (!auth._id) {
@@ -535,7 +535,8 @@ export class GeneticService implements OnApplicationBootstrap {
   async updateItinerary(routes: LocationOptions[][], name: string, isPublic: boolean, routeId: string) {
     const newRoutes = routes.map((route) => {
       const routeOption = getRoute(route, this.type);
-      return { distance: routeOption.distance, route: routeOption.routeInfo };
+      const { data, cost } = routeOption.routeInfo;
+      return { distance: routeOption.distance, cost: cost, route: data };
     });
 
     const data = {
@@ -590,7 +591,7 @@ export class GeneticService implements OnApplicationBootstrap {
     return newRoutes;
   }
 
-  check1(startPoint: LocationOptions, day: string, allPoints: any[]) {
+  check1(startPoint: LocationOptions, day: string, allPoints: any[], requiredLocations: Location[]) {
     let arrivalTime = START_TIME;
     const listPointDetails: LocationOptions[] = [startPoint];
     const listPoints = [startPoint.location];
@@ -601,8 +602,48 @@ export class GeneticService implements OnApplicationBootstrap {
 
       if (locations.length === 0 || arrivalTime > END_TIME) break;
 
-      const randomIndex = Math.floor(Math.random() * locations.length);
-      const randomLocation = locations[randomIndex];
+      let randomIndex: number = 0;
+      let randomLocation: Location = null;
+
+      if (requiredLocations.length) {
+        randomIndex = Math.floor(Math.random() * requiredLocations.length);
+        randomLocation = requiredLocations[randomIndex];
+      }
+
+      if (randomLocation) {
+        const { stayTime, delayTime, latitude, longitude, opening_hours, cost, types } = randomLocation;
+        const point = { latitude, longitude };
+
+        const stayDuration = stayTime + delayTime;
+        const openTime = opening_hours[day];
+
+        const isExist = checkExistedValue(listPoints, point) || checkExistedValue(allPoints, point);
+        const isValidTime = compareTimes(arrivalTime, openTime, stayDuration);
+        const isValidArrivalTime = arrivalTime + stayDuration <= END_TIME;
+
+        const isValidLocation = isExist === false && isValidTime && isValidArrivalTime;
+
+        if (isValidLocation) {
+          const pointDetail = {
+            ...point,
+            openTimes: openTime,
+            stayTime: stayDuration,
+            cost: cost,
+            time: { openTime: arrivalTime, closeTime: arrivalTime + stayDuration } as ActiveTime,
+            description: randomLocation,
+            types,
+          } as LocationDto;
+
+          arrivalTime += stayDuration;
+          listPoints.push(point);
+          listPointDetails.push(getLocation(pointDetail));
+
+          requiredLocations = requiredLocations.filter((_, index) => index !== randomIndex);
+        }
+      }
+
+      randomIndex = Math.floor(Math.random() * locations.length);
+      randomLocation = locations[randomIndex];
 
       const { latitude, longitude, types, stayTime, delayTime, opening_hours, cost } = randomLocation;
 
@@ -649,9 +690,32 @@ export class GeneticService implements OnApplicationBootstrap {
     return listPointDetails;
   }
 
-  generateBestRoutes(dto: RouteQueryDto) {
+  async generateBestRoutes(dto: RouteQueryDto, input: RouteBodyDto) {
     const { latitude, longitude, startDate, endDate, type, ...data } = dto;
+    const { points } = input;
+
     this.type = type;
+    let locations: Location[] = [];
+
+    if (points && points.length) {
+      locations = await this.locationRepo.find(
+        { _id: { $in: points } },
+        {
+          _id: true,
+          name: true,
+          latitude: true,
+          longitude: true,
+          rating: true,
+          formatted_address: true,
+          opening_hours: true,
+          photos: true,
+          stayTime: true,
+          delayTime: true,
+          cost: true,
+        },
+      );
+      console.log(locations.length);
+    }
 
     const startPoint = getLocation({
       latitude,
@@ -666,14 +730,21 @@ export class GeneticService implements OnApplicationBootstrap {
     const routes = weekdays.map((day: string) => {
       const population: LocationOptions[][] = [];
 
-      while (population.length < 1000) {
-        const route = this.check1(startPoint, day.toLowerCase(), allPoints);
+      while (population.length < 2000) {
+        const route = this.check1(startPoint, day.toLowerCase(), allPoints, locations);
         population.push(route);
       }
 
       const fitnesses = population.map((locations, index) => {
+        let isTrue = false;
+        for (const item of locations) {
+          if (points && points.length && points.includes(item.description._id?.toString())) {
+            isTrue = true;
+            break;
+          }
+        }
         const route = getRoute(locations, this.type);
-        return { index: index, fitness: route.fitness };
+        return { index: index, fitness: isTrue ? route.fitness : 0 };
       });
 
       const sortedFitnesses = fitnesses.sort((a, b) => b.fitness - a.fitness);
