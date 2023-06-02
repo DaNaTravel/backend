@@ -1,4 +1,4 @@
-import { IsArray, IsLatitude, IsLongitude, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsLatitude, IsLongitude, IsObject, IsOptional, IsString } from 'class-validator';
 import { LocationType, OpeningHours, Pagination } from 'src/utils';
 
 export class LocationQueryDto extends Pagination {

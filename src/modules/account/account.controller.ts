@@ -291,7 +291,7 @@ export class AccountController {
     };
   }
 
-  @Patch('/admin/update/:accountId')
+  @Patch('/update/:accountId')
   @UseGuards(JwtAuthGuard)
   async updateProfileUser(
     @GetAuth() auth: Auth,

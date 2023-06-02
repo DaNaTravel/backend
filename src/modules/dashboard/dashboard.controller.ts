@@ -1,15 +1,4 @@
-import {
-  Controller,
-  Delete,
-  Body,
-  Post,
-  BadRequestException,
-  Param,
-  Get,
-  Query,
-  UseGuards,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Controller, BadRequestException, Get, Query, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { DashboardService } from './dashboard.service';
 import { Auth, GetAuth } from 'src/core/decorator';

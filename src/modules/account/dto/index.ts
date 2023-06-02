@@ -1,7 +1,5 @@
 import {
   IsArray,
-  IsDate,
-  IsDateString,
   IsEmail,
   IsEnum,
   IsMongoId,
@@ -35,7 +33,7 @@ export class AccountCreateDto {
   name: string;
 
   @IsEnum(Role)
-  role: Role;
+  role: Role = Role.TRAVELER;
 
   @IsOptional()
   @IsString()
@@ -64,7 +62,14 @@ export class AccountUpdateDto {
   avatar: string = AVATAR_DEFAULT;
 
   @IsOptional()
+  @IsEnum(Role)
+  role: Role;
+
+  @IsOptional()
   isActive: boolean;
+
+  @IsOptional()
+  isConfirmed: boolean;
 }
 
 export class PasswordDto {

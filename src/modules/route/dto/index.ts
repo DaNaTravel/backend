@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsEnum, IsMongoId, IsNumber, IsOptional, IsString } from 'class-validator';
-import { ObjectId } from 'mongoose';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Pagination, TravelType } from 'src/utils';
 
 export class RouteQueryDto {
