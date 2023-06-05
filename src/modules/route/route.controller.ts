@@ -157,6 +157,17 @@ export class RouteController {
     };
   }
 
+  @Get('/recommened')
+  async getRecommedItinerariesHomePage() {
+    const itinerary = await this.routeService.getRecommedItinerariesHomePage();
+    if (!itinerary) throw new BadRequestException('Bad Request');
+
+    return {
+      message: 'Success',
+      data: itinerary,
+    };
+  }
+
   @Get('/:itineraryId')
   @UseGuards(OptionalAuthGuard)
   async getItinerary(@Param('itineraryId') itineraryId: ObjectId, @GetAuth() auth: Auth) {
