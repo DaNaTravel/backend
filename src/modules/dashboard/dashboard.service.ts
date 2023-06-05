@@ -14,7 +14,7 @@ export class DashboardService {
   ) {}
 
   async getDataAccountsDashboard(startDate: Date, endDate: Date) {
-    const result = await this.accountRepo.aggregate([
+    const result = await this.itineraryRepo.aggregate([
       {
         $match: {
           createdAt: {
@@ -31,6 +31,15 @@ export class DashboardService {
             day: { $dayOfMonth: '$createdAt' },
           },
           count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          year: '$_id.year',
+          month: '$_id.month',
+          day: '$_id.day',
+          count: 1,
         },
       },
     ]);
@@ -58,6 +67,15 @@ export class DashboardService {
           count: { $sum: 1 },
         },
       },
+      {
+        $project: {
+          _id: 0,
+          year: '$_id.year',
+          month: '$_id.month',
+          day: '$_id.day',
+          count: 1,
+        },
+      },
     ]);
 
     return result;
@@ -81,6 +99,15 @@ export class DashboardService {
             day: { $dayOfMonth: '$createdAt' },
           },
           count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          year: '$_id.year',
+          month: '$_id.month',
+          day: '$_id.day',
+          count: 1,
         },
       },
     ]);
