@@ -3,7 +3,7 @@ import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { DashboardService } from './dashboard.service';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { DashboardQueryDto } from './dto';
-import { Role } from 'src/utils';
+import { Role, setDefaultTime } from 'src/utils';
 
 @Controller('/dashboard')
 @UseGuards(JwtAuthGuard)
@@ -22,16 +22,7 @@ export class DashboardController {
     endDate.setUTCHours(23, 59, 59, 999);
 
     if (!query.startDate || !query.endDate) {
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = date.getMonth();
-
-      const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
-      firstDayOfMonth.setUTCHours(0, 0, 0, 0);
-
-      const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0));
-      lastDayOfMonth.setUTCHours(23, 59, 59, 999);
-
+      const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
       startDate = firstDayOfMonth;
       endDate = lastDayOfMonth;
     }
@@ -56,16 +47,7 @@ export class DashboardController {
     endDate.setUTCHours(23, 59, 59, 999);
 
     if (!query.startDate || !query.endDate) {
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = date.getMonth();
-
-      const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
-      firstDayOfMonth.setUTCHours(0, 0, 0, 0);
-
-      const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0));
-      lastDayOfMonth.setUTCHours(23, 59, 59, 999);
-
+      const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
       startDate = firstDayOfMonth;
       endDate = lastDayOfMonth;
     }
@@ -90,16 +72,7 @@ export class DashboardController {
     endDate.setUTCHours(23, 59, 59, 999);
 
     if (!query.startDate || !query.endDate) {
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = date.getMonth();
-
-      const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
-      firstDayOfMonth.setUTCHours(0, 0, 0, 0);
-
-      const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0));
-      lastDayOfMonth.setUTCHours(23, 59, 59, 999);
-
+      const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
       startDate = firstDayOfMonth;
       endDate = lastDayOfMonth;
     }

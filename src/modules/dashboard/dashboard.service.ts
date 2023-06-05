@@ -89,9 +89,11 @@ export class DashboardService {
   }
 
   async getDataOverviewDashboard() {
-    const accountCount = await this.accountRepo.countDocuments();
-    const locationCount = await this.locationRepo.countDocuments();
-    const itineraryCount = await this.itineraryRepo.countDocuments();
+    const [accountCount, locationCount, itineraryCount] = await Promise.all([
+      this.accountRepo.countDocuments(),
+      this.locationRepo.countDocuments(),
+      this.itineraryRepo.countDocuments(),
+    ]);
     return {
       Accounts: accountCount,
       Locations: locationCount,

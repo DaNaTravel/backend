@@ -297,3 +297,17 @@ export const getPhoto = (info: any) => {
     photos: photo,
   };
 };
+
+export const setDefaultTime = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth();
+
+  const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
+  firstDayOfMonth.setUTCHours(0, 0, 0, 0);
+
+  const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0));
+  lastDayOfMonth.setUTCHours(23, 59, 59, 999);
+
+  return { firstDayOfMonth, lastDayOfMonth };
+};
