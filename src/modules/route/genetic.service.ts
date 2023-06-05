@@ -1,4 +1,4 @@
-import _, { range } from 'lodash';
+import _, { min, range } from 'lodash';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
@@ -18,7 +18,6 @@ import {
 } from 'src/utils';
 import { BEST_PARAMS, DEFAULT_BEST_PARAM, END_TIME, START_TIME, STAY_TIME } from 'src/constants';
 import { Auth } from 'src/core/decorator';
-import { timeStamp } from 'console';
 
 @Injectable()
 export class GeneticService implements OnApplicationBootstrap {
@@ -28,6 +27,7 @@ export class GeneticService implements OnApplicationBootstrap {
   constructor(
     @InjectModel(Location.name) private readonly locationRepo: Model<LocationDocument>,
     @InjectModel(Itinerary.name) private readonly itineraryRepo: Model<ItineraryDocument>,
+    private readonly routeOption: RouteOptions,
   ) {}
 
   async onApplicationBootstrap() {
@@ -691,7 +691,7 @@ export class GeneticService implements OnApplicationBootstrap {
   }
 
   async generateBestRoutes(dto: RouteQueryDto, input: RouteBodyDto) {
-    const { latitude, longitude, startDate, endDate, type, ...data } = dto;
+    const { latitude, longitude, startDate, endDate, type, minCost, maxCost, ...data } = dto;
     const { points } = input;
 
     this.type = type;
@@ -714,7 +714,6 @@ export class GeneticService implements OnApplicationBootstrap {
           cost: true,
         },
       );
-      console.log(locations.length);
     }
 
     const startPoint = getLocation({
@@ -736,15 +735,25 @@ export class GeneticService implements OnApplicationBootstrap {
       }
 
       const fitnesses = population.map((locations, index) => {
-        let isTrue = false;
-        for (const item of locations) {
-          if (points && points.length && points.includes(item.description._id?.toString())) {
-            isTrue = true;
-            break;
-          }
-        }
         const route = getRoute(locations, this.type);
-        return { index: index, fitness: isTrue ? route.fitness : 0 };
+        let fitness = route.fitness;
+
+        if (points && points.length) {
+          let isValidRoute = false;
+          for (const item of locations) {
+            if (points && points.length && points.includes(item.description._id?.toString())) {
+              isValidRoute = true;
+              break;
+            }
+          }
+          fitness = isValidRoute ? fitness : 0;
+        }
+
+        if (minCost && maxCost) {
+          fitness = route.cost >= minCost && route.cost <= maxCost ? fitness : 0;
+          if (fitness !== 0) console.log(fitness);
+        }
+        return { index: index, fitness: fitness };
       });
 
       const sortedFitnesses = fitnesses.sort((a, b) => b.fitness - a.fitness);

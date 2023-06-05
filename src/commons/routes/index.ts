@@ -1,7 +1,8 @@
 import { LocationTypes, TravelType, fitness, haversineDistance, typeScore } from 'src/utils';
 import { LocationOptions } from '../locations';
-import { values } from 'lodash';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class RouteOptions {
   route: LocationOptions[];
   type: TravelType;
