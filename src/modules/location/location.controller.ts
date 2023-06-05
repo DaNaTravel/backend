@@ -20,6 +20,7 @@ import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { LocationService } from './location.service';
 import { LocationQueryDto, LocationDto, LocationUpdateDto } from './dto';
+import { PATH_CONTAIN_ID } from 'src/constants';
 
 @Controller('/locations')
 export class LocationController {
@@ -31,7 +32,7 @@ export class LocationController {
     return this.locationService.getListLocations(dto);
   }
 
-  @Get('/:locationId')
+  @Get(`/locationId${PATH_CONTAIN_ID}`)
   async getDetailLocation(@Param('locationId') locationId: ObjectId) {
     const locations = await this.locationService.getDetailLocation(locationId);
     return {

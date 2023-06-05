@@ -61,11 +61,11 @@ export const typeScore = (types: string[], locationTypes: string[]) => {
   const number = locationTypes.filter((item) => types.includes(item));
   if (number.length) return 0;
 
-  return 10000;
+  return 1000;
 };
 
 export const fitness = (distance: number, type: number, cost: number) => {
-  return 5 / (Math.pow(distance, 2) + 1) + 2 / (Math.pow(type, 2) + 1) + 2 / (Math.pow(cost, 2) + 1);
+  return 8 / (Math.pow(distance, 4) + 1) + 1 / (Math.pow(type, 4) + 1) + 2 / (Math.pow(cost, 4) + 1);
 };
 
 export const handleDurationTime = (

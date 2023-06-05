@@ -92,3 +92,5 @@ export const END_TIME = 1350;
 export const STAY_TIME = 120;
 export const ARRIVAl_TIME = 30;
 export const DAY_IN_MILISECONDS = 1000 * 60 * 60 * 24;
+
+export const PATH_CONTAIN_ID = '([0-9a-fA-F]{24}$)';

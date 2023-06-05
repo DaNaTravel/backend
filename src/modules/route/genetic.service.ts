@@ -1,8 +1,8 @@
-import _, { range } from 'lodash';
+import _, { max, min, range } from 'lodash';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { Point, RouteBodyDto, RouteQueryDto } from './dto';
+import { Point, RouteQueryDto } from './dto';
 import { RouteOptions, getRoute } from 'src/commons/routes';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
@@ -18,7 +18,6 @@ import {
 } from 'src/utils';
 import { BEST_PARAMS, DEFAULT_BEST_PARAM, END_TIME, START_TIME, STAY_TIME } from 'src/constants';
 import { Auth } from 'src/core/decorator';
-import { timeStamp } from 'console';
 
 @Injectable()
 export class GeneticService implements OnApplicationBootstrap {
@@ -417,8 +416,8 @@ export class GeneticService implements OnApplicationBootstrap {
     return routes;
   }
 
-  async createNewRoute(dto: RouteQueryDto, auth: Auth, points: RouteBodyDto) {
-    const { latitude, longitude, startDate, endDate, ...data } = dto;
+  async createNewRoute(dto: RouteQueryDto, auth: Auth) {
+    const { latitude, longitude, startDate, endDate, people, ...data } = dto;
 
     this.locations = await this.locationRepo
       .find(
@@ -439,22 +438,26 @@ export class GeneticService implements OnApplicationBootstrap {
       )
       .lean();
 
-    const routes = await this.generateBestRoutes(dto, points);
+    const routes = await this.generateBestRoutes(dto);
+    const cost = routes.reduce((accumulation, route) => accumulation + route.cost * people, 0);
+
     const { diffInDays } = handleDurationTime(startDate, endDate);
 
     if (!auth._id) {
-      return { _id: null, accountId: null, totalDays: diffInDays, type: dto.type, people: dto.people, cost: 0, routes };
+      return { _id: null, accountId: null, totalDays: diffInDays, type: dto.type, people: people, cost: cost, routes };
     }
 
     const newItinerary = await new this.itineraryRepo({
       ...data,
+      cost: cost,
+      people,
       startDate: startDate,
       endDate: endDate,
       routes: routes,
       accountId: auth._id,
     }).save();
 
-    const { _id, accountId, type, people, cost } = newItinerary;
+    const { _id, accountId, type } = newItinerary;
 
     return { _id, accountId, totalDays: diffInDays, type, people, cost, routes };
   }
@@ -539,10 +542,13 @@ export class GeneticService implements OnApplicationBootstrap {
       return { distance: routeOption.distance, cost: cost, route: data };
     });
 
+    const total = newRoutes.reduce((accumulation, route) => accumulation + route.cost * people, 0);
+
     const data = {
       name,
       isPublic,
       routes: newRoutes,
+      cost: total,
     };
 
     const updatedItinerary = await this.itineraryRepo
@@ -690,9 +696,8 @@ export class GeneticService implements OnApplicationBootstrap {
     return listPointDetails;
   }
 
-  async generateBestRoutes(dto: RouteQueryDto, input: RouteBodyDto) {
-    const { latitude, longitude, startDate, endDate, type, ...data } = dto;
-    const { points } = input;
+  async generateBestRoutes(dto: RouteQueryDto) {
+    const { latitude, longitude, startDate, endDate, type, minCost, maxCost, people, points } = dto;
 
     this.type = type;
     let locations: Location[] = [];
@@ -714,7 +719,6 @@ export class GeneticService implements OnApplicationBootstrap {
           cost: true,
         },
       );
-      console.log(locations.length);
     }
 
     const startPoint = getLocation({
@@ -727,6 +731,9 @@ export class GeneticService implements OnApplicationBootstrap {
     const allPoints = [];
 
     const { weekdays, diffInDays } = handleDurationTime(startDate, endDate);
+    let minCostPerPerson = minCost ? minCost / (people * diffInDays) : 0;
+    let maxCostPerPerson = maxCost ? maxCost / (people * diffInDays) : 0;
+
     const routes = weekdays.map((day: string) => {
       const population: LocationOptions[][] = [];
 
@@ -736,15 +743,24 @@ export class GeneticService implements OnApplicationBootstrap {
       }
 
       const fitnesses = population.map((locations, index) => {
-        let isTrue = false;
-        for (const item of locations) {
-          if (points && points.length && points.includes(item.description._id?.toString())) {
-            isTrue = true;
-            break;
-          }
-        }
         const route = getRoute(locations, this.type);
-        return { index: index, fitness: isTrue ? route.fitness : 0 };
+        let fitness = route.fitness;
+
+        if (points && points.length) {
+          let isValidRoute = false;
+          for (const item of locations) {
+            if (points && points.length && points.includes(item.description._id?.toString())) {
+              isValidRoute = true;
+              break;
+            }
+          }
+          fitness = isValidRoute ? fitness : 0;
+        }
+
+        if (minCost && maxCost) {
+          fitness = route.cost >= minCostPerPerson && route.cost <= maxCostPerPerson ? fitness : 0;
+        }
+        return { index: index, fitness: fitness };
       });
 
       const sortedFitnesses = fitnesses.sort((a, b) => b.fitness - a.fitness);
