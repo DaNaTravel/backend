@@ -75,9 +75,9 @@ export class LocationController {
     };
   }
 
-  @Patch('/update/:locationId')
+  @Patch('/:locationId')
   @UseGuards(JwtAuthGuard)
-  async updateProfileUser(
+  async updateLocation(
     @GetAuth() auth: Auth,
     @Param('locationId') locationId: ObjectId,
     @Body() changedInfo: LocationUpdateDto,
@@ -89,11 +89,11 @@ export class LocationController {
       throw new BadRequestException('No changes found');
     }
 
-    const updatedProfile = await this.locationService.updatedLocation(locationId, changedInfo);
-    if (!updatedProfile) throw new BadRequestException('Bad Request');
+    const updatedLocaton = await this.locationService.updatedLocation(locationId, changedInfo);
+    if (!updatedLocaton) throw new BadRequestException('Bad Request');
     return {
       message: 'Success',
-      data: updatedProfile,
+      data: updatedLocaton,
     };
   }
 }
