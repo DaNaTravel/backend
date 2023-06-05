@@ -1,12 +1,11 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
+import { Model } from 'mongoose';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
 import { Account, AccountDocument } from 'src/schemas/accounts';
-import { Model } from 'mongoose';
 import { DashboardQueryDto } from './dto';
-import { Auth } from 'src/core/decorator';
-import { setDefaultTime } from 'src/utils';
+import { formatDate, setDefaultTime } from 'src/utils';
 import { CHART } from 'src/constants';
 
 @Injectable()
@@ -17,7 +16,7 @@ export class DashboardService {
     @InjectModel(Account.name) private readonly accountRepo: Model<AccountDocument>,
   ) {}
 
-  async getDashboard(query: DashboardQueryDto, auth: Auth) {
+  async getDashboard(query: DashboardQueryDto) {
     let startDate = new Date(query.startDate);
     startDate.setUTCHours(0, 0, 0, 0);
     let endDate = new Date(query.endDate);
@@ -31,26 +30,26 @@ export class DashboardService {
 
     switch (query.name) {
       case CHART.LOCATION:
-        return await this.getDataLocationsDashboard(startDate, endDate);
+        return this.getDataDashboard(this.locationRepo, startDate, endDate);
 
       case CHART.ACCOUNT:
-        return await this.getDataLocationsDashboard(startDate, endDate);
+        return this.getDataDashboard(this.accountRepo, startDate, endDate);
 
       case CHART.ITINERARY:
-        return await this.getDataLocationsDashboard(startDate, endDate);
+        return this.getDataDashboard(this.itineraryRepo, startDate, endDate);
 
       default:
         return [];
     }
   }
 
-  async getDataAccountsDashboard(startDate: Date, endDate: Date) {
-    const result = await this.itineraryRepo.aggregate([
+  private async getDataDashboard(repo: Model<any>, startDate: Date, endDate: Date) {
+    const result = await repo.aggregate([
       {
         $match: {
           createdAt: {
             $gte: startDate,
-            $lte: endDate,
+            $lt: endDate,
           },
         },
       },
@@ -64,89 +63,32 @@ export class DashboardService {
           count: { $sum: 1 },
         },
       },
-      {
-        $project: {
-          _id: 0,
-          year: '$_id.year',
-          month: '$_id.month',
-          day: '$_id.day',
-          count: 1,
-        },
-      },
     ]);
 
-    return result;
-  }
+    const formattedResult = {};
 
-  async getDataLocationsDashboard(startDate: Date, endDate: Date) {
-    const result = await this.locationRepo.aggregate([
-      {
-        $match: {
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' },
-            day: { $dayOfMonth: '$createdAt' },
-          },
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          year: '$_id.year',
-          month: '$_id.month',
-          day: '$_id.day',
-          count: 1,
-        },
-      },
-    ]);
+    const currentDate = new Date(startDate);
+    const endDateCopy = new Date(endDate);
+    endDateCopy.setDate(endDateCopy.getDate() + 1);
 
-    return result;
-  }
+    while (currentDate < endDateCopy) {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      const day = currentDate.getDate();
 
-  async getDataItinerariesDashboard(startDate: Date, endDate: Date) {
-    const result = await this.itineraryRepo.aggregate([
-      {
-        $match: {
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' },
-            day: { $dayOfMonth: '$createdAt' },
-          },
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          year: '$_id.year',
-          month: '$_id.month',
-          day: '$_id.day',
-          count: 1,
-        },
-      },
-      {
-        $sort: { createdAt: -1 },
-      },
-    ]);
+      const formattedDate = formatDate(year, month, day);
 
-    return result;
+      const matchingResult = result.find(
+        (item) => item._id.year === year && item._id.month === month && item._id.day === day,
+      );
+
+      const count = matchingResult ? matchingResult.count : 0;
+      formattedResult[formattedDate] = count;
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return formattedResult;
   }
 
   async getDataOverviewDashboard() {

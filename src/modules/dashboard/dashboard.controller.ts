@@ -16,7 +16,7 @@ export class DashboardController {
     if (auth.role !== Role.ADMIN)
       throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
 
-    const data = await this.dashboardService.getDashboard(query, auth);
+    const data = await this.dashboardService.getDashboard(query);
 
     if (!data) throw new BadRequestException('Bad Request');
     return {
@@ -25,80 +25,80 @@ export class DashboardController {
     };
   }
 
-  @Get('/accounts')
-  @UseGuards(JwtAuthGuard)
-  async getDataAccountsDashboard(@GetAuth() auth: Auth, @Query() query: DashboardQueryDto) {
-    if (auth.role !== Role.ADMIN)
-      throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
+  // @Get('/accounts')
+  // @UseGuards(JwtAuthGuard)
+  // async getDataAccountsDashboard(@GetAuth() auth: Auth, @Query() query: DashboardQueryDto) {
+  //   if (auth.role !== Role.ADMIN)
+  //     throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
 
-    let startDate = new Date(query.startDate);
-    startDate.setUTCHours(0, 0, 0, 0);
-    let endDate = new Date(query.endDate);
-    endDate.setUTCHours(23, 59, 59, 999);
+  //   let startDate = new Date(query.startDate);
+  //   startDate.setUTCHours(0, 0, 0, 0);
+  //   let endDate = new Date(query.endDate);
+  //   endDate.setUTCHours(23, 59, 59, 999);
 
-    if (!query.startDate || !query.endDate) {
-      const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
-      startDate = firstDayOfMonth;
-      endDate = lastDayOfMonth;
-    }
+  //   if (!query.startDate || !query.endDate) {
+  //     const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
+  //     startDate = firstDayOfMonth;
+  //     endDate = lastDayOfMonth;
+  //   }
 
-    const data = await this.dashboardService.getDataAccountsDashboard(startDate, endDate);
-    if (!data) throw new BadRequestException('Bad Request');
-    return {
-      message: 'Success',
-      data: data,
-    };
-  }
+  //   const data = await this.dashboardService.getDataAccountsDashboard(startDate, endDate);
+  //   if (!data) throw new BadRequestException('Bad Request');
+  //   return {
+  //     message: 'Success',
+  //     data: data,
+  //   };
+  // }
 
-  @Get('/locations')
-  @UseGuards(JwtAuthGuard)
-  async getDataLocationsDashboard(@GetAuth() auth: Auth, @Query() query: DashboardQueryDto) {
-    if (auth.role !== Role.ADMIN)
-      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+  // @Get('/locations')
+  // @UseGuards(JwtAuthGuard)
+  // async getDataLocationsDashboard(@GetAuth() auth: Auth, @Query() query: DashboardQueryDto) {
+  //   if (auth.role !== Role.ADMIN)
+  //     throw new UnauthorizedException({ message: 'You do not have permission', data: null });
 
-    let startDate = new Date(query.startDate);
-    startDate.setUTCHours(0, 0, 0, 0);
-    let endDate = new Date(query.endDate);
-    endDate.setUTCHours(23, 59, 59, 999);
+  //   let startDate = new Date(query.startDate);
+  //   startDate.setUTCHours(0, 0, 0, 0);
+  //   let endDate = new Date(query.endDate);
+  //   endDate.setUTCHours(23, 59, 59, 999);
 
-    if (!query.startDate || !query.endDate) {
-      const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
-      startDate = firstDayOfMonth;
-      endDate = lastDayOfMonth;
-    }
+  //   if (!query.startDate || !query.endDate) {
+  //     const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
+  //     startDate = firstDayOfMonth;
+  //     endDate = lastDayOfMonth;
+  //   }
 
-    const data = await this.dashboardService.getDataLocationsDashboard(startDate, endDate);
-    if (!data) throw new BadRequestException('Bad Request');
-    return {
-      message: 'Success',
-      data: data,
-    };
-  }
+  //   const data = await this.dashboardService.getDataLocationsDashboard(startDate, endDate);
+  //   if (!data) throw new BadRequestException('Bad Request');
+  //   return {
+  //     message: 'Success',
+  //     data: data,
+  //   };
+  // }
 
-  @Get('/itineraries')
-  @UseGuards(JwtAuthGuard)
-  async getDataItinerariesDashboard(@GetAuth() auth: Auth, @Query() query: DashboardQueryDto) {
-    if (auth.role !== Role.ADMIN)
-      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
+  // @Get('/itineraries')
+  // @UseGuards(JwtAuthGuard)
+  // async getDataItinerariesDashboard(@GetAuth() auth: Auth, @Query() query: DashboardQueryDto) {
+  //   if (auth.role !== Role.ADMIN)
+  //     throw new UnauthorizedException({ message: 'You do not have permission', data: null });
 
-    let startDate = new Date(query.startDate);
-    startDate.setUTCHours(0, 0, 0, 0);
-    let endDate = new Date(query.endDate);
-    endDate.setUTCHours(23, 59, 59, 999);
+  //   let startDate = new Date(query.startDate);
+  //   startDate.setUTCHours(0, 0, 0, 0);
+  //   let endDate = new Date(query.endDate);
+  //   endDate.setUTCHours(23, 59, 59, 999);
 
-    if (!query.startDate || !query.endDate) {
-      const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
-      startDate = firstDayOfMonth;
-      endDate = lastDayOfMonth;
-    }
+  //   if (!query.startDate || !query.endDate) {
+  //     const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
+  //     startDate = firstDayOfMonth;
+  //     endDate = lastDayOfMonth;
+  //   }
 
-    const data = await this.dashboardService.getDataItinerariesDashboard(startDate, endDate);
-    if (!data) throw new BadRequestException('Bad Request');
-    return {
-      message: 'Success',
-      data: data,
-    };
-  }
+  //   const data = await this.dashboardService.getDataItinerariesDashboard(startDate, endDate);
+  //   if (!data) throw new BadRequestException('Bad Request');
+  //   return {
+  //     message: 'Success',
+  //     data: data,
+  //   };
+  // }
 
   @Get('/overview')
   @UseGuards(JwtAuthGuard)
