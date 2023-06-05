@@ -30,13 +30,13 @@ export class DashboardService {
 
     switch (query.name) {
       case CHART.LOCATION:
-        return this.getDataDashboard(this.locationRepo, startDate, endDate);
+        return await this.getDataDashboard(this.locationRepo, startDate, endDate);
 
       case CHART.ACCOUNT:
-        return this.getDataDashboard(this.accountRepo, startDate, endDate);
+        return await this.getDataDashboard(this.accountRepo, startDate, endDate);
 
       case CHART.ITINERARY:
-        return this.getDataDashboard(this.itineraryRepo, startDate, endDate);
+        return await this.getDataDashboard(this.itineraryRepo, startDate, endDate);
 
       default:
         return [];
@@ -65,7 +65,7 @@ export class DashboardService {
       },
     ]);
 
-    const formattedResult = {};
+    const formattedResult = [];
 
     const currentDate = new Date(startDate);
     const endDateCopy = new Date(endDate);
@@ -83,7 +83,7 @@ export class DashboardService {
       );
 
       const count = matchingResult ? matchingResult.count : 0;
-      formattedResult[formattedDate] = count;
+      formattedResult.push({ timeline: formattedDate, count });
 
       currentDate.setDate(currentDate.getDate() + 1);
     }
