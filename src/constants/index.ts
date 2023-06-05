@@ -1,3 +1,4 @@
+import { type } from 'os';
 import { ConfigService } from '../config';
 
 const config = ConfigService.getInstance();
@@ -94,3 +95,9 @@ export const ARRIVAl_TIME = 30;
 export const DAY_IN_MILISECONDS = 1000 * 60 * 60 * 24;
 
 export const PATH_CONTAIN_ID = '([0-9a-fA-F]{24}$)';
+
+export enum CHART {
+  LOCATION = 'locations',
+  ACCOUNT = 'accounts',
+  ITINERARY = 'itineraries',
+}

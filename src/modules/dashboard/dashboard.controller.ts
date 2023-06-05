@@ -4,11 +4,26 @@ import { DashboardService } from './dashboard.service';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { DashboardQueryDto } from './dto';
 import { Role, setDefaultTime } from 'src/utils';
+import { auth } from 'google-auth-library';
 
 @Controller('/dashboard')
 @UseGuards(JwtAuthGuard)
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
+
+  @Get()
+  async getDashboard(@GetAuth() auth: Auth, @Query() query: DashboardQueryDto) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
+
+    const data = await this.dashboardService.getDashboard(query, auth);
+
+    if (!data) throw new BadRequestException('Bad Request');
+    return {
+      message: 'Success',
+      data: data,
+    };
+  }
 
   @Get('/accounts')
   @UseGuards(JwtAuthGuard)

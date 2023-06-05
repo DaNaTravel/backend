@@ -4,6 +4,10 @@ import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { Model } from 'mongoose';
+import { DashboardQueryDto } from './dto';
+import { Auth } from 'src/core/decorator';
+import { setDefaultTime } from 'src/utils';
+import { CHART } from 'src/constants';
 
 @Injectable()
 export class DashboardService {
@@ -12,6 +16,33 @@ export class DashboardService {
     @InjectModel(Itinerary.name) private readonly itineraryRepo: Model<ItineraryDocument>,
     @InjectModel(Account.name) private readonly accountRepo: Model<AccountDocument>,
   ) {}
+
+  async getDashboard(query: DashboardQueryDto, auth: Auth) {
+    let startDate = new Date(query.startDate);
+    startDate.setUTCHours(0, 0, 0, 0);
+    let endDate = new Date(query.endDate);
+    endDate.setUTCHours(23, 59, 59, 999);
+
+    if (!query.startDate || !query.endDate) {
+      const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
+      startDate = firstDayOfMonth;
+      endDate = lastDayOfMonth;
+    }
+
+    switch (query.name) {
+      case CHART.LOCATION:
+        return await this.getDataLocationsDashboard(startDate, endDate);
+
+      case CHART.ACCOUNT:
+        return await this.getDataLocationsDashboard(startDate, endDate);
+
+      case CHART.ITINERARY:
+        return await this.getDataLocationsDashboard(startDate, endDate);
+
+      default:
+        return [];
+    }
+  }
 
   async getDataAccountsDashboard(startDate: Date, endDate: Date) {
     const result = await this.itineraryRepo.aggregate([
@@ -109,6 +140,9 @@ export class DashboardService {
           day: '$_id.day',
           count: 1,
         },
+      },
+      {
+        $sort: { createdAt: -1 },
       },
     ]);
 

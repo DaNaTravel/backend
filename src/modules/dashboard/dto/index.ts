@@ -8,4 +8,7 @@ export class DashboardQueryDto {
   @IsString()
   @IsOptional()
   endDate: string;
+
+  @IsString()
+  name: string;
 }
