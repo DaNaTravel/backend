@@ -95,10 +95,18 @@ export class RouteController {
         });
       }
 
-      return this.geneticService.updateItinerary(compareItinerary, name, isPublic, id);
+      const output = await this.geneticService.updateItinerary(compareItinerary, name, isPublic, id);
+      return {
+        message: 'Success',
+        data: output,
+      };
     }
 
-    return this.routeService.updateItinerary(dto, id);
+    const output = await this.routeService.updateItinerary(dto, id);
+    return {
+      message: 'Success',
+      data: output,
+    };
   }
 
   @Post('/:id/generate')
