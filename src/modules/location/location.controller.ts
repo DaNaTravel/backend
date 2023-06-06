@@ -69,7 +69,7 @@ export class LocationController {
 
     const deletedItem = await this.locationService.removeLocationById(locationId);
 
-    if (!deletedItem) throw new BadRequestException({ message: "Don't request to server", data: null });
+    if (!deletedItem) throw new BadRequestException({ message: 'Bad Request', data: null });
     return {
       mesage: 'Success',
       data: deletedItem,
