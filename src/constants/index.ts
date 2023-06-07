@@ -94,3 +94,6 @@ export const ARRIVAl_TIME = 30;
 export const DAY_IN_MILISECONDS = 1000 * 60 * 60 * 24;
 
 export const PATH_CONTAIN_ID = '([0-9a-fA-F]{24}$)';
+
+export const AAPID = config.get('AAPID');
+export const OPEN_WEATHER_MAP_API = `https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=${AAPID}`;

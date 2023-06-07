@@ -23,6 +23,7 @@ import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { OptionalAuthGuard } from 'src/guards/optional-jwt.guard';
 import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto, ACCESS } from './dto';
+import { PATH_CONTAIN_ID } from 'src/constants';
 
 @Controller('routes')
 export class RouteController {
@@ -134,11 +135,17 @@ export class RouteController {
 
     const compareItinerary = await this.geneticService.compareItinerary(routes, startDate, endDate);
 
-    const newRoutes = await this.geneticService.generateNewItinerary(compareItinerary);
+    const { cost, newRoutes } = await this.geneticService.generateNewItinerary(compareItinerary);
+
+    const output = {
+      _id: id,
+      cost: cost,
+      routes: newRoutes,
+    };
 
     return {
       message: 'Success',
-      data: newRoutes,
+      data: output,
     };
   }
 
@@ -165,7 +172,7 @@ export class RouteController {
     };
   }
 
-  @Get('/:itineraryId')
+  @Get(`/:itineraryId${PATH_CONTAIN_ID}`)
   async getItinerary(@Param('itineraryId') itineraryId: ObjectId) {
     const itinerary = await this.routeService.getItinerary(itineraryId);
     if (!itinerary) throw new NotFoundException('Itineray not found!');
@@ -192,5 +199,10 @@ export class RouteController {
       message: 'Success',
       data: output,
     };
+  }
+
+  @Get('/check')
+  async check() {
+    return this.geneticService.getDistrictWeather();
   }
 }
