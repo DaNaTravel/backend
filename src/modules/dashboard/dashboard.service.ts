@@ -49,7 +49,7 @@ export class DashboardService {
         $match: {
           createdAt: {
             $gte: startDate,
-            $lt: endDate,
+            $lte: endDate,
           },
         },
       },
@@ -66,24 +66,19 @@ export class DashboardService {
     ]);
 
     const formattedResult = [];
-
     const currentDate = new Date(startDate);
-    const endDateCopy = new Date(endDate);
-    endDateCopy.setDate(endDateCopy.getDate() + 1);
 
-    while (currentDate < endDateCopy) {
+    while (currentDate <= endDate) {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
       const day = currentDate.getDate();
-
-      const formattedDate = formatDate(year, month, day);
 
       const matchingResult = result.find(
         (item) => item._id.year === year && item._id.month === month && item._id.day === day,
       );
 
       const count = matchingResult ? matchingResult.count : 0;
-      formattedResult.push({ timeline: formattedDate, count });
+      formattedResult.push({ timeline: formatDate(year, month, day), count });
 
       currentDate.setDate(currentDate.getDate() + 1);
     }

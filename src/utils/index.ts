@@ -318,15 +318,3 @@ export function formatDate(year: number, month: number, day: number) {
   const formattedYear = String(year);
   return `${formattedDay}/${formattedMonth}/${formattedYear}`;
 }
-
-export function getDateRange(startDate: Date, endDate: Date) {
-  const dateRange = [];
-  const currentDate = new Date(startDate);
-
-  while (currentDate <= endDate) {
-    dateRange.push(new Date(currentDate));
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  return dateRange;
-}
