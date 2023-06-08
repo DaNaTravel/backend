@@ -44,6 +44,7 @@ export class FavoriteService {
             $project: {
               _id: 1,
               accountId: 1,
+              itineraryId: 1,
               name: '$itinerary.name',
               cost: '$itinerary.cost',
               people: '$itinerary.people',
