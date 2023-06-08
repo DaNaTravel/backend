@@ -17,16 +17,22 @@ export class DashboardService {
   ) {}
 
   async getDashboard(query: DashboardQueryDto) {
-    let startDate = new Date(query.startDate);
-    startDate.setUTCHours(0, 0, 0, 0);
-    let endDate = new Date(query.endDate);
-    endDate.setUTCHours(23, 59, 59, 999);
+    const { startDate: queryStartDate, endDate: queryEndDate } = query;
 
-    if (!query.startDate || !query.endDate) {
+    let startDate: Date;
+    let endDate: Date;
+
+    if (queryStartDate && queryEndDate) {
+      startDate = new Date(Number(queryStartDate));
+      endDate = new Date(Number(queryEndDate));
+    } else {
       const { firstDayOfMonth, lastDayOfMonth } = setDefaultTime();
       startDate = firstDayOfMonth;
       endDate = lastDayOfMonth;
     }
+
+    startDate.setUTCHours(0, 0, 0, 0);
+    endDate.setUTCHours(23, 59, 59, 999);
 
     switch (query.name) {
       case CHART.LOCATION:

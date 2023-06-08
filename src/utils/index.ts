@@ -316,5 +316,6 @@ export function formatDate(year: number, month: number, day: number) {
   const formattedDay = String(day).padStart(2, '0');
   const formattedMonth = String(month).padStart(2, '0');
   const formattedYear = String(year);
-  return `${formattedDay}/${formattedMonth}/${formattedYear}`;
+  const date = `${formattedYear}-${formattedMonth}-${formattedDay}`;
+  return new Date(date).getTime();
 }
