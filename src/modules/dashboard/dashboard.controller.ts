@@ -27,6 +27,7 @@ export class DashboardController {
   @Get('/overview')
   @UseGuards(JwtAuthGuard)
   async getDataOverviewDashboard(@GetAuth() auth: Auth) {
+    console.log(auth.role);
     if (auth.role !== Role.ADMIN)
       throw new UnauthorizedException({ message: 'You do not have permission', data: null });
 

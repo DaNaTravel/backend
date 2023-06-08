@@ -16,6 +16,7 @@ export class RouteService {
   ) {}
 
   async getItinerary(itineraryId: ObjectId) {
+    // this.deleteItinerarys();
     const itinerary = await this.itineraryRepo.findById(itineraryId).lean();
     return itinerary;
   }
@@ -126,6 +127,15 @@ export class RouteService {
 
     return output;
   }
+
+  // async deleteItinerarys() {
+  //   const date = '2023-06-05';
+  //   console.log(new Date(date + 'T00:00:00Z'), new Date(date + 'T23:59:59Z'));
+  //   const query = { createdAt: { $gte: new Date(date + 'T00:00:00Z'), $lt: new Date(date + 'T23:59:59Z') } };
+  //   const output = await this.itineraryRepo.deleteMany(query);
+  //   console.log(output.deletedCount);
+  //   return output;
+  // }
 
   async getRecommedItinerariesHomePage() {
     const topItineraries = await this.itineraryRepo.aggregate([
