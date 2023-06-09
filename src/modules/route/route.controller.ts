@@ -15,7 +15,6 @@ import {
   UnauthorizedException,
   Delete,
 } from '@nestjs/common';
-import _ from 'lodash';
 import { ParseBooleanPipe } from 'src/pipes';
 import { RouteService } from './route.service';
 import { GeneticService } from './genetic.service';
@@ -23,6 +22,7 @@ import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { OptionalAuthGuard } from 'src/guards/optional-jwt.guard';
 import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto, ACCESS } from './dto';
+import { PATH_CONTAIN_ID } from 'src/constants';
 
 @Controller('routes')
 export class RouteController {
@@ -95,10 +95,18 @@ export class RouteController {
         });
       }
 
-      return this.geneticService.updateItinerary(compareItinerary, name, isPublic, id);
+      const output = await this.geneticService.updateItinerary(compareItinerary, name, isPublic, id);
+      return {
+        message: 'Success',
+        data: output,
+      };
     }
 
-    return this.routeService.updateItinerary(dto, id);
+    const output = await this.routeService.updateItinerary(dto, id);
+    return {
+      message: 'Success',
+      data: output,
+    };
   }
 
   @Post('/:id/generate')
@@ -126,11 +134,17 @@ export class RouteController {
 
     const compareItinerary = await this.geneticService.compareItinerary(routes, startDate, endDate);
 
-    const newRoutes = await this.geneticService.generateNewItinerary(compareItinerary);
+    const { cost, newRoutes } = await this.geneticService.generateNewItinerary(compareItinerary);
+
+    const output = {
+      _id: id,
+      cost: cost,
+      routes: newRoutes,
+    };
 
     return {
       message: 'Success',
-      data: newRoutes,
+      data: output,
     };
   }
 
@@ -157,24 +171,10 @@ export class RouteController {
     };
   }
 
-  @Get('/recommened')
-  async getRecommedItinerariesHomePage() {
-    const itinerary = await this.routeService.getRecommedItinerariesHomePage();
-    if (!itinerary) throw new BadRequestException('Bad Request');
-
-    return {
-      message: 'Success',
-      data: itinerary,
-    };
-  }
-
-  @Get('/:itineraryId')
-  @UseGuards(OptionalAuthGuard)
-  async getItinerary(@Param('itineraryId') itineraryId: ObjectId, @GetAuth() auth: Auth) {
+  @Get(`/:itineraryId${PATH_CONTAIN_ID}`)
+  async getItinerary(@Param('itineraryId') itineraryId: ObjectId) {
     const itinerary = await this.routeService.getItinerary(itineraryId);
-    if (!itinerary) throw new NotFoundException('Itinerary not found!');
-
-    if (!auth && itinerary.isPublic === false) throw new UnauthorizedException('You must not view this itinerary');
+    if (!itinerary) throw new NotFoundException('Itineray not found!');
     return {
       message: 'Success',
       data: itinerary,
@@ -197,6 +197,22 @@ export class RouteController {
     return {
       message: 'Success',
       data: output,
+    };
+  }
+
+  @Get('/check')
+  async check() {
+    return this.geneticService.getDistrictWeather();
+  }
+
+  @Get('/recommended')
+  async getRecommendedItinerariesHomePage() {
+    const itinerary = await this.routeService.getRecommendedItinerariesHomePage();
+    if (!itinerary) throw new BadRequestException('Bad Request');
+
+    return {
+      message: 'Success',
+      data: itinerary,
     };
   }
 }

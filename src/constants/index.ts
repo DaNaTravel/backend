@@ -101,3 +101,6 @@ export enum CHART {
   ACCOUNT = 'accounts',
   ITINERARY = 'itineraries',
 }
+
+export const AAPID = config.get('AAPID');
+export const OPEN_WEATHER_MAP_API = `http://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=${AAPID}`;

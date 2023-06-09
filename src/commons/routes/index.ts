@@ -69,7 +69,22 @@ export class RouteOptions {
   }
 
   get fitness() {
-    return fitness(this.distance, this.typeScore, this.cost);
+    let count = 0;
+    let check = 0;
+    this.route.map((location) => {
+      if (location.types) {
+        const type = location.types;
+        if (
+          type.includes(LocationTypes.FOOD) ||
+          type.includes(LocationTypes.RESTAURANT) ||
+          type.includes(LocationTypes.CAFE)
+        )
+          count += 1;
+      }
+    });
+
+    if (count > 2) check = 100000;
+    return fitness(this.distance, this.typeScore, this.cost, check);
   }
 
   get cost() {

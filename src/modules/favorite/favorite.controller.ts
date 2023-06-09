@@ -11,7 +11,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ObjectId } from 'mongoose';
-import { FavoriteDto } from './dto';
+import { FavoriteDto, ItineraryQueryDto } from './dto';
 import { Category } from 'src/utils';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { GetAuth, Auth } from '../../core/decorator';
@@ -79,8 +79,8 @@ export class FavoriteController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getFavorite(@Query('category') category: Category, @GetAuth() auth: Auth) {
-    const data = await this.favoriteService.getFavorites(category, auth);
+  async getFavorite(@Query('category') category: Category, @Query() query: ItineraryQueryDto, @GetAuth() auth: Auth) {
+    const data = await this.favoriteService.getFavorites(category, auth, query);
 
     return {
       message: 'Success',

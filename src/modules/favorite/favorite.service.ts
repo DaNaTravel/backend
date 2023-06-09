@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, ObjectId, PipelineStage } from 'mongoose';
-import { Category, Role, getPhoto } from 'src/utils';
-import { FavoriteDto } from './dto';
+import { Category, Role, getPagination } from 'src/utils';
+import { FavoriteDto, ItineraryQueryDto } from './dto';
+
 import { Auth } from 'src/core/decorator';
 import { DAY_IN_MILISECONDS } from 'src/constants';
 import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
@@ -13,16 +14,16 @@ export class FavoriteService {
     @InjectModel(Favorite.name)
     private readonly favoriteRepo: Model<FavoriteDocument>,
   ) {}
-  async getFavorites(category: Category, auth: Auth) {
+
+  async getFavorites(category: Category, auth: Auth, query: ItineraryQueryDto) {
     const { _id } = auth;
+    const { page, take, skip } = getPagination(query.page, query.take);
 
     const array: Category[] = category ? [category] : ['itinerary', 'location'];
 
-    const promise = array.map((category: Category) => {
+    const promises = array.map(async (category: Category) => {
       const aggregate: PipelineStage[] = [
-        {
-          $match: { accountId: new mongoose.Types.ObjectId(_id) },
-        },
+        { $match: { accountId: new mongoose.Types.ObjectId(_id) } },
         {
           $lookup: {
             from: category === 'location' ? 'locations' : 'itineraries',
@@ -31,9 +32,7 @@ export class FavoriteService {
             as: `${category}`,
           },
         },
-        {
-          $unwind: `$${category}`,
-        },
+        { $unwind: `$${category}` },
       ];
 
       if (category === 'itinerary') {
@@ -67,6 +66,14 @@ export class FavoriteService {
             },
           },
         );
+
+        if (query.people) {
+          aggregate.push({ $match: { people: Number(query.people) } });
+        }
+
+        if (query.days) {
+          aggregate.push({ $match: { days: Number(query.days) } });
+        }
       } else {
         aggregate.push(
           { $match: { itineraryId: { $exists: false } } },
@@ -84,23 +91,22 @@ export class FavoriteService {
         );
       }
 
-      return this.favoriteRepo.aggregate(aggregate);
+      const getAll = this.favoriteRepo.aggregate(aggregate).exec();
+      const getByPage = this.favoriteRepo.aggregate(aggregate).skip(skip).limit(Number(take)).exec();
+
+      return { getAll, getByPage };
     });
+    const results = await Promise.all(promises);
+    const getAllPromises = results.map((item) => item.getAll);
+    const getByPagePromises = results.map((item) => item.getByPage);
 
-    const output = await Promise.all(promise);
-    let data = [].concat(...output);
-    if (category === 'itinerary') {
-      data = data.map((item) => {
-        const { routes } = item;
+    const [all, output] = await Promise.all([Promise.all(getAllPromises), Promise.all(getByPagePromises)]);
+    const data = [].concat(...output);
 
-        const address = routes.map((days: { route: any[] }) => {
-          return days.route.map((route: { description: any }) => getPhoto(route.description));
-        });
+    const totalCount = [].concat(...all).length;
+    const currentPage = page;
 
-        return { ...item, routes: address.flat() };
-      });
-    }
-    return data;
+    return { count: totalCount, page: currentPage, data };
   }
 
   async hasPermissionDeleteFavorite(auth: Auth, favoriteId: ObjectId) {

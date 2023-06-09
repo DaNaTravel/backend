@@ -127,7 +127,7 @@ export class RouteService {
     return output;
   }
 
-  async getRecommedItinerariesHomePage() {
+  async getRecommendedItinerariesHomePage() {
     const topItineraries = await this.itineraryRepo.aggregate([
       { $match: { isPublic: true } },
       { $lookup: { from: 'favorites', localField: '_id', foreignField: 'itineraryId', as: 'favorites' } },

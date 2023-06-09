@@ -47,16 +47,16 @@ export class LocationOptions {
     const travelTime = { arrival, departure };
 
     const description = {
-      _id: this.description._id || null,
-      name: this.description.name,
+      _id: this.description?._id || null,
+      name: this.description?.name,
       latitude: this.latitude,
       longitude: this.longitude,
-      address: this.description.formatted_address || null,
+      address: this.description?.formatted_address || null,
       types: this.types,
       openTimes: openTimes,
       stayTime: this.stayTime,
-      rating: this.description.rating || null,
-      photos: this.description.photos ? this.description.photos[0].photo_reference : null,
+      rating: this.description?.rating || null,
+      photos: this.description?.photos ? this.description.photos[0].photo_reference : null,
     };
 
     return {
