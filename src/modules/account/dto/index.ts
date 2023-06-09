@@ -12,7 +12,6 @@ import {
 import { Pagination, Role } from 'src/utils';
 import { AVATAR_DEFAULT } from '../../../constants';
 import { ObjectId } from 'mongoose';
-
 export class AccountCreateDto {
   @IsEmail()
   @MaxLength(100)
@@ -40,7 +39,6 @@ export class AccountCreateDto {
   @IsString()
   avatar: string = AVATAR_DEFAULT;
 }
-
 export class AccountUpdateDto {
   @IsMongoId()
   @IsOptional()
@@ -64,7 +62,14 @@ export class AccountUpdateDto {
   avatar: string = AVATAR_DEFAULT;
 
   @IsOptional()
+  @IsEnum(Role)
+  role: Role;
+
+  @IsOptional()
   isActive: boolean;
+
+  @IsOptional()
+  isConfirmed: boolean;
 }
 
 export class PasswordDto {
@@ -145,14 +150,6 @@ export class FacebookAccountDto {
   @IsOptional()
   @IsString()
   avatar: string = AVATAR_DEFAULT;
-}
-
-export class DashboardQueryDto {
-  @IsOptional()
-  month: number;
-
-  @IsOptional()
-  year: number;
 }
 
 export class BlockedAccountBodyDto {

@@ -118,6 +118,7 @@ export const convertTime = (value: number) => {
 
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 };
+
 export const PAGINATION = {
   take: 10,
   limit: 200,
@@ -284,6 +285,38 @@ export const permutations = (num: number) => {
 
   return output;
 };
+
+export const getPhoto = (info: any) => {
+  const { name, photos } = info;
+
+  const photo = photos ? photos : null;
+  return {
+    name: name,
+    photos: photo,
+  };
+};
+
+export const setDefaultTime = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth();
+
+  const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
+  firstDayOfMonth.setUTCHours(0, 0, 0, 0);
+
+  const lastDayOfMonth = new Date(Date.UTC(year, month + 1, 0));
+  lastDayOfMonth.setUTCHours(23, 59, 59, 999);
+
+  return { firstDayOfMonth, lastDayOfMonth };
+};
+
+export function formatDate(year: number, month: number, day: number) {
+  const formattedDay = String(day).padStart(2, '0');
+  const formattedMonth = String(month).padStart(2, '0');
+  const formattedYear = String(year);
+  const date = `${formattedYear}-${formattedMonth}-${formattedDay}`;
+  return new Date(date).getTime();
+}
 
 export const removeVietnameseTones = (str: string) => {
   str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');

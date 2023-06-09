@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, ObjectId, PipelineStage } from 'mongoose';
 import { Category, Role, getPagination } from 'src/utils';
 import { FavoriteDto, ItineraryQueryDto } from './dto';
+
 import { Auth } from 'src/core/decorator';
 import { DAY_IN_MILISECONDS } from 'src/constants';
 import { Favorite, FavoriteDocument } from 'src/schemas/favorites';
@@ -95,7 +96,6 @@ export class FavoriteService {
 
       return { getAll, getByPage };
     });
-
     const results = await Promise.all(promises);
     const getAllPromises = results.map((item) => item.getAll);
     const getByPagePromises = results.map((item) => item.getByPage);

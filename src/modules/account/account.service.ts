@@ -4,13 +4,13 @@ import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Account, AccountDocument } from 'src/schemas/accounts';
 import { compareHash, hashPassword } from 'src/utils/auth';
 import {
-  AccountCreateDto,
   GoogleAccountDto,
   SignInDto,
   FacebookAccountDto,
   AccountUpdateDto,
   PasswordDto,
   AccountQueryDto,
+  AccountCreateDto,
 } from './dto';
 import { TokenService } from './token.service';
 import { generate } from 'generate-password';
@@ -36,12 +36,13 @@ export class AccountService {
     return account;
   }
 
-  async createAccount(account: AccountCreateDto) {
+  async registerAccount(account: AccountCreateDto) {
     const { password, ...data } = account;
     const passwordHash = hashPassword(password);
 
     const newAccount = await new this.accountRepo({
       ...data,
+      role: 1,
       phone: null,
       isActive: true,
       password: passwordHash,
@@ -124,8 +125,7 @@ export class AccountService {
 
   async checkConfirmedEmail(email: string) {
     const account = await this.accountRepo.findOne({ email }).lean();
-
-    return account.isConfirmed;
+    return Boolean(account.isConfirmed);
   }
 
   async updateConfirmEmail(email: string) {
@@ -253,5 +253,18 @@ export class AccountService {
     return { count, page, listAccount };
   }
 
-  // async getDataDashboard() {}
+  async createAccount(account: AccountCreateDto) {
+    const { password, ...data } = account;
+    const passwordHash = hashPassword(password);
+
+    const newAccount = await new this.accountRepo({
+      ...data,
+      phone: null,
+      isActive: true,
+      isConfirmed: true,
+      password: passwordHash,
+    }).save();
+
+    return { _id: newAccount._id, role: newAccount.role };
+  }
 }

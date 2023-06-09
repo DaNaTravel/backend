@@ -27,7 +27,6 @@ import {
   EmailConfirmationDto,
   AccountUpdateDto,
   PasswordDto,
-  BlockedAccountBodyDto,
   DeletedAccountBodyDto,
   AccountQueryDto,
 } from './dto';
@@ -47,7 +46,7 @@ export class AccountController {
   ) {}
 
   @Post()
-  async createNewUser(@Body() account: AccountCreateDto) {
+  async registerNewUser(@Body() account: AccountCreateDto) {
     const { email, role } = account;
 
     if (role === Role.ADMIN)
@@ -63,7 +62,7 @@ export class AccountController {
         data: null,
       });
 
-    const newAccount = await this.accountService.createAccount(account);
+    const newAccount = await this.accountService.registerAccount(account);
     await this.mailService.sendEmailConfirm(email, newAccount._id);
 
     return {
@@ -76,7 +75,7 @@ export class AccountController {
   async validateAccount(@Body() account: SignInDto) {
     const { email } = account;
 
-    const isExistEmail = await this.accountService.checkConfirmedEmail(email);
+    const isExistEmail = await this.accountService.checkExistEmail(email);
     if (isExistEmail === false) {
       throw new NotFoundException({
         message: 'Email is not existed',
@@ -86,7 +85,7 @@ export class AccountController {
 
     const isConfirmed = await this.accountService.checkConfirmedEmail(email);
 
-    if (Boolean(isConfirmed) === false)
+    if (isConfirmed === false)
       throw new BadRequestException({
         message: 'Please confirm your email before sign-in',
         data: null,
@@ -292,7 +291,7 @@ export class AccountController {
     };
   }
 
-  @Patch('/admin/update/:accountId')
+  @Patch('/update/:accountId')
   @UseGuards(JwtAuthGuard)
   async updateProfileUser(
     @GetAuth() auth: Auth,
@@ -314,17 +313,23 @@ export class AccountController {
     };
   }
 
-  // @Get('/dashboard')
-  // @UseGuards(JwtAuthGuard)
-  // async getDataDashboard(@GetAuth() auth: Auth, @Query() query: dashboardQueryDto) {
-  //   if (auth.role !== Role.ADMIN)
-  //     throw new UnauthorizedException({ message: 'You do not have permission to create a new location', data: null });
+  @Post('/create')
+  @UseGuards(JwtAuthGuard)
+  async createNewUser(@GetAuth() auth: Auth, @Body() account: AccountCreateDto) {
+    if (auth.role !== Role.ADMIN)
+      throw new UnauthorizedException({ message: 'You do not have permission', data: null });
 
-  //   const data = await this.accountService.getDataDashboard(query);
-  //   if (!data) throw new BadRequestException('Bad Request');
-  //   return {
-  //     message: 'Success',
-  //     data: data,
-  //   };
-  // }
+    const isExistEmail = await this.accountService.checkExistEmail(account.email);
+    if (isExistEmail)
+      throw new BadRequestException({
+        message: 'Email is existed',
+        data: null,
+      });
+
+    const newAccount = await this.accountService.createAccount(account);
+    return {
+      message: 'Success',
+      data: newAccount,
+    };
+  }
 }

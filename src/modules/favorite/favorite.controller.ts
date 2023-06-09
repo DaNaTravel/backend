@@ -32,7 +32,7 @@ export class FavoriteController {
     if (isExistedFavorite) throw new BadRequestException({ message: 'You liked', data: null });
 
     const favorite = await this.favoriteService.addFavorite(bodyData, auth);
-    if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
+    if (!favorite) throw new BadRequestException({ message: 'Bad Request', data: null });
 
     return {
       message: 'Success',
@@ -52,7 +52,7 @@ export class FavoriteController {
 
     const favorite = await this.favoriteService.removeFavoriteById(favoriteId);
 
-    if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
+    if (!favorite) throw new BadRequestException({ message: 'Bad Request', data: null });
     return {
       message: 'Success',
       data: favorite.deletedCount,
@@ -70,7 +70,7 @@ export class FavoriteController {
       throw new BadRequestException({ message: "You didn't like it before", data: null });
 
     const favorite = await this.favoriteService.removeFavorite(bodyData, auth);
-    if (!favorite) throw new BadRequestException({ message: "Don't request to server", data: null });
+    if (!favorite) throw new BadRequestException({ message: 'Bad Request', data: null });
     return {
       message: 'Success',
       data: favorite.deletedCount,

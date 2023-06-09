@@ -15,7 +15,6 @@ import {
   UnauthorizedException,
   Delete,
 } from '@nestjs/common';
-import _ from 'lodash';
 import { ParseBooleanPipe } from 'src/pipes';
 import { RouteService } from './route.service';
 import { GeneticService } from './genetic.service';
