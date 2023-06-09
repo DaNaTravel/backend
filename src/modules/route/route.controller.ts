@@ -206,9 +206,9 @@ export class RouteController {
     return this.geneticService.getDistrictWeather();
   }
 
-  @Get('/recommened')
-  async getRecommedItinerariesHomePage() {
-    const itinerary = await this.routeService.getRecommedItinerariesHomePage();
+  @Get('/recommended')
+  async getRecommendedItinerariesHomePage() {
+    const itinerary = await this.routeService.getRecommendedItinerariesHomePage();
     if (!itinerary) throw new BadRequestException('Bad Request');
 
     return {
