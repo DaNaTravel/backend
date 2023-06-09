@@ -138,4 +138,16 @@ export class RouteService {
 
     return output;
   }
+
+  async getRecommendedItinerariesHomePage() {
+    const topItineraries = await this.itineraryRepo.aggregate([
+      { $match: { isPublic: true } },
+      { $lookup: { from: 'favorites', localField: '_id', foreignField: 'itineraryId', as: 'favorites' } },
+      { $addFields: { favoriteCount: { $size: '$favorites' } } },
+      { $sort: { favoriteCount: -1 } },
+      { $limit: 6 },
+    ]);
+
+    return topItineraries;
+  }
 }
