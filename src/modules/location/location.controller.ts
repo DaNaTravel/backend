@@ -32,7 +32,7 @@ export class LocationController {
     return this.locationService.getListLocations(dto);
   }
 
-  @Get(`/locationId${PATH_CONTAIN_ID}`)
+  @Get(`/:locationId${PATH_CONTAIN_ID}`)
   async getDetailLocation(@Param('locationId') locationId: ObjectId) {
     const locations = await this.locationService.getDetailLocation(locationId);
     return {
@@ -58,7 +58,7 @@ export class LocationController {
     };
   }
 
-  @Delete('/:locationId')
+  @Delete(`/:locationId${PATH_CONTAIN_ID}`)
   @UseGuards(JwtAuthGuard)
   async removeLocationById(@Param('locationId') locationId: ObjectId, @GetAuth() auth: Auth) {
     if (auth.role !== Role.ADMIN)
@@ -76,7 +76,7 @@ export class LocationController {
     };
   }
 
-  @Patch('/:locationId')
+  @Patch(`/:locationId${PATH_CONTAIN_ID}`)
   @UseGuards(JwtAuthGuard)
   async updateLocation(
     @GetAuth() auth: Auth,

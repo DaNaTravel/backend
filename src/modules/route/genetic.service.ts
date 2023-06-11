@@ -154,7 +154,7 @@ export class GeneticService implements OnApplicationBootstrap {
         return !isOutsideActivity;
       }
 
-      return false;
+      return true;
     });
 
     return invalidLocations;
