@@ -181,7 +181,7 @@ export class RouteController {
     };
   }
 
-  @Delete('/:itineraryId')
+  @Delete(`/:itineraryId${PATH_CONTAIN_ID}`)
   @UseGuards(JwtAuthGuard)
   async deleteItinerary(@Param('itineraryId') itineraryId: string, @GetAuth() auth: Auth) {
     const permission = await this.routeService.hasPermission(auth, itineraryId);
@@ -198,11 +198,6 @@ export class RouteController {
       message: 'Success',
       data: output,
     };
-  }
-
-  @Get('/check')
-  async check() {
-    return this.geneticService.getDistrictWeather();
   }
 
   @Get('/recommended')

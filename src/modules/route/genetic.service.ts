@@ -609,6 +609,8 @@ export class GeneticService implements OnApplicationBootstrap {
         const isTrue = compareTimes(arrivalTime, route[i].openTimes, route[i].stayTime);
 
         if (isTrue === false) unvalidLocations.push(route[i].description['name'] || 'Unknown location');
+
+        arrivalTime += route[i].stayTime;
       }
     }
     return unvalidLocations;

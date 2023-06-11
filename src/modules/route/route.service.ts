@@ -6,6 +6,7 @@ import { ACCESS, ItinerariesByAccountQueryDto, UpdateItineraryDto } from './dto'
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
 import { Auth } from 'src/core/decorator';
+import { DAY_IN_MILISECONDS } from 'src/constants';
 @Injectable()
 export class RouteService {
   private locations: Location[] = [];
@@ -131,7 +132,28 @@ export class RouteService {
     const topItineraries = await this.itineraryRepo.aggregate([
       { $match: { isPublic: true } },
       { $lookup: { from: 'favorites', localField: '_id', foreignField: 'itineraryId', as: 'favorites' } },
-      { $addFields: { favoriteCount: { $size: '$favorites' } } },
+      {
+        $project: {
+          _id: 1,
+          cost: 1,
+          type: 1,
+          people: 1,
+          endDate: 1,
+          startDate: 1,
+          name: 1,
+          days: {
+            $let: {
+              vars: {
+                diffInDays: {
+                  $divide: [{ $subtract: [{ $toDate: '$endDate' }, { $toDate: '$startDate' }] }, DAY_IN_MILISECONDS],
+                },
+              },
+              in: { $add: ['$$diffInDays', 1] },
+            },
+          },
+          favoriteCount: { $size: '$favorites' },
+        },
+      },
       { $sort: { favoriteCount: -1 } },
       { $limit: 6 },
     ]);
