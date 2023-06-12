@@ -97,4 +97,15 @@ export class LocationController {
       data: updatedLocaton,
     };
   }
+
+  @Get('/recommended')
+  async getRecommendedLocationsHomePage() {
+    const locations = await this.locationService.getRecommendedLocationsHomePage();
+    if (!locations) throw new BadRequestException('Bad Request');
+
+    return {
+      message: 'Success',
+      data: locations,
+    };
+  }
 }

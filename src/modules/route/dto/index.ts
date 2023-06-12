@@ -80,6 +80,12 @@ export class ItinerariesByAccountQueryDto extends Pagination {
   type: TravelType;
 
   @IsOptional()
+  people: number;
+
+  @IsOptional()
+  days: number;
+
+  @IsOptional()
   @IsEnum(ACCESS)
   access: ACCESS = ACCESS.public;
 }

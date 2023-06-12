@@ -129,4 +129,23 @@ export class LocationService {
       .select('-__v -updatedAt -createdAt');
     return updatedProfile;
   }
+
+  async getRecommendedLocationsHomePage() {
+    const topLocations = await this.locationRepo.aggregate([
+      { $lookup: { from: 'favorites', localField: '_id', foreignField: 'locationId', as: 'favorites' } },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          photo: { $arrayElemAt: ['$photos.photo_reference', 0] },
+          rating: 1,
+          favoriteCount: { $size: '$favorites' },
+        },
+      },
+      { $sort: { favoriteCount: -1 } },
+      { $limit: 6 },
+    ]);
+
+    return topLocations;
+  }
 }
