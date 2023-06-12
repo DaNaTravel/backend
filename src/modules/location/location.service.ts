@@ -110,6 +110,7 @@ export class LocationService {
               user_ratings_total: true,
               reviews: true,
               photos: true,
+              rating: true,
               weekday_text: true,
             },
           },
