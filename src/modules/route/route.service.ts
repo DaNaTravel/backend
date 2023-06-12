@@ -71,7 +71,7 @@ export class RouteService {
       resultPipeline.push({ $match: { days: Number(days) } });
     }
 
-    const [count, itinerariesResult] = await Promise.all([
+    const [itineraries, itinerariesResult] = await Promise.all([
       this.itineraryRepo.aggregate(resultPipeline).exec(),
       this.itineraryRepo.aggregate(resultPipeline).skip(skip).limit(Number(take)).exec(),
     ]);
@@ -85,7 +85,7 @@ export class RouteService {
       return { ...item, routes: address.flat() };
     });
 
-    return { count: count.length, page, output };
+    return { count: itineraries.length, page, output };
   }
 
   async getListItineries(query: ItinerariesByAccountQueryDto) {
