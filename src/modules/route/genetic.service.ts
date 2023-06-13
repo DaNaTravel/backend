@@ -802,6 +802,7 @@ export class GeneticService implements OnApplicationBootstrap {
             stayTime: true,
             delayTime: true,
             cost: true,
+            types: true,
           },
         )
         .lean();
