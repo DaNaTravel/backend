@@ -1,0 +1,12 @@
+version: '3'
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend
+    # command: npm start
+    # volumes:
+    #   - .:/app-folder
+    ports:
+      - '8001:5000'

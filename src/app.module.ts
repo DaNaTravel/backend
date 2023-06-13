@@ -8,6 +8,7 @@ import { LocationModule } from './modules/location/location.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
 import { RouteModule } from './modules/route/route.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
