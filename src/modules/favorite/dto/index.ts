@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { Category, Pagination, TravelType } from 'src/utils';
 
 export class FavoriteDto {

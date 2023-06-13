@@ -15,7 +15,6 @@ import {
   checkExistedValue,
   compareTimes,
   handleDurationTime,
-  haversineDistance,
   permutations,
   removeVietnameseTones,
 } from 'src/utils';
