@@ -89,3 +89,5 @@ export class ItinerariesByAccountQueryDto extends Pagination {
   @IsEnum(ACCESS)
   access: ACCESS = ACCESS.public;
 }
+
+export type Weather = { datetime: string; weather: string };

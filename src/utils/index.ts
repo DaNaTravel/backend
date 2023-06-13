@@ -86,9 +86,19 @@ export const handleDurationTime = (
   const diffInSeconds = toUTCDayJS(endDate).unix() - toUTCDayJS(startDate).unix();
   const diffInDays = Math.floor(diffInSeconds / (60 * 60 * 24)) + 1;
 
-  const weekdays = Array.from({ length: diffInDays }, (_, i) => i + 1).map((item: number) => getDate(startDate, item));
+  const currentDate = toUTCDayJS(startDate);
+  const weekdays: string[] = [];
+  const datetimes: string[] = [];
 
-  return { weekdays, diffInDays };
+  Array.from({ length: diffInDays }, (_, i) => i + 1).map((item: number, index) => {
+    const date = currentDate.add(index, 'day').toString();
+    const day = getDate(startDate, item);
+
+    weekdays.push(day);
+    datetimes.push(date);
+  });
+
+  return { weekdays, diffInDays, datetimes };
 };
 
 export const compareTimes = (currentTime: number, openTimes: ActiveTime[], stayTime: number = 0) => {
