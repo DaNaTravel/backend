@@ -24,14 +24,19 @@ export class RouteService {
   async getItinerariesByAccountId(filterCondition: ItinerariesByAccountQueryDto, auth: Auth) {
     const { skip, take, page } = getPagination(filterCondition.page, filterCondition.take);
     const { isPublic, access, type, people, days } = filterCondition;
-    const status = isPublic === 'true' ? true : false;
+
     const resultPipeline: any[] = [];
 
     if (access === ACCESS.private && auth._id) {
       resultPipeline.push({ $match: { accountId: new mongoose.Types.ObjectId(auth._id) } });
     }
 
+    if (access === ACCESS.public) {
+      resultPipeline.push({ $match: { isPublic: true } });
+    }
+
     if (isPublic !== undefined) {
+      const status = isPublic === 'true';
       resultPipeline.push({ $match: { isPublic: status } });
     }
 
@@ -78,8 +83,8 @@ export class RouteService {
 
     const output = itinerariesResult.map((item) => {
       const { routes } = item;
-      const address = routes.map((routes: { route: any[] }) =>
-        routes.route.map((route: { description: any }) => getPhoto(route.description)),
+      const address = routes.map((route: { route: any[] }) =>
+        route.route.map((route: { description: any }) => getPhoto(route.description)),
       );
 
       return { ...item, routes: address.flat() };
