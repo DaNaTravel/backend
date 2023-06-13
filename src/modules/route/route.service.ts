@@ -190,13 +190,31 @@ export class RouteService {
               in: { $add: ['$$diffInDays', 1] },
             },
           },
+          photos: {
+            $filter: {
+              input: {
+                $reduce: {
+                  input: {
+                    $map: {
+                      input: '$routes',
+                      as: 'route',
+                      in: '$$route.route.description.photos',
+                    },
+                  },
+                  initialValue: [],
+                  in: { $concatArrays: ['$$value', '$$this'] },
+                },
+              },
+              as: 'photo',
+              cond: { $ne: ['$$photo', null] },
+            },
+          },
           favoriteCount: { $size: '$favorites' },
         },
       },
       { $sort: { favoriteCount: -1 } },
       { $limit: 6 },
     ]);
-
     return topItineraries;
   }
 }
