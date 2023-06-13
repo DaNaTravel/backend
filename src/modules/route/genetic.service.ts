@@ -2,7 +2,7 @@ import _, { range } from 'lodash';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { Point, RouteQueryDto } from './dto';
+import { Point, RouteQueryDto, Weather } from './dto';
 import { RouteOptions, getRoute } from 'src/commons/routes';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
@@ -30,47 +30,47 @@ export class GeneticService implements OnApplicationBootstrap {
     {
       name: 'Hai Chau',
       location: { latitude: 16.04697173633593, longitude: 108.22038515715947 },
-      weather: [] as { datetime: string; weather: string }[],
+      weather: [] as Weather[],
     },
     {
       name: 'Son Tra',
       location: { latitude: 16.10291977378059, longitude: 108.2493200440619 },
-      weather: [] as { datetime: string; weather: string }[],
+      weather: [] as Weather[],
     },
     {
       name: 'Cam Le',
       location: { latitude: 16.015214248224638, longitude: 108.20671641221819 },
-      weather: [] as { datetime: string; weather: string }[],
+      weather: [] as Weather[],
     },
     {
       name: 'Ngu Hanh Son',
       location: { latitude: 16.030357060030763, longitude: 108.2445189339372 },
-      weather: [] as { datetime: string; weather: string }[],
+      weather: [] as Weather[],
     },
     {
       name: 'Lien Chieu',
       location: { latitude: 16.09278261915859, longitude: 108.1364319458878 },
-      weather: [] as { datetime: string; weather: string }[],
+      weather: [] as Weather[],
     },
     {
       name: 'Thanh Khe',
       location: { latitude: 16.064008756151956, longitude: 108.18639079211471 },
-      weather: [] as { datetime: string; weather: string }[],
+      weather: [] as Weather[],
     },
     {
       name: 'Hoa Ninh',
       location: { latitude: 16.048544178522768, longitude: 108.01103261826346 },
-      weather: [] as { datetime: string; weather: string }[],
+      weather: [] as Weather[],
     },
     {
       name: 'Hoa Bac',
       location: { latitude: 16.144259518821833, longitude: 107.95281243770388 },
-      weather: [] as { datetime: string; weather: string }[],
+      weather: [] as Weather[],
     },
     {
       name: 'Hoa Vang',
       location: { latitude: 15.984797655384305, longitude: 108.19288999139336 },
-      weather: [] as { datetime: string; weather: string }[],
+      weather: [] as Weather[],
     },
   ];
 
@@ -170,7 +170,7 @@ export class GeneticService implements OnApplicationBootstrap {
     const promises = this.district.map((item) => {
       const { latitude, longitude } = item.location;
 
-      return this.getWeather(latitude, longitude).then((data: { datetime: string; weather: string }[]) => {
+      return this.getWeather(latitude, longitude).then((data: Weather[]) => {
         const group = Array.from(
           data.reduce((map, currentItem) => {
             const date = currentItem.datetime.split(' ')[0];
@@ -179,7 +179,7 @@ export class GeneticService implements OnApplicationBootstrap {
             else map.set(date, [currentItem]);
 
             return map;
-          }, new Map<string, { datetime: string; weather: string }[]>()),
+          }, new Map<string, Weather[]>()),
         );
 
         const output = group.map(([key, values]) => {
