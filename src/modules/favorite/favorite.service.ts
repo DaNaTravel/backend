@@ -68,7 +68,7 @@ export class FavoriteService {
         );
 
         if (query.type) {
-          aggregate.push({ $match: { people: Number(query.type) } });
+          aggregate.push({ $match: { type: Number(query.type) } });
         }
 
         if (query.people) {
