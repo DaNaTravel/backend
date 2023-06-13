@@ -1,7 +1,7 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
 import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
-import { Role, getPagination, getPhoto, handleDurationTime } from 'src/utils';
+import { Role, getPagination, getPhoto } from 'src/utils';
 import { ACCESS, ItinerariesByAccountQueryDto, UpdateItineraryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
@@ -23,39 +23,74 @@ export class RouteService {
 
   async getItinerariesByAccountId(filterCondition: ItinerariesByAccountQueryDto, auth: Auth) {
     const { skip, take, page } = getPagination(filterCondition.page, filterCondition.take);
+    const { isPublic, access, type, people, days } = filterCondition;
 
-    const { isPublic, access } = filterCondition;
-
-    const where: FilterQuery<unknown>[] = [];
+    const resultPipeline: any[] = [];
 
     if (access === ACCESS.private && auth._id) {
-      where.push({ accountId: auth._id });
+      resultPipeline.push({ $match: { accountId: new mongoose.Types.ObjectId(auth._id) } });
+    }
+
+    if (access === ACCESS.public) {
+      resultPipeline.push({ $match: { isPublic: true } });
     }
 
     if (isPublic !== undefined) {
-      where.push({ isPublic: isPublic });
+      const status = isPublic === 'true';
+      resultPipeline.push({ $match: { isPublic: status } });
     }
 
-    const [count, itineraries] = await Promise.all([
-      this.itineraryRepo.count(where.length ? { $and: where } : {}),
-      this.itineraryRepo
-        .find(where.length ? { $and: where } : {})
-        .skip(skip)
-        .limit(take)
-        .lean(),
-    ]);
+    if (type) {
+      resultPipeline.push({ $match: { type } });
+    }
 
-    const output = itineraries.map((item) => {
-      const { routes, startDate, endDate } = item;
-      const { diffInDays } = handleDurationTime(startDate, endDate);
-      const address = routes
-        .filter((days) => !Array.isArray(days))
-        .map((days: { route: any[] }) => days.route.map((route: { description: any }) => getPhoto(route.description)));
+    if (people) {
+      resultPipeline.push({ $match: { people: Number(people) } });
+    }
 
-      return { ...item, days: diffInDays, routes: address.flat() };
+    resultPipeline.push({
+      $project: {
+        _id: 1,
+        cost: 1,
+        type: 1,
+        people: 1,
+        endDate: 1,
+        startDate: 1,
+        name: 1,
+        days: {
+          $let: {
+            vars: {
+              diffInDays: {
+                $divide: [{ $subtract: [{ $toDate: '$endDate' }, { $toDate: '$startDate' }] }, DAY_IN_MILISECONDS],
+              },
+            },
+            in: { $add: ['$$diffInDays', 1] },
+          },
+        },
+        isPublic: 1,
+        routes: 1,
+      },
     });
 
-    return { count, page, output };
+    if (days) {
+      resultPipeline.push({ $match: { days: Number(days) } });
+    }
+
+    const [itineraries, itinerariesResult] = await Promise.all([
+      this.itineraryRepo.aggregate(resultPipeline).exec(),
+      this.itineraryRepo.aggregate(resultPipeline).skip(skip).limit(Number(take)).exec(),
+    ]);
+
+    const output = itinerariesResult.map((item) => {
+      const { routes } = item;
+      const address = routes.map((route: { route: any[] }) =>
+        route.route.map((route: { description: any }) => getPhoto(route.description)),
+      );
+
+      return { ...item, routes: address.flat() };
+    });
+
+    return { count: itineraries.length, page, output };
   }
 
   async getListItineries(query: ItinerariesByAccountQueryDto) {

@@ -1,5 +1,5 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
-import { Category, Pagination } from 'src/utils';
+import { IsOptional, IsString } from 'class-validator';
+import { Category, Pagination, TravelType } from 'src/utils';
 
 export class FavoriteDto {
   @IsString()
@@ -26,4 +26,7 @@ export class ItineraryQueryDto extends Pagination {
 
   @IsOptional()
   days: number;
+
+  @IsOptional()
+  type: TravelType;
 }
