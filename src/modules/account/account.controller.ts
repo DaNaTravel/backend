@@ -36,6 +36,7 @@ import { TokenService } from './token.service';
 import { Auth, GetAuth } from 'src/core/decorator';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { ObjectId } from 'mongoose';
+import { PATH_CONTAIN_ID } from 'src/constants';
 
 @Controller('/accounts')
 export class AccountController {
@@ -291,7 +292,7 @@ export class AccountController {
     };
   }
 
-  @Patch('/update/:accountId')
+  @Patch(`/admin/update/:accountId${PATH_CONTAIN_ID}`)
   @UseGuards(JwtAuthGuard)
   async updateProfileUser(
     @GetAuth() auth: Auth,

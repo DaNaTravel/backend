@@ -1,8 +1,8 @@
-import _, { max, min, range, remove } from 'lodash';
+import _, { range } from 'lodash';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { Point, RouteQueryDto } from './dto';
+import { Point, RouteQueryDto, Weather } from './dto';
 import { RouteOptions, getRoute } from 'src/commons/routes';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
@@ -15,11 +15,10 @@ import {
   checkExistedValue,
   compareTimes,
   handleDurationTime,
-  haversineDistance,
   permutations,
   removeVietnameseTones,
 } from 'src/utils';
-import { BEST_PARAMS, DEFAULT_BEST_PARAM, END_TIME, OPEN_WEATHER_MAP_API, START_TIME, STAY_TIME } from 'src/constants';
+import { BEST_PARAMS, DEFAULT_BEST_PARAM, END_TIME, OPEN_WEATHER_MAP_API, START_TIME } from 'src/constants';
 import { Auth } from 'src/core/decorator';
 import axios from 'axios';
 
@@ -31,36 +30,48 @@ export class GeneticService implements OnApplicationBootstrap {
     {
       name: 'Hai Chau',
       location: { latitude: 16.04697173633593, longitude: 108.22038515715947 },
-      weather: '',
+      weather: [] as Weather[],
     },
     {
       name: 'Son Tra',
       location: { latitude: 16.10291977378059, longitude: 108.2493200440619 },
-      weather: '',
+      weather: [] as Weather[],
     },
     {
       name: 'Cam Le',
       location: { latitude: 16.015214248224638, longitude: 108.20671641221819 },
-      weather: '',
+      weather: [] as Weather[],
     },
     {
       name: 'Ngu Hanh Son',
       location: { latitude: 16.030357060030763, longitude: 108.2445189339372 },
-      weather: '',
+      weather: [] as Weather[],
     },
-    { name: 'Lien Chieu', location: { latitude: 16.09278261915859, longitude: 108.1364319458878 }, weather: '' },
+    {
+      name: 'Lien Chieu',
+      location: { latitude: 16.09278261915859, longitude: 108.1364319458878 },
+      weather: [] as Weather[],
+    },
     {
       name: 'Thanh Khe',
       location: { latitude: 16.064008756151956, longitude: 108.18639079211471 },
-      weather: '',
+      weather: [] as Weather[],
     },
-    { name: 'Hoa Ninh', location: { latitude: 16.048544178522768, longitude: 108.01103261826346 }, weather: '' },
+    {
+      name: 'Hoa Ninh',
+      location: { latitude: 16.048544178522768, longitude: 108.01103261826346 },
+      weather: [] as Weather[],
+    },
     {
       name: 'Hoa Bac',
       location: { latitude: 16.144259518821833, longitude: 107.95281243770388 },
-      weather: '',
+      weather: [] as Weather[],
     },
-    { name: 'Hoa Vang', location: { latitude: 15.984797655384305, longitude: 108.19288999139336 }, weather: '' },
+    {
+      name: 'Hoa Vang',
+      location: { latitude: 15.984797655384305, longitude: 108.19288999139336 },
+      weather: [] as Weather[],
+    },
   ];
 
   constructor(
@@ -69,8 +80,9 @@ export class GeneticService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    const [locations, districts] = await Promise.all([this.getLocations(), this.getDistrictWeather()]);
+    const [locations, weather] = await Promise.all([this.getLocations(), this.handleDataWeather()]);
     this.locations = locations;
+    weather.map((value, index) => (this.district[index].weather = value));
   }
 
   async getLocations() {
@@ -84,35 +96,21 @@ export class GeneticService implements OnApplicationBootstrap {
 
     try {
       const response = await axios.get(url);
-      return response.data;
+      const data = response.data.list;
+      const output = data.map((item: any) => {
+        const datetime = item.dt_txt;
+        const weather = item.weather?.[0].main;
+
+        return { datetime, weather };
+      });
+
+      return output;
     } catch {
       return null;
     }
   }
 
-  async getDistrictWeather() {
-    const promises = this.district.map((item, index) => {
-      const { latitude, longitude } = item.location;
-
-      return this.getWeather(latitude, longitude)
-        .then((data) => {
-          const weather = data?.weather?.[0].main || '';
-          return { index, weather };
-        })
-        .catch(() => {
-          return { index, weather: '' };
-        });
-    });
-
-    const data = await Promise.all(promises);
-
-    data.map((value) => {
-      const { index, weather } = value;
-      this.district[index].weather = weather;
-    });
-  }
-
-  async getListLocations() {
+  async getListLocations(date: string | Date = new Date()) {
     let locations = await this.locationRepo
       .find(
         {},
@@ -133,31 +131,75 @@ export class GeneticService implements OnApplicationBootstrap {
       )
       .lean();
 
-    const invalidLocations = locations.filter((location) => {
-      const address = removeVietnameseTones(location.formatted_address);
-      let weather = this.district[0].weather;
+    const arrivalDate = new Date(date);
+    const now = new Date();
+    const { diffInDays } = handleDurationTime(now, arrivalDate);
 
-      for (const district of this.district) {
-        const name = district.name.toLowerCase();
+    if (diffInDays >= 0 && diffInDays <= 5) {
+      const validLocations = locations.filter((location) => {
+        const address = removeVietnameseTones(location.formatted_address);
+        let weather = this.district[0].weather[diffInDays].weather;
 
-        const isTrue = address.toLowerCase().includes(name);
-        if (isTrue) {
-          weather = district.weather;
-          break;
+        for (const district of this.district) {
+          const name = district.name.toLowerCase();
+
+          const isTrue = address.toLowerCase().includes(name);
+          if (isTrue) {
+            weather = district.weather[diffInDays].weather;
+            break;
+          }
         }
-      }
 
-      if (['Clouds', 'Clear'].includes(weather) === false) {
-        const types = location.types;
-        const isOutsideActivity = this.checkOutsideActivity(types);
+        if (['Clouds', 'Clear'].includes(weather) === false) {
+          const types = location.types;
+          const isOutsideActivity = this.checkOutsideActivity(types);
 
-        return !isOutsideActivity;
-      }
+          return !isOutsideActivity;
+        }
 
-      return true;
+        return true;
+      });
+
+      return validLocations;
+    }
+
+    return locations;
+  }
+
+  async handleDataWeather() {
+    const promises = this.district.map((item) => {
+      const { latitude, longitude } = item.location;
+
+      return this.getWeather(latitude, longitude).then((data: Weather[]) => {
+        const group = Array.from(
+          data.reduce((map, currentItem) => {
+            const date = currentItem.datetime.split(' ')[0];
+
+            if (map.has(date)) map.get(date).push(currentItem);
+            else map.set(date, [currentItem]);
+
+            return map;
+          }, new Map<string, Weather[]>()),
+        );
+
+        const output = group.map(([key, values]) => {
+          const datetime = `${key} 12:00:00`;
+
+          const centerWeather = values.filter((value) => {
+            const isTrue = datetime === value.datetime;
+            return isTrue;
+          });
+
+          const detailWeather = centerWeather.length ? centerWeather[0] : values[0];
+          return detailWeather;
+        });
+
+        return output;
+      });
     });
 
-    return invalidLocations;
+    const data = await Promise.all(promises);
+    return data;
   }
 
   checkArrivalTime(routes: LocationOptions[]) {
@@ -458,12 +500,10 @@ export class GeneticService implements OnApplicationBootstrap {
   async createNewRoute(dto: RouteQueryDto, auth: Auth) {
     const { latitude, longitude, startDate, endDate, people, ...data } = dto;
 
-    this.locations = await this.getListLocations();
+    const { diffInDays } = handleDurationTime(startDate, endDate);
 
     const routes = await this.generateBestRoutes(dto);
     const cost = routes.reduce((accumulation, route) => accumulation + route.cost * people, 0);
-
-    const { diffInDays } = handleDurationTime(startDate, endDate);
 
     if (!auth._id) {
       return { _id: null, accountId: null, totalDays: diffInDays, type: dto.type, people: people, cost: cost, routes };
@@ -551,6 +591,7 @@ export class GeneticService implements OnApplicationBootstrap {
           stayTime: true,
           delayTime: true,
           cost: true,
+          types: true,
         },
       )
       .lean();
@@ -583,7 +624,7 @@ export class GeneticService implements OnApplicationBootstrap {
 
     const { diffInDays } = handleDurationTime(startDate, endDate);
 
-    return { _id, accountId: accountId || null, days: diffInDays, type, people, cost, newRoutes };
+    return { _id, accountId: accountId || null, days: diffInDays, type, people, cost, routes: newRoutes };
   }
 
   async compareItinerary(routes: Point[][], startDate: string | Date, endDate: string | Date) {
@@ -634,11 +675,16 @@ export class GeneticService implements OnApplicationBootstrap {
     return false;
   }
 
-  check1(startPoint: LocationOptions, day: string, allPoints: any[], requiredLocations: Location[]) {
+  check1(
+    locations: Location[],
+    startPoint: LocationOptions,
+    day: string,
+    allPoints: any[],
+    requiredLocations: Location[],
+  ) {
     let arrivalTime = START_TIME;
     const listPointDetails: LocationOptions[] = [startPoint];
     const listPoints = [startPoint.location];
-    let locations = [...this.locations];
 
     while (true) {
       arrivalTime += 30;
@@ -658,6 +704,7 @@ export class GeneticService implements OnApplicationBootstrap {
         const point = { latitude, longitude };
 
         const stayDuration = stayTime + delayTime;
+
         const openTime = opening_hours[day];
 
         const isExist = checkExistedValue(listPoints, point) || checkExistedValue(allPoints, point);
@@ -737,25 +784,28 @@ export class GeneticService implements OnApplicationBootstrap {
     const { latitude, longitude, startDate, endDate, type, minCost, maxCost, people, points } = dto;
 
     this.type = type;
-    let locations: Location[] = [];
+    let requiredLocations: Location[] = [];
 
     if (points && points.length) {
-      locations = await this.locationRepo.find(
-        { _id: { $in: points } },
-        {
-          _id: true,
-          name: true,
-          latitude: true,
-          longitude: true,
-          rating: true,
-          formatted_address: true,
-          opening_hours: true,
-          photos: true,
-          stayTime: true,
-          delayTime: true,
-          cost: true,
-        },
-      );
+      requiredLocations = await this.locationRepo
+        .find(
+          { _id: { $in: points } },
+          {
+            _id: true,
+            name: true,
+            latitude: true,
+            longitude: true,
+            rating: true,
+            formatted_address: true,
+            opening_hours: true,
+            photos: true,
+            stayTime: true,
+            delayTime: true,
+            cost: true,
+            types: true,
+          },
+        )
+        .lean();
     }
 
     const startPoint = getLocation({
@@ -768,15 +818,19 @@ export class GeneticService implements OnApplicationBootstrap {
 
     const allPoints = [];
 
-    const { weekdays, diffInDays } = handleDurationTime(startDate, endDate);
+    const { weekdays, diffInDays, datetimes } = handleDurationTime(startDate, endDate);
+
     let minCostPerPerson = minCost ? minCost / (people * diffInDays) : 0;
     let maxCostPerPerson = maxCost ? maxCost / (people * diffInDays) : 0;
 
-    const routes = weekdays.map((day: string) => {
+    const routes = [];
+
+    for (const [index, day] of weekdays.entries()) {
       const population: LocationOptions[][] = [];
+      const locations: Location[] = await this.getListLocations(datetimes[index]);
 
       while (population.length < 2000) {
-        const route = this.check1(startPoint, day.toLowerCase(), allPoints, locations);
+        const route = this.check1(locations, startPoint, day.toLowerCase(), allPoints, requiredLocations);
         population.push(route);
       }
 
@@ -840,8 +894,8 @@ export class GeneticService implements OnApplicationBootstrap {
         const point = { latitude: description.latitude, longitude: description.longitude };
         allPoints.push(point);
       });
-      return sortedRoutes[0];
-    });
+      routes.push(sortedRoutes[0]);
+    }
 
     return routes;
   }

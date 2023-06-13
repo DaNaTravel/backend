@@ -104,3 +104,8 @@ export enum CHART {
 
 export const AAPID = config.get('AAPID');
 export const OPEN_WEATHER_MAP_API = `http://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=${AAPID}`;
+
+export const REDIS_HOST = config.get('REDIS_HOST');
+export const REDIS_PORT = config.getNumber('REDIS_PORT');
+export const REDIS_USERNAME = config.get('REDIS_USERNAME');
+export const REDIS_PASSWORD = config.get('REDISPASSWORD');

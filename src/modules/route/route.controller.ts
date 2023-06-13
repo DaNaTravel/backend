@@ -45,7 +45,7 @@ export class RouteController {
     };
   }
 
-  @Patch('/:id')
+  @Patch(`/:id${PATH_CONTAIN_ID}`)
   @UseGuards(JwtAuthGuard)
   async updateItinerary(
     @Param('id') id: string,
@@ -209,5 +209,10 @@ export class RouteController {
       message: 'Success',
       data: itinerary,
     };
+  }
+
+  @Get('/check')
+  async check() {
+    return this.geneticService.handleDataWeather();
   }
 }

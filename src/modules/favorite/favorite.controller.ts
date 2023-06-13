@@ -16,6 +16,7 @@ import { Category } from 'src/utils';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { GetAuth, Auth } from '../../core/decorator';
 import { FavoriteService } from './favorite.service';
+import { PATH_CONTAIN_ID } from 'src/constants';
 
 @Controller('/favorites')
 @UseGuards(JwtAuthGuard)
@@ -40,7 +41,7 @@ export class FavoriteController {
     };
   }
 
-  @Delete('/:favoriteId')
+  @Delete(`/:favoriteId${PATH_CONTAIN_ID}`)
   @UseGuards(JwtAuthGuard)
   async removeToFavoriteById(@Param('favoriteId') favoriteId: ObjectId, @GetAuth() auth: Auth) {
     const isExistedFavorite = await this.favoriteService.checkExistedFavoriteById(favoriteId);
