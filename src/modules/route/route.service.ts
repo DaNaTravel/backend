@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
-import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
+import mongoose, { AggregateOptions, FilterQuery, Model, ObjectId } from 'mongoose';
 import { Role, getPagination, getPhoto } from 'src/utils';
 import { ACCESS, ItinerariesByAccountQueryDto, UpdateItineraryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';
@@ -25,28 +25,32 @@ export class RouteService {
     const { skip, take, page } = getPagination(filterCondition.page, filterCondition.take);
     const { isPublic, access, type, people, days } = filterCondition;
 
+    const where: FilterQuery<unknown>[] = [];
+
     const resultPipeline: any[] = [];
 
     if (access === ACCESS.private && auth._id) {
-      resultPipeline.push({ $match: { accountId: new mongoose.Types.ObjectId(auth._id) } });
+      where.push({ accountId: new mongoose.Types.ObjectId(auth._id) });
     }
 
     if (access === ACCESS.public) {
-      resultPipeline.push({ $match: { isPublic: true } });
+      where.push({ isPublic: true });
     }
 
     if (isPublic !== undefined) {
       const status = isPublic === 'true';
-      resultPipeline.push({ $match: { isPublic: status } });
+      where.push({ isPublic: status });
     }
 
     if (type) {
-      resultPipeline.push({ $match: { type } });
+      where.push({ type: type });
     }
 
     if (people) {
-      resultPipeline.push({ $match: { people: Number(people) } });
+      where.push({ people: Number(people) });
     }
+
+    resultPipeline.push({ $match: { $and: where } });
 
     resultPipeline.push({
       $project: {

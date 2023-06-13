@@ -210,9 +210,4 @@ export class RouteController {
       data: itinerary,
     };
   }
-
-  @Get('/check')
-  async check() {
-    return this.geneticService.handleDataWeather();
-  }
 }
