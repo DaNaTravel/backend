@@ -146,6 +146,7 @@ export class LocationService {
           name: 1,
           photo: { $arrayElemAt: ['$photos.photo_reference', 0] },
           rating: 1,
+          formatted_address: 1,
           favoriteCount: { $size: '$favorites' },
         },
       },
