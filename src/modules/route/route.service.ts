@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
-import mongoose, { AggregateOptions, FilterQuery, Model, ObjectId } from 'mongoose';
+import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Role, getPagination, getPhoto } from 'src/utils';
 import { ACCESS, ItinerariesByAccountQueryDto, UpdateItineraryDto } from './dto';
 import { Location, LocationDocument } from 'src/schemas/locations';

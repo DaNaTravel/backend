@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, ObjectId } from 'mongoose';
+import mongoose, { FilterQuery, Model, ObjectId } from 'mongoose';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { LocationDto, LocationQueryDto, LocationUpdateDto } from './dto';
 import { convertOpeningHours, convertOpeningHoursToWeekdayText, getPagination, isValidOpeningHours } from 'src/utils';
@@ -48,12 +48,12 @@ export class LocationService {
     return location;
   }
 
-  async getDetailLocation(locationId: ObjectId) {
+  async getDetailLocation(locationId: string) {
     const locationMain = await this.locationRepo.findById(locationId).lean();
 
     const [type]: string[] = locationMain?.types;
     const relatedLocations = await this.locationRepo.aggregate([
-      { $match: { types: type, _id: { $ne: locationId } } },
+      { $match: { _id: { $ne: new mongoose.Types.ObjectId(locationId) } } },
       {
         $lookup: {
           from: 'favorites',
@@ -68,6 +68,12 @@ export class LocationService {
         },
       },
       { $sort: { totalFavorites: -1 } },
+      {
+        $project: {
+          favorites: 0,
+        },
+      },
+      { $match: { types: type } },
       { $limit: 5 },
     ]);
     const locations = { ...locationMain, relatedLocations: relatedLocations };

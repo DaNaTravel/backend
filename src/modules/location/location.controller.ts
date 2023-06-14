@@ -33,7 +33,7 @@ export class LocationController {
   }
 
   @Get(`/:locationId${PATH_CONTAIN_ID}`)
-  async getDetailLocation(@Param('locationId') locationId: ObjectId) {
+  async getDetailLocation(@Param('locationId') locationId: string) {
     const locations = await this.locationService.getDetailLocation(locationId);
     return {
       mesage: 'Success',
