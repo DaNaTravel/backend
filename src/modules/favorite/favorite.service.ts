@@ -89,6 +89,8 @@ export class FavoriteService {
               latitude: '$location.latitude',
               longitude: '$location.longitude',
               photos: '$location.photos',
+              formatted_address: '$location.formatted_address',
+              cost: '$location.cost',
               rating: '$location.rating',
             },
           },
