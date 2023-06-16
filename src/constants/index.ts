@@ -109,3 +109,6 @@ export const REDIS_HOST = config.get('REDIS_HOST');
 export const REDIS_PORT = config.getNumber('REDIS_PORT');
 export const REDIS_USERNAME = config.get('REDIS_USERNAME');
 export const REDIS_PASSWORD = config.get('REDISPASSWORD');
+
+export const TRIPADVISOR_KEY = config.get('TRIPADVISOR_KEY');
+export const TRIPADVISOR_API = `https://api.content.tripadvisor.com/api/v1/location/nearby_search?latLong=$lat,$lon&key=${TRIPADVISOR_KEY}&language=en`;

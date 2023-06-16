@@ -14,7 +14,7 @@ import { ObjectId } from 'mongoose';
 import { FavoriteDto, ItineraryQueryDto } from './dto';
 import { Category } from 'src/utils';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
-import { GetAuth, Auth } from '../../core/decorator';
+import { GetAuth, Auth, Roles } from '../../core/decorator';
 import { FavoriteService } from './favorite.service';
 import { PATH_CONTAIN_ID } from 'src/constants';
 

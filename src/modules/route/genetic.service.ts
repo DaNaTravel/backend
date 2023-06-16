@@ -1,4 +1,4 @@
-import _, { range } from 'lodash';
+import _, { range, sum } from 'lodash';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
@@ -18,7 +18,14 @@ import {
   permutations,
   removeVietnameseTones,
 } from 'src/utils';
-import { BEST_PARAMS, DEFAULT_BEST_PARAM, END_TIME, OPEN_WEATHER_MAP_API, START_TIME } from 'src/constants';
+import {
+  BEST_PARAMS,
+  DEFAULT_BEST_PARAM,
+  END_TIME,
+  OPEN_WEATHER_MAP_API,
+  START_TIME,
+  TRIPADVISOR_API,
+} from 'src/constants';
 import { Auth } from 'src/core/decorator';
 import axios from 'axios';
 
@@ -502,11 +509,20 @@ export class GeneticService implements OnApplicationBootstrap {
 
     const { diffInDays } = handleDurationTime(startDate, endDate);
 
-    const routes = await this.generateBestRoutes(dto);
+    const { routes, recommendedHotels } = await this.generateBestRoutes(dto);
     const cost = routes.reduce((accumulation, route) => accumulation + route.cost * people, 0);
 
     if (!auth._id) {
-      return { _id: null, accountId: null, totalDays: diffInDays, type: dto.type, people: people, cost: cost, routes };
+      return {
+        _id: null,
+        accountId: null,
+        totalDays: diffInDays,
+        type: dto.type,
+        people: people,
+        cost: cost,
+        recommendedHotels: [],
+        routes,
+      };
     }
 
     const newItinerary = await new this.itineraryRepo({
@@ -521,7 +537,7 @@ export class GeneticService implements OnApplicationBootstrap {
 
     const { _id, accountId, type } = newItinerary;
 
-    return { _id, accountId, totalDays: diffInDays, type, people, cost, routes };
+    return { _id, accountId, totalDays: diffInDays, type, people, cost, recommendedHotels, routes };
   }
 
   async getLocationOptions(route: Point[], day: string) {
@@ -629,14 +645,25 @@ export class GeneticService implements OnApplicationBootstrap {
 
   async compareItinerary(routes: Point[][], startDate: string | Date, endDate: string | Date) {
     const { weekdays } = handleDurationTime(startDate, endDate);
+    const allPoints: Point[] = [];
 
     const promises = routes.map((route, index) => {
       const day = weekdays[index].toLowerCase();
-      return this.getLocationOptions(route, day);
+      const output = this.getLocationOptions(route, day).then((locations: LocationOptions[]) => {
+        locations.map((location) => {
+          allPoints.push({ latitude: location.latitude, longitude: location.longitude } as Point);
+        });
+
+        return locations;
+      });
+
+      return output;
     });
     const newRoutes = await Promise.all(promises);
 
-    return newRoutes;
+    const recommendedHotels = await this.recommendedHotels(allPoints);
+
+    return { comparedRoutes: newRoutes, recommendedHotels };
   }
 
   checkReasonableItinerary(routes: LocationOptions[][]) {
@@ -816,7 +843,7 @@ export class GeneticService implements OnApplicationBootstrap {
       description: { name: 'Start Point', address: 'Start Point' },
     } as LocationDto);
 
-    const allPoints = [];
+    const allPoints: Point[] = [];
 
     const { weekdays, diffInDays, datetimes } = handleDurationTime(startDate, endDate);
 
@@ -891,12 +918,53 @@ export class GeneticService implements OnApplicationBootstrap {
 
       sortedRoutes[0].route.map((location) => {
         const description = location.description;
-        const point = { latitude: description.latitude, longitude: description.longitude };
+        const point = { latitude: description.latitude, longitude: description.longitude } as Point;
         allPoints.push(point);
       });
       routes.push(sortedRoutes[0]);
     }
 
-    return routes;
+    const recommendedHotels = await this.recommendedHotels(allPoints);
+
+    return { routes, recommendedHotels };
+  }
+
+  async recommendedHotels(points: Point[]) {
+    const accumulation = points.reduce(
+      (accumulation: Point, point) => {
+        const sumLat = accumulation.latitude + point.latitude;
+        const sumLon = accumulation.longitude + point.longitude;
+
+        return { latitude: sumLat, longitude: sumLon };
+      },
+      { latitude: 0, longitude: 0 },
+    );
+
+    const length = points.length;
+
+    if (length) {
+      const midPointCoordinate = {
+        latitude: accumulation.latitude / length,
+        longitude: accumulation.longitude / length,
+      } as Point;
+      return this.getTripAdvisorAPI(midPointCoordinate);
+    }
+
+    return [];
+  }
+
+  async getTripAdvisorAPI(point: Point) {
+    const url = TRIPADVISOR_API.replace('$lat', point.latitude.toString()).replace('$lon', point.longitude.toString());
+
+    try {
+      const response = await axios.get(url);
+      const data = response.data.data;
+
+      const output: string[] = data.map((item: { location_id: string }) => item.location_id);
+
+      return output;
+    } catch {
+      return [];
+    }
   }
 }

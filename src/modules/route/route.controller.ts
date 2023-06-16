@@ -80,11 +80,21 @@ export class RouteController {
 
       const { startDate, endDate } = itinerary;
 
-      const compareItinerary = await this.geneticService.compareItinerary(routes, startDate, endDate);
+      const { comparedRoutes, recommendedHotels } = await this.geneticService.compareItinerary(
+        routes,
+        startDate,
+        endDate,
+      );
 
-      if (checked === false) return this.geneticService.updateItinerary(compareItinerary, name, isPublic, id);
+      if (checked === false) {
+        const output = await this.geneticService.updateItinerary(comparedRoutes, name, isPublic, id);
+        return {
+          message: 'Success',
+          data: { ...output, recommendedHotels },
+        };
+      }
 
-      const reasonableItinerary = this.geneticService.checkReasonableItinerary(compareItinerary);
+      const reasonableItinerary = this.geneticService.checkReasonableItinerary(comparedRoutes);
 
       if (reasonableItinerary.length) {
         const key = reasonableItinerary.length > 1 ? 'are' : 'is';
@@ -95,10 +105,10 @@ export class RouteController {
         });
       }
 
-      const output = await this.geneticService.updateItinerary(compareItinerary, name, isPublic, id);
+      const output = await this.geneticService.updateItinerary(comparedRoutes, name, isPublic, id);
       return {
         message: 'Success',
-        data: output,
+        data: { ...output, recommendedHotels },
       };
     }
 
@@ -132,13 +142,18 @@ export class RouteController {
 
     const { startDate, endDate } = itinerary;
 
-    const compareItinerary = await this.geneticService.compareItinerary(routes, startDate, endDate);
+    const { comparedRoutes, recommendedHotels } = await this.geneticService.compareItinerary(
+      routes,
+      startDate,
+      endDate,
+    );
 
-    const { cost, newRoutes } = await this.geneticService.generateNewItinerary(compareItinerary);
+    const { cost, newRoutes } = await this.geneticService.generateNewItinerary(comparedRoutes);
 
     const output = {
       _id: id,
       cost: cost,
+      recommendedHotels: recommendedHotels,
       routes: newRoutes,
     };
 
