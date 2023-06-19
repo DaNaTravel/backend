@@ -24,6 +24,7 @@ import {
   END_TIME,
   OPEN_WEATHER_MAP_API,
   START_TIME,
+  STAY_TIME,
   TRIPADVISOR_API,
 } from 'src/constants';
 import { Auth } from 'src/core/decorator';
@@ -214,7 +215,11 @@ export class GeneticService implements OnApplicationBootstrap {
 
     for (let i = 1; i <= routes.length - 2; i++) {
       arrivalTime += 30;
-      const isTrue = compareTimes(arrivalTime, routes[i].openTimes, routes[i].stayTime);
+
+      const openTimes = routes[i].openTimes
+        ? routes[i].openTimes
+        : [{ openTime: arrivalTime, closeTime: arrivalTime + STAY_TIME } as ActiveTime];
+      const isTrue = compareTimes(arrivalTime, openTimes, routes[i].stayTime);
 
       if (isTrue === false) return false;
 
