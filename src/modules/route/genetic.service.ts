@@ -219,6 +219,7 @@ export class GeneticService implements OnApplicationBootstrap {
       const openTimes = routes[i].openTimes
         ? routes[i].openTimes
         : [{ openTime: arrivalTime, closeTime: arrivalTime + STAY_TIME } as ActiveTime];
+
       const isTrue = compareTimes(arrivalTime, openTimes, routes[i].stayTime);
 
       if (isTrue === false) return false;
