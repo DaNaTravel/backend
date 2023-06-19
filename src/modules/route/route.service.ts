@@ -60,6 +60,7 @@ export class RouteService {
         people: 1,
         endDate: 1,
         startDate: 1,
+        createdAt: 1,
         name: 1,
         days: {
           $let: {
@@ -79,6 +80,8 @@ export class RouteService {
     if (days) {
       resultPipeline.push({ $match: { days: Number(days) } });
     }
+
+    resultPipeline.push({ $sort: { createdAt: -1 } });
 
     const [itineraries, itinerariesResult] = await Promise.all([
       this.itineraryRepo.aggregate(resultPipeline).exec(),

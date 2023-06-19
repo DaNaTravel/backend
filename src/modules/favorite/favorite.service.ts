@@ -63,8 +63,10 @@ export class FavoriteService {
                 },
               },
               routes: '$itinerary.routes',
+              createdAt: 1,
             },
           },
+          { $sort: { createdAt: -1 } },
         );
 
         if (query.type) {
@@ -92,8 +94,10 @@ export class FavoriteService {
               formatted_address: '$location.formatted_address',
               cost: '$location.cost',
               rating: '$location.rating',
+              createdAt: 1,
             },
           },
+          { $sort: { createdAt: -1 } },
         );
       }
 
