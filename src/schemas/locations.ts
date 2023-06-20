@@ -3,7 +3,7 @@ import { HydratedDocument } from 'mongoose';
 import { OpeningHours } from 'src/utils';
 
 export type LocationDocument = HydratedDocument<Location>;
-
+@Schema({ timestamps: true })
 export class Location {
   @Prop()
   name: string;
@@ -52,12 +52,6 @@ export class Location {
 
   @Prop()
   photos: { photo_reference: string }[];
-
-  @Prop()
-  createdAt: Date;
-
-  @Prop()
-  updatedAt: Date;
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);
