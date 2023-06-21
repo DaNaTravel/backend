@@ -23,6 +23,7 @@ import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { OptionalAuthGuard } from 'src/guards/optional-jwt.guard';
 import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto, ACCESS } from './dto';
 import { PATH_CONTAIN_ID } from 'src/constants';
+import { Role } from 'src/utils';
 
 @Controller('routes')
 export class RouteController {
@@ -168,9 +169,11 @@ export class RouteController {
   @UsePipes(new ValidationPipe({ skipMissingProperties: true, transformOptions: { enableImplicitConversion: true } }))
   async getItinerariesByAccountId(@Query() dataQuery: ItinerariesByAccountQueryDto, @GetAuth() auth: Auth) {
     const isPublic = dataQuery.isPublic === 'false' ? false : true;
-    const conditionPublic = dataQuery.access === ACCESS.public && isPublic === false;
 
-    if (conditionPublic === true)
+    const conditionPublic = dataQuery.access === ACCESS.public && isPublic === false;
+    const conditionAdminSite = auth.role !== Role.ADMIN && dataQuery.access === ACCESS.all;
+
+    if (conditionPublic || conditionAdminSite)
       throw new UnauthorizedException({
         message: `You don't have permission to view private itineraries.`,
         data: null,
@@ -179,7 +182,7 @@ export class RouteController {
     if (dataQuery.access === ACCESS.private && Boolean(auth._id) === false)
       throw new UnauthorizedException({ message: `Please sign in to view your itinraries.`, data: null });
 
-    const itineraries = await this.routeService.getItinerariesByAccountId(dataQuery, auth);
+    const itineraries = await this.routeService.getItineraries(dataQuery, auth);
     return {
       message: 'Success',
       data: itineraries,

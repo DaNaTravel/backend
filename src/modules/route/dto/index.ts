@@ -64,6 +64,7 @@ export class UpdateItineraryDto {
 export enum ACCESS {
   public = 'public',
   private = 'private',
+  all = 'all',
 }
 
 export class ItinerariesByAccountQueryDto extends Pagination {

@@ -21,7 +21,7 @@ export class RouteService {
     return itinerary;
   }
 
-  async getItinerariesByAccountId(filterCondition: ItinerariesByAccountQueryDto, auth: Auth) {
+  async getItineraries(filterCondition: ItinerariesByAccountQueryDto, auth: Auth) {
     const { skip, take, page } = getPagination(filterCondition.page, filterCondition.take);
     const { isPublic, access, type, people, days } = filterCondition;
 
@@ -50,7 +50,7 @@ export class RouteService {
       where.push({ people: Number(people) });
     }
 
-    resultPipeline.push({ $match: { $and: where } });
+    if (where.length) resultPipeline.push({ $match: { $and: where } });
 
     resultPipeline.push({
       $project: {
