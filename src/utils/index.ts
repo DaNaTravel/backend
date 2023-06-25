@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { Type } from 'class-transformer';
 import { IsNumber, IsOptional, IsPositive } from 'class-validator';
+import { SPEECH } from 'src/constants';
 dayjs.extend(utc);
 
 export type DayJS = dayjs.Dayjs;
@@ -65,7 +66,7 @@ export const typeScore = (types: string[], locationTypes: string[]) => {
   const number = locationTypes.filter((item) => types.includes(item));
   if (number.length) return 0;
 
-  return 1000;
+  return 1;
 };
 
 export const fitness = (distance: number, type: number, cost: number, check?: number) => {
@@ -73,9 +74,10 @@ export const fitness = (distance: number, type: number, cost: number, check?: nu
   if (check)
     output =
       1 / (Math.pow(distance, 1) + 1) +
-      30 / (Math.pow(type, 1) + 1) +
+      40 / (Math.pow(type, 1) + 1) +
       2 / (Math.pow(cost, 1) + 1) +
-      10 / (Math.pow(check, 1) + 1);
+      20 / (Math.pow(check, 1) + 1);
+
   return output;
 };
 
@@ -222,6 +224,10 @@ export const isValidOpeningHours = (openingHours: any) => {
   }
 
   return true;
+};
+
+export const travelTime = (distance: number) => {
+  return Math.ceil((distance / (1000 * SPEECH)) * 60);
 };
 
 export function convertOpeningHours(openingHours: any) {

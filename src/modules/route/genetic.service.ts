@@ -15,8 +15,10 @@ import {
   checkExistedValue,
   compareTimes,
   handleDurationTime,
+  haversineDistance,
   permutations,
   removeVietnameseTones,
+  travelTime,
 } from 'src/utils';
 import {
   BEST_PARAMS,
@@ -28,7 +30,7 @@ import {
   TRIPADVISOR_API,
 } from 'src/constants';
 import { Auth } from 'src/core/decorator';
-import axios from 'axios';
+import axios, { all } from 'axios';
 
 @Injectable()
 export class GeneticService implements OnApplicationBootstrap {
@@ -119,7 +121,7 @@ export class GeneticService implements OnApplicationBootstrap {
   }
 
   async getListLocations(date: string | Date = new Date()) {
-    let locations = await this.locationRepo
+    const locations = await this.locationRepo
       .find(
         {},
         {
@@ -214,7 +216,17 @@ export class GeneticService implements OnApplicationBootstrap {
     let arrivalTime = START_TIME;
 
     for (let i = 1; i <= routes.length - 2; i++) {
-      arrivalTime += 30;
+      const prevLocation = routes[i - 1];
+      const currLocation = routes[i];
+
+      const distance = haversineDistance(
+        prevLocation.latitude,
+        prevLocation.longitude,
+        currLocation.latitude,
+        currLocation.longitude,
+      );
+
+      arrivalTime += travelTime(distance);
 
       const openTimes = routes[i].openTimes
         ? routes[i].openTimes
@@ -238,11 +250,19 @@ export class GeneticService implements OnApplicationBootstrap {
 
       if (isExist) {
         const preLocation = routes.route[index - 1];
+
+        const distance = haversineDistance(
+          preLocation.latitude,
+          preLocation.longitude,
+          location.latitude,
+          location.longitude,
+        );
+
         const preTime = preLocation.time;
 
         const { stayTime } = location;
 
-        openTime = preTime.closeTime + 30;
+        openTime = preTime.closeTime + travelTime(distance);
         closeTime = openTime + stayTime;
       }
       location.time = { openTime, closeTime } as ActiveTime;
@@ -515,35 +535,35 @@ export class GeneticService implements OnApplicationBootstrap {
 
     const { diffInDays } = handleDurationTime(startDate, endDate);
 
-    const { routes, recommendedHotels } = await this.generateBestRoutes(dto);
-    const cost = routes.reduce((accumulation, route) => accumulation + route.cost * people, 0);
+    return this.generateBestRoutes(dto);
+    // const cost = routes.reduce((accumulation, route) => accumulation + route.cost * people, 0);
 
-    if (!auth._id) {
-      return {
-        _id: null,
-        accountId: null,
-        totalDays: diffInDays,
-        type: dto.type,
-        people: people,
-        cost: cost,
-        recommendedHotels: [],
-        routes,
-      };
-    }
+    // if (!auth._id) {
+    //   return {
+    //     _id: null,
+    //     accountId: null,
+    //     totalDays: diffInDays,
+    //     type: dto.type,
+    //     people: people,
+    //     cost: cost,
+    //     recommendedHotels: [],
+    //     routes,
+    //   };
+    // }
 
-    const newItinerary = await new this.itineraryRepo({
-      ...data,
-      cost: cost,
-      people,
-      startDate: startDate,
-      endDate: endDate,
-      routes: routes,
-      accountId: auth._id,
-    }).save();
+    // const newItinerary = await new this.itineraryRepo({
+    //   ...data,
+    //   cost: cost,
+    //   people,
+    //   startDate: startDate,
+    //   endDate: endDate,
+    //   routes: routes,
+    //   accountId: auth._id,
+    // }).save();
 
-    const { _id, accountId, type } = newItinerary;
+    // const { _id, accountId, type } = newItinerary;
 
-    return { _id, accountId, totalDays: diffInDays, type, people, cost, recommendedHotels, routes };
+    // return { _id, accountId, totalDays: diffInDays, type, people, cost, recommendedHotels, routes };
   }
 
   async getLocationOptions(route: Point[], day: string) {
@@ -553,9 +573,16 @@ export class GeneticService implements OnApplicationBootstrap {
     for (const [index, point] of route.entries()) {
       let locationOptions: LocationOptions = null;
 
-      const isExist = route[index - 1];
-
-      arrivalTime += isExist ? 30 : 0;
+      const prevLocation = route[index - 1];
+      if (prevLocation) {
+        const distance = haversineDistance(
+          prevLocation.latitude,
+          prevLocation.longitude,
+          point.latitude,
+          point.longitude,
+        );
+        arrivalTime += travelTime(distance);
+      }
 
       if (point._id) {
         const location = await this.getLocationOptionByPoint(point._id);
@@ -679,7 +706,17 @@ export class GeneticService implements OnApplicationBootstrap {
       let arrivalTime = START_TIME;
 
       for (let i = 1; i <= route.length - 2; i++) {
-        arrivalTime += 30;
+        const prevLocation = route[i - 1];
+        const currLocation = route[i];
+
+        const distance = haversineDistance(
+          prevLocation.latitude,
+          prevLocation.longitude,
+          currLocation.latitude,
+          currLocation.longitude,
+        );
+
+        arrivalTime += travelTime(distance);
         const isTrue = compareTimes(arrivalTime, route[i].openTimes, route[i].stayTime);
 
         if (isTrue === false) unvalidLocations.push(route[i].description['name'] || 'Unknown location');
@@ -720,9 +757,9 @@ export class GeneticService implements OnApplicationBootstrap {
     const listPoints = [startPoint.location];
 
     while (true) {
-      arrivalTime += 30;
+      let prevLocation = listPoints.slice(-1)[0];
 
-      if (locations.length === 0 || arrivalTime > END_TIME) break;
+      if (locations.length === 0) break;
 
       let randomIndex: number = 0;
       let randomLocation: Location = null;
@@ -735,6 +772,14 @@ export class GeneticService implements OnApplicationBootstrap {
       if (randomLocation) {
         const { stayTime, delayTime, latitude, longitude, opening_hours, cost, types } = randomLocation;
         const point = { latitude, longitude };
+
+        if (prevLocation) {
+          const distance = haversineDistance(prevLocation.latitude, prevLocation.longitude, latitude, longitude);
+
+          arrivalTime += travelTime(distance);
+        }
+
+        if (arrivalTime > END_TIME) break;
 
         const stayDuration = stayTime + delayTime;
 
@@ -761,6 +806,8 @@ export class GeneticService implements OnApplicationBootstrap {
           listPoints.push(point);
           listPointDetails.push(getLocation(pointDetail));
 
+          prevLocation = point;
+
           requiredLocations = requiredLocations.filter((_, index) => index !== randomIndex);
         }
       }
@@ -769,6 +816,13 @@ export class GeneticService implements OnApplicationBootstrap {
       randomLocation = locations[randomIndex];
 
       const { latitude, longitude, types, stayTime, delayTime, opening_hours, cost } = randomLocation;
+
+      if (prevLocation) {
+        const distance = haversineDistance(prevLocation.latitude, prevLocation.longitude, latitude, longitude);
+        arrivalTime += travelTime(distance);
+      }
+
+      if (arrivalTime > END_TIME) break;
 
       const stayDuration = stayTime + delayTime;
       const openTime = opening_hours[day];
@@ -849,90 +903,99 @@ export class GeneticService implements OnApplicationBootstrap {
       description: { name: 'Start Point', address: 'Start Point' },
     } as LocationDto);
 
-    const allPoints: Point[] = [];
-
     const { weekdays, diffInDays, datetimes } = handleDurationTime(startDate, endDate);
 
-    let minCostPerPerson = minCost ? minCost / (people * diffInDays) : 0;
-    let maxCostPerPerson = maxCost ? maxCost / (people * diffInDays) : 0;
+    const minCostPerPerson = minCost ? minCost / (people * diffInDays) : 0;
+    const maxCostPerPerson = maxCost ? maxCost / (people * diffInDays) : 0;
 
-    const routes = [];
+    const promises = datetimes.map((date) => this.getListLocations(date));
+    const listLocations = await Promise.all(promises);
 
-    for (const [index, day] of weekdays.entries()) {
-      const population: LocationOptions[][] = [];
-      const locations: Location[] = await this.getListLocations(datetimes[index]);
+    const allRoutes = [];
 
-      while (population.length < 2000) {
-        const route = this.check1(locations, startPoint, day.toLowerCase(), allPoints, requiredLocations);
-        population.push(route);
-      }
+    while (allRoutes.length < 3) {
+      const routes = [];
+      const allPoints: Point[] = [];
+      let sumFitness = 0;
 
-      const fitnesses = population.map((locations, index) => {
-        const route = getRoute(locations, this.type);
-        let fitness = route.fitness;
+      for (const [index, day] of weekdays.entries()) {
+        const population: LocationOptions[][] = [];
+        const locations: Location[] = listLocations[index];
 
-        if (points && points.length) {
-          let isValidRoute = false;
-          for (const item of locations) {
-            if (points && points.length && points.includes(item.description._id?.toString())) {
-              isValidRoute = true;
-              break;
+        while (population.length < 2000) {
+          const route = this.check1(locations, startPoint, day.toLowerCase(), allPoints, requiredLocations);
+          population.push(route);
+        }
+
+        const fitnesses = population.map((locations, index) => {
+          const route = getRoute(locations, this.type);
+          let fitness = route.fitness;
+
+          if (points && points.length) {
+            let isValidRoute = false;
+            for (const item of locations) {
+              if (points && points.length && points.includes(item.description._id?.toString())) {
+                isValidRoute = true;
+                break;
+              }
             }
+            fitness = isValidRoute ? fitness : 0;
           }
-          fitness = isValidRoute ? fitness : 0;
-        }
 
-        if (minCost && maxCost) {
-          fitness = route.cost >= minCostPerPerson && route.cost <= maxCostPerPerson ? fitness : 0;
-        }
-        return { index: index, fitness: fitness };
-      });
+          if (minCost && maxCost) {
+            fitness = route.cost >= minCostPerPerson && route.cost <= maxCostPerPerson ? fitness : 0;
+          }
+          return { index: index, fitness: fitness };
+        });
 
-      const sortedFitnesses = fitnesses.sort((a, b) => b.fitness - a.fitness);
+        const sortedFitnesses = fitnesses.sort((a, b) => b.fitness - a.fitness);
 
-      const max = sortedFitnesses.slice(0, 10);
+        const max = sortedFitnesses.slice(0, 10);
 
-      const bestRoutes = max.map((item) => {
-        const route = population[item.index];
-        const length = route.length;
+        const bestRoutes = max.map((item) => {
+          const route = population[item.index];
+          const length = route.length;
 
-        if (length < 3) return { distance: 0, cost: 0, route: null, fitness: 0 };
+          if (length < 3) return { distance: 0, cost: 0, route: null, fitness: 0 };
 
-        if (length < 4) {
-          const routeOptions = getRoute(route, this.type);
+          if (length < 4) {
+            const routeOptions = getRoute(route, this.type);
 
-          const { data, cost } = routeOptions.routeInfo;
+            const { data, cost } = routeOptions.routeInfo;
 
-          return { distance: routeOptions.distance, cost: cost, route: data, fitness: routeOptions.fitness };
-        }
+            return { distance: routeOptions.distance, cost: cost, route: data, fitness: routeOptions.fitness };
+          }
 
-        let bestParams = DEFAULT_BEST_PARAM;
-        if (length < 12) bestParams = BEST_PARAMS[length - 4];
+          let bestParams = DEFAULT_BEST_PARAM;
+          if (length < 12) bestParams = BEST_PARAMS[length - 4];
 
-        const { bestDistance, bestFinalRoute, fitness, cost } = this.geneticAlgorithm(
-          bestParams.POPULATION_SIZE,
-          bestParams.NUM_ELITES,
-          bestParams.NUM_GENS,
-          bestParams.MUTATION_RATE,
-          route,
-        );
+          const { bestDistance, bestFinalRoute, fitness, cost } = this.geneticAlgorithm(
+            bestParams.POPULATION_SIZE,
+            bestParams.NUM_ELITES,
+            bestParams.NUM_GENS,
+            bestParams.MUTATION_RATE,
+            route,
+          );
 
-        return { distance: bestDistance, cost: cost, route: bestFinalRoute, fitness: fitness };
-      });
+          return { distance: bestDistance, cost: cost, route: bestFinalRoute, fitness: fitness };
+        });
 
-      const sortedRoutes = bestRoutes.sort((a, b) => b.fitness - a.fitness);
+        const sortedRoutes = bestRoutes.sort((a, b) => b.fitness - a.fitness);
 
-      sortedRoutes[0].route.map((location) => {
-        const description = location.description;
-        const point = { latitude: description.latitude, longitude: description.longitude } as Point;
-        allPoints.push(point);
-      });
-      routes.push(sortedRoutes[0]);
+        sortedRoutes[0].route.map((location) => {
+          const description = location.description;
+          const point = { latitude: description.latitude, longitude: description.longitude } as Point;
+          allPoints.push(point);
+        });
+        routes.push(sortedRoutes[0]);
+        sumFitness += sortedRoutes[0].fitness;
+      }
+      const recommendedHotels = await this.recommendedHotels(allPoints);
+
+      allRoutes.push({ fitness: sumFitness, routes, recommendedHotels });
     }
 
-    const recommendedHotels = await this.recommendedHotels(allPoints);
-
-    return { routes, recommendedHotels };
+    return { routes: allRoutes };
   }
 
   async recommendedHotels(points: Point[]) {

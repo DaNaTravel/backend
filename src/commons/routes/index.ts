@@ -83,7 +83,7 @@ export class RouteOptions {
       }
     });
 
-    if (count > 2) check = 100000;
+    if (count > 2) check = count * 1000;
     return fitness(this.distance, this.typeScore, this.cost, check);
   }
 
