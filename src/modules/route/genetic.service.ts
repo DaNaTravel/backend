@@ -219,6 +219,17 @@ export class GeneticService implements OnApplicationBootstrap {
       const prevLocation = routes[i - 1];
       const currLocation = routes[i];
 
+      const isExistFoodPrev =
+        prevLocation.types?.includes(LocationTypes.CAFE) ||
+        prevLocation.types?.includes(LocationTypes.FOOD) ||
+        prevLocation.types?.includes(LocationTypes.RESTAURANT);
+      const isExistFoodCurr =
+        currLocation.types?.includes(LocationTypes.CAFE) ||
+        currLocation.types?.includes(LocationTypes.FOOD) ||
+        currLocation.types?.includes(LocationTypes.RESTAURANT);
+
+      if (isExistFoodPrev && isExistFoodCurr) return false;
+
       const distance = haversineDistance(
         prevLocation.latitude,
         prevLocation.longitude,
@@ -757,7 +768,7 @@ export class GeneticService implements OnApplicationBootstrap {
     const listPoints = [startPoint.location];
 
     while (true) {
-      let prevLocation = listPoints.slice(-1)[0];
+      let prevLocation = listPointDetails.slice(-1)[0];
 
       if (locations.length === 0) break;
 
@@ -778,6 +789,17 @@ export class GeneticService implements OnApplicationBootstrap {
 
           arrivalTime += travelTime(distance);
         }
+
+        const isExistFoodPrev =
+          prevLocation.types?.includes(LocationTypes.CAFE) ||
+          prevLocation.types?.includes(LocationTypes.FOOD) ||
+          prevLocation.types?.includes(LocationTypes.RESTAURANT);
+        const isExistFoodCurr =
+          randomLocation.types?.includes(LocationTypes.CAFE) ||
+          randomLocation.types?.includes(LocationTypes.FOOD) ||
+          randomLocation.types?.includes(LocationTypes.RESTAURANT);
+
+        if (isExistFoodPrev && isExistFoodCurr) continue;
 
         if (arrivalTime > END_TIME) break;
 
@@ -806,7 +828,7 @@ export class GeneticService implements OnApplicationBootstrap {
           listPoints.push(point);
           listPointDetails.push(getLocation(pointDetail));
 
-          prevLocation = point;
+          prevLocation = getLocation(pointDetail);
 
           requiredLocations = requiredLocations.filter((_, index) => index !== randomIndex);
         }
@@ -823,6 +845,17 @@ export class GeneticService implements OnApplicationBootstrap {
       }
 
       if (arrivalTime > END_TIME) break;
+
+      const isExistFoodPrev =
+        prevLocation.types?.includes(LocationTypes.CAFE) ||
+        prevLocation.types?.includes(LocationTypes.FOOD) ||
+        prevLocation.types?.includes(LocationTypes.RESTAURANT);
+      const isExistFoodCurr =
+        randomLocation.types?.includes(LocationTypes.CAFE) ||
+        randomLocation.types?.includes(LocationTypes.FOOD) ||
+        randomLocation.types?.includes(LocationTypes.RESTAURANT);
+
+      if (isExistFoodPrev && isExistFoodCurr) continue;
 
       const stayDuration = stayTime + delayTime;
       const openTime = opening_hours[day];
@@ -922,7 +955,7 @@ export class GeneticService implements OnApplicationBootstrap {
         const population: LocationOptions[][] = [];
         const locations: Location[] = listLocations[index];
 
-        while (population.length < 2000) {
+        while (population.length < 1000) {
           const route = this.check1(locations, startPoint, day.toLowerCase(), allPoints, requiredLocations);
           population.push(route);
         }
@@ -945,7 +978,7 @@ export class GeneticService implements OnApplicationBootstrap {
           if (minCost && maxCost) {
             fitness = route.cost >= minCostPerPerson && route.cost <= maxCostPerPerson ? fitness : 0;
           }
-          return { index: index, fitness: fitness };
+          return { index: index, fitness: fitness, priority: route.priority };
         });
 
         const sortedFitnesses = fitnesses.sort((a, b) => b.fitness - a.fitness);
@@ -956,14 +989,20 @@ export class GeneticService implements OnApplicationBootstrap {
           const route = population[item.index];
           const length = route.length;
 
-          if (length < 3) return { distance: 0, cost: 0, route: null, fitness: 0 };
+          if (length < 3) return { distance: 0, cost: 0, route: null, fitness: 0, priority: 0 };
 
           if (length < 4) {
             const routeOptions = getRoute(route, this.type);
 
             const { data, cost } = routeOptions.routeInfo;
 
-            return { distance: routeOptions.distance, cost: cost, route: data, fitness: routeOptions.fitness };
+            return {
+              distance: routeOptions.distance,
+              cost: cost,
+              route: data,
+              fitness: routeOptions.fitness,
+              priority: item.priority,
+            };
           }
 
           let bestParams = DEFAULT_BEST_PARAM;
@@ -977,7 +1016,13 @@ export class GeneticService implements OnApplicationBootstrap {
             route,
           );
 
-          return { distance: bestDistance, cost: cost, route: bestFinalRoute, fitness: fitness };
+          return {
+            distance: bestDistance,
+            cost: cost,
+            route: bestFinalRoute,
+            fitness: fitness,
+            priority: item.priority,
+          };
         });
 
         const sortedRoutes = bestRoutes.sort((a, b) => b.fitness - a.fitness);
@@ -988,11 +1033,24 @@ export class GeneticService implements OnApplicationBootstrap {
           allPoints.push(point);
         });
         routes.push(sortedRoutes[0]);
-        sumFitness += sortedRoutes[0].fitness;
+        // sumFitness += sortedRoutes[0].fitness;
       }
+
       const recommendedHotels = await this.recommendedHotels(allPoints);
 
-      allRoutes.push({ fitness: sumFitness, routes, recommendedHotels });
+      const value = routes.reduce(
+        (value: { fitness: number; priority: number; length: number }, data) => {
+          const { fitness, priority, route } = data;
+          const sumFit = value.fitness + fitness;
+          const sumPriority = value.priority + priority;
+          const sumLength = value.length + (route.length - 2);
+
+          return { fitness: sumFit, priority: sumPriority, length: sumLength };
+        },
+        { fitness: 0, priority: 0, length: 0 },
+      );
+
+      allRoutes.push({ ...value, routes });
     }
 
     return { routes: allRoutes };

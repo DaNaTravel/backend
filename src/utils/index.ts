@@ -71,12 +71,7 @@ export const typeScore = (types: string[], locationTypes: string[]) => {
 
 export const fitness = (distance: number, type: number, cost: number, check?: number) => {
   let output = 4 / (Math.pow(distance, 1) + 1) + 4 / (Math.pow(type, 1) + 1) + 2 / (Math.pow(cost, 1) + 1);
-  if (check)
-    output =
-      1 / (Math.pow(distance, 1) + 1) +
-      40 / (Math.pow(type, 1) + 1) +
-      2 / (Math.pow(cost, 1) + 1) +
-      20 / (Math.pow(check, 1) + 1);
+  if (check) output = 20 / (Math.pow(distance, 1) + 1) + 30 / (Math.pow(type, 1) + 1) + 15 / (Math.pow(cost, 1) + 1);
 
   return output;
 };

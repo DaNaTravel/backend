@@ -96,6 +96,16 @@ export class RouteOptions {
     const data = this.route.map((location) => location.travelInfo);
     return { cost: this.cost, data: data };
   }
+
+  get priority() {
+    const count = this.route.reduce((accumulation, location) => {
+      const existedTypes = location.types?.filter((item) => this.types.includes(item as LocationTypes));
+
+      if (existedTypes && existedTypes.length) return (accumulation += 1);
+      return accumulation;
+    }, 0);
+    return count;
+  }
 }
 
 export const getRoute = (route: LocationOptions[], type: TravelType) => {
