@@ -321,12 +321,13 @@ export const setDefaultTime = () => {
   return { firstDayOfMonth, lastDayOfMonth };
 };
 
-export function formatDate(year: number, month: number, day: number) {
-  const formattedDay = String(day).padStart(2, '0');
-  const formattedMonth = String(month).padStart(2, '0');
-  const formattedYear = String(year);
-  const date = `${formattedYear}-${formattedMonth}-${formattedDay}`;
-  return new Date(date).getTime();
+export function formatDate(date: number | string | Date) {
+  const newDate = new Date(date);
+  const formatedDay = newDate.getDate().toString().padStart(2, '0');
+  const formatedMonth = newDate.toLocaleString('en-US', { month: 'short' });
+
+  const formatedDate = `${formatedMonth}-${formatedDay}`;
+  return formatedDate;
 }
 
 export const removeVietnameseTones = (str: string) => {

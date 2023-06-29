@@ -88,7 +88,7 @@ export class DashboardService {
       );
 
       const count = matchingResult ? matchingResult.count : 0;
-      formattedResult.push({ timeline: formatDate(year, month, day), count });
+      formattedResult.push({ timeline: formatDate(currentDate), count });
 
       currentDate.setDate(currentDate.getDate() + 1);
     }
