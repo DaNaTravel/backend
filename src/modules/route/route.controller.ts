@@ -217,4 +217,15 @@ export class RouteController {
       data: output,
     };
   }
+
+  @Get('/recommended')
+  async getRecommendedItinerariesHomePage() {
+    const itinerary = await this.routeService.getRecommendedItinerariesHomePage();
+    if (!itinerary) throw new BadRequestException('Bad Request');
+
+    return {
+      message: 'Success',
+      data: itinerary,
+    };
+  }
 }
