@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
-import { Model } from 'mongoose';
+import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Location, LocationDocument } from 'src/schemas/locations';
 import { Itinerary, ItineraryDocument } from 'src/schemas/itineraries';
 import { Account, AccountDocument } from 'src/schemas/accounts';
@@ -17,7 +17,7 @@ export class DashboardService {
   ) {}
 
   async getDashboard(query: DashboardQueryDto) {
-    const { startDate: queryStartDate, endDate: queryEndDate } = query;
+    const { startDate: queryStartDate, endDate: queryEndDate, accountId } = query;
 
     let startDate: Date;
     let endDate: Date;
@@ -42,22 +42,26 @@ export class DashboardService {
         return await this.getDataDashboard(this.accountRepo, startDate, endDate);
 
       case CHART.ITINERARY:
-        return await this.getDataDashboard(this.itineraryRepo, startDate, endDate);
+        return await this.getDataDashboard(this.itineraryRepo, startDate, endDate, accountId);
 
       default:
         return [];
     }
   }
 
-  private async getDataDashboard(repo: Model<any>, startDate: Date, endDate: Date) {
+  private async getDataDashboard(repo: Model<any>, startDate: Date, endDate: Date, accountId?: string) {
+    const where: FilterQuery<unknown>[] = [];
+    where.push({
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    });
+
+    if (accountId) where.push({ accountId: new mongoose.Schema.Types.ObjectId(accountId) });
     const result = await repo.aggregate([
       {
-        $match: {
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-        },
+        $match: { $and: where },
       },
       {
         $group: {

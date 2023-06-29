@@ -11,4 +11,7 @@ export class DashboardQueryDto {
 
   @IsString()
   name: string;
+
+  @IsOptional()
+  accountId: string;
 }

@@ -11,10 +11,7 @@ import { DAY_IN_MILISECONDS } from 'src/constants';
 export class RouteService {
   private locations: Location[] = [];
 
-  constructor(
-    @InjectModel(Location.name) private readonly locationRepo: Model<LocationDocument>,
-    @InjectModel(Itinerary.name) private readonly itineraryRepo: Model<ItineraryDocument>,
-  ) {}
+  constructor(@InjectModel(Itinerary.name) private readonly itineraryRepo: Model<ItineraryDocument>) {}
 
   async getItinerary(itineraryId: ObjectId) {
     const itinerary = await this.itineraryRepo.findById(itineraryId).lean();

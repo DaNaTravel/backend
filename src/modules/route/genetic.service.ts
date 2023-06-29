@@ -546,35 +546,34 @@ export class GeneticService implements OnApplicationBootstrap {
 
     const { diffInDays } = handleDurationTime(startDate, endDate);
 
-    return this.generateBestRoutes(dto);
-    // const cost = routes.reduce((accumulation, route) => accumulation + route.cost * people, 0);
+    const allRoutes = await this.generateBestRoutes(dto);
+    const { routes, cost } = allRoutes[0];
 
-    // if (!auth._id) {
-    //   return {
-    //     _id: null,
-    //     accountId: null,
-    //     totalDays: diffInDays,
-    //     type: dto.type,
-    //     people: people,
-    //     cost: cost,
-    //     recommendedHotels: [],
-    //     routes,
-    //   };
-    // }
+    if (!auth._id) {
+      return {
+        _id: null,
+        accountId: null,
+        totalDays: diffInDays,
+        type: dto.type,
+        people: people,
+        recommendedHotels: [],
+        options: allRoutes,
+      };
+    }
 
-    // const newItinerary = await new this.itineraryRepo({
-    //   ...data,
-    //   cost: cost,
-    //   people,
-    //   startDate: startDate,
-    //   endDate: endDate,
-    //   routes: routes,
-    //   accountId: auth._id,
-    // }).save();
+    const newItinerary = await new this.itineraryRepo({
+      ...data,
+      cost: cost,
+      people,
+      startDate: startDate,
+      endDate: endDate,
+      routes: routes,
+      accountId: auth._id,
+    }).save();
 
-    // const { _id, accountId, type } = newItinerary;
+    const { _id, accountId, type } = newItinerary;
 
-    // return { _id, accountId, totalDays: diffInDays, type, people, cost, recommendedHotels, routes };
+    return { _id, accountId, totalDays: diffInDays, type, people, cost, options: allRoutes };
   }
 
   async getLocationOptions(route: Point[], day: string) {
@@ -1033,27 +1032,30 @@ export class GeneticService implements OnApplicationBootstrap {
           allPoints.push(point);
         });
         routes.push(sortedRoutes[0]);
-        // sumFitness += sortedRoutes[0].fitness;
       }
 
       const recommendedHotels = await this.recommendedHotels(allPoints);
 
       const value = routes.reduce(
-        (value: { fitness: number; priority: number; length: number }, data) => {
-          const { fitness, priority, route } = data;
+        (value: { fitness: number; priority: number; length: number; cost: number }, data) => {
+          const { fitness, priority, route, cost } = data;
           const sumFit = value.fitness + fitness;
           const sumPriority = value.priority + priority;
           const sumLength = value.length + (route.length - 2);
 
-          return { fitness: sumFit, priority: sumPriority, length: sumLength };
+          const sumCost = value.cost + cost;
+
+          return { fitness: sumFit, priority: sumPriority, length: sumLength, cost };
         },
-        { fitness: 0, priority: 0, length: 0 },
+        { fitness: 0, priority: 0, length: 0, cost: 0 },
       );
 
-      allRoutes.push({ ...value, routes });
+      const priority = `${value.priority}/${value.length}`;
+
+      allRoutes.push({ priority, cost: value.cost, routes, recommendedHotels });
     }
 
-    return { routes: allRoutes };
+    return allRoutes;
   }
 
   async recommendedHotels(points: Point[]) {
