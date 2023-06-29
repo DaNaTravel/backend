@@ -51,6 +51,7 @@ export class DashboardService {
 
   private async getDataDashboard(repo: Model<any>, startDate: Date, endDate: Date, accountId?: string) {
     const where: FilterQuery<unknown>[] = [];
+
     where.push({
       createdAt: {
         $gte: startDate,
@@ -58,7 +59,8 @@ export class DashboardService {
       },
     });
 
-    if (accountId) where.push({ accountId: new mongoose.Schema.Types.ObjectId(accountId) });
+    if (accountId) where.push({ accountId: new mongoose.Types.ObjectId(accountId) });
+
     const result = await repo.aggregate([
       {
         $match: { $and: where },
