@@ -120,7 +120,7 @@ export class RouteController {
     };
   }
 
-  @Post('/:id/generate')
+  @Post('/:id/arrange')
   async generateNewItinerary(@Body('routes') routes: Point[][], @Param('id') id: string) {
     routes.map((route) =>
       route.map((location) => {
@@ -215,17 +215,6 @@ export class RouteController {
     return {
       message: 'Success',
       data: output,
-    };
-  }
-
-  @Get('/recommended')
-  async getRecommendedItinerariesHomePage() {
-    const itinerary = await this.routeService.getRecommendedItinerariesHomePage();
-    if (!itinerary) throw new BadRequestException('Bad Request');
-
-    return {
-      message: 'Success',
-      data: itinerary,
     };
   }
 }

@@ -92,6 +92,7 @@ export const START_TIME = 420;
 export const END_TIME = 1350;
 export const STAY_TIME = 30;
 export const ARRIVAl_TIME = 30;
+export const SPEECH = 30;
 export const DAY_IN_MILISECONDS = 1000 * 60 * 60 * 24;
 
 export const PATH_CONTAIN_ID = '([0-9a-fA-F]{24}$)';

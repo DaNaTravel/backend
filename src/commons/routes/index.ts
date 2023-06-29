@@ -83,7 +83,7 @@ export class RouteOptions {
       }
     });
 
-    if (count > 2) check = 100000;
+    if (count > 2) check = count * 1000;
     return fitness(this.distance, this.typeScore, this.cost, check);
   }
 
@@ -95,6 +95,16 @@ export class RouteOptions {
   get routeInfo() {
     const data = this.route.map((location) => location.travelInfo);
     return { cost: this.cost, data: data };
+  }
+
+  get priority() {
+    const count = this.route.reduce((accumulation, location) => {
+      const existedTypes = location.types?.filter((item) => this.types.includes(item as LocationTypes));
+
+      if (existedTypes && existedTypes.length) return (accumulation += 1);
+      return accumulation;
+    }, 0);
+    return count;
   }
 }
 
