@@ -24,6 +24,7 @@ import { OptionalAuthGuard } from 'src/guards/optional-jwt.guard';
 import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto, ACCESS } from './dto';
 import { PATH_CONTAIN_ID } from 'src/constants';
 import { Role } from 'src/utils';
+import { getRoute } from 'src/commons/routes';
 
 @Controller('routes')
 export class RouteController {

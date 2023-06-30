@@ -542,7 +542,7 @@ export class GeneticService implements OnApplicationBootstrap {
   }
 
   async createNewRoute(dto: RouteQueryDto, auth: Auth) {
-    const { latitude, longitude, startDate, endDate, people, ...data } = dto;
+    const { startDate, endDate, people, ...data } = dto;
 
     const { diffInDays } = handleDurationTime(startDate, endDate);
 
@@ -658,12 +658,16 @@ export class GeneticService implements OnApplicationBootstrap {
   }
 
   async updateItinerary(routes: LocationOptions[][], name: string, isPublic: boolean, routeId: string) {
-    const itinerary = await this.itineraryRepo.findOne({ _id: new mongoose.Types.ObjectId(routeId) }, { people: true });
+    const itinerary = await this.itineraryRepo.findOne(
+      { _id: new mongoose.Types.ObjectId(routeId) },
+      { people: true, type: true },
+    );
 
     const newRoutes = routes.map((route) => {
       const routeOption = getRoute(route, this.type);
+      const newRouteOption = this.updateArrivalTime(routeOption);
       const { data, cost } = routeOption.routeInfo;
-      return { distance: routeOption.distance, cost: cost, route: data };
+      return { distance: routeOption.distance, cost: cost, route: newRouteOption };
     });
 
     const total = newRoutes.reduce((accumulation, route) => accumulation + route.cost * itinerary.people, 0);
