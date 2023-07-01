@@ -49,30 +49,44 @@ export class RouteService {
 
     if (where.length) resultPipeline.push({ $match: { $and: where } });
 
-    resultPipeline.push({
-      $project: {
-        _id: 1,
-        cost: 1,
-        type: 1,
-        people: 1,
-        endDate: 1,
-        startDate: 1,
-        createdAt: 1,
-        name: 1,
-        days: {
-          $let: {
-            vars: {
-              diffInDays: {
-                $divide: [{ $subtract: [{ $toDate: '$endDate' }, { $toDate: '$startDate' }] }, DAY_IN_MILISECONDS],
-              },
-            },
-            in: { $add: ['$$diffInDays', 1] },
-          },
+    resultPipeline.push(
+      {
+        $lookup: {
+          from: 'accounts',
+          localField: 'accountId',
+          foreignField: '_id',
+          as: 'account',
         },
-        isPublic: 1,
-        routes: 1,
       },
-    });
+      { $unwind: '$account' },
+      {
+        $project: {
+          _id: 1,
+          accountId: 1,
+          accountName: '$account.name',
+          avatar: '$account.avatar',
+          cost: 1,
+          type: 1,
+          people: 1,
+          endDate: 1,
+          startDate: 1,
+          createdAt: 1,
+          name: 1,
+          days: {
+            $let: {
+              vars: {
+                diffInDays: {
+                  $divide: [{ $subtract: [{ $toDate: '$endDate' }, { $toDate: '$startDate' }] }, DAY_IN_MILISECONDS],
+                },
+              },
+              in: { $add: ['$$diffInDays', 1] },
+            },
+          },
+          isPublic: 1,
+          routes: 1,
+        },
+      },
+    );
 
     if (days) {
       resultPipeline.push({ $match: { days: Number(days) } });
