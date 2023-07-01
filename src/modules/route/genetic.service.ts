@@ -1,4 +1,4 @@
-import _, { range, sum } from 'lodash';
+import _, { range } from 'lodash';
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
@@ -30,7 +30,7 @@ import {
   TRIPADVISOR_API,
 } from 'src/constants';
 import { Auth } from 'src/core/decorator';
-import axios, { all } from 'axios';
+import axios from 'axios';
 
 @Injectable()
 export class GeneticService implements OnApplicationBootstrap {
@@ -315,7 +315,7 @@ export class GeneticService implements OnApplicationBootstrap {
     const fitnessResults: { [key: number]: number } = {};
 
     for (const [index, popItem] of population.entries()) {
-      const { fitness, distance } = getRoute(popItem, this.type);
+      const { fitness } = getRoute(popItem, this.type);
       fitnessResults[index] = fitness;
     }
 
@@ -407,7 +407,7 @@ export class GeneticService implements OnApplicationBootstrap {
 
     let index = 0;
     while (children.length < numNonElites + numElites) {
-      const { child1, child2 } = this.crossoverMix(individuals[index], individuals[mergedPoint.length - index - 1]);
+      const { child1 } = this.crossoverMix(individuals[index], individuals[mergedPoint.length - index - 1]);
 
       const isTrue = this.checkArrivalTime(child1);
       if (isTrue) children.push(child1);
@@ -511,7 +511,7 @@ export class GeneticService implements OnApplicationBootstrap {
   }
 
   getBestRoute(routesInfo: LocationOptions[][]) {
-    const routes = routesInfo.map((route: LocationOptions[], index) => {
+    const routes = routesInfo.map((route: LocationOptions[]) => {
       const length = route.length;
 
       if (length < 3) return { distance: 0, cost: 0, route: null };
@@ -666,7 +666,7 @@ export class GeneticService implements OnApplicationBootstrap {
     const newRoutes = routes.map((route) => {
       const routeOption = getRoute(route, this.type);
       const newRouteOption = this.updateArrivalTime(routeOption);
-      const { data, cost } = routeOption.routeInfo;
+      const { cost } = routeOption.routeInfo;
       return { distance: routeOption.distance, cost: cost, route: newRouteOption };
     });
 
@@ -952,7 +952,6 @@ export class GeneticService implements OnApplicationBootstrap {
     while (allRoutes.length < 3) {
       const routes = [];
       const allPoints: Point[] = [];
-      let sumFitness = 0;
 
       for (const [index, day] of weekdays.entries()) {
         const population: LocationOptions[][] = [];
@@ -1049,7 +1048,7 @@ export class GeneticService implements OnApplicationBootstrap {
 
           const sumCost = value.cost + cost;
 
-          return { fitness: sumFit, priority: sumPriority, length: sumLength, cost };
+          return { fitness: sumFit, priority: sumPriority, length: sumLength, cost: sumCost };
         },
         { fitness: 0, priority: 0, length: 0, cost: 0 },
       );
