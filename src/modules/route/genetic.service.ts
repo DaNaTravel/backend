@@ -965,6 +965,9 @@ export class GeneticService implements OnApplicationBootstrap {
         const fitnesses = population.map((locations, index) => {
           const route = getRoute(locations, this.type);
           let fitness = route.fitness;
+          let typeScore = route.typeScore;
+
+          if (locations.length < 4) typeScore = 4;
 
           if (points && points.length) {
             let isValidRoute = false;
@@ -980,7 +983,8 @@ export class GeneticService implements OnApplicationBootstrap {
           if (minCost && maxCost) {
             fitness = route.cost >= minCostPerPerson && route.cost <= maxCostPerPerson ? fitness : 0;
           }
-          return { index: index, typeScore: route.typeScore, fitness: fitness, priority: route.priority };
+
+          return { index: index, typeScore: typeScore, fitness: fitness, priority: route.priority };
         });
 
         const sortedFitnesses = fitnesses.sort((a, b) => a.typeScore - b.typeScore);
