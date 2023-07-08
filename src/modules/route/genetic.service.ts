@@ -793,16 +793,16 @@ export class GeneticService implements OnApplicationBootstrap {
           arrivalTime += travelTime(distance);
         }
 
-        const isExistFoodPrev =
-          prevLocation.types?.includes(LocationTypes.CAFE) ||
-          prevLocation.types?.includes(LocationTypes.FOOD) ||
-          prevLocation.types?.includes(LocationTypes.RESTAURANT);
-        const isExistFoodCurr =
-          randomLocation.types?.includes(LocationTypes.CAFE) ||
-          randomLocation.types?.includes(LocationTypes.FOOD) ||
-          randomLocation.types?.includes(LocationTypes.RESTAURANT);
+        // const isExistFoodPrev =
+        //   prevLocation.types?.includes(LocationTypes.CAFE) ||
+        //   prevLocation.types?.includes(LocationTypes.FOOD) ||
+        //   prevLocation.types?.includes(LocationTypes.RESTAURANT);
+        // const isExistFoodCurr =
+        //   randomLocation.types?.includes(LocationTypes.CAFE) ||
+        //   randomLocation.types?.includes(LocationTypes.FOOD) ||
+        //   randomLocation.types?.includes(LocationTypes.RESTAURANT);
 
-        if (isExistFoodPrev && isExistFoodCurr) continue;
+        // if (isExistFoodPrev && isExistFoodCurr) continue;
 
         if (arrivalTime > END_TIME) break;
 
@@ -980,10 +980,10 @@ export class GeneticService implements OnApplicationBootstrap {
           if (minCost && maxCost) {
             fitness = route.cost >= minCostPerPerson && route.cost <= maxCostPerPerson ? fitness : 0;
           }
-          return { index: index, fitness: fitness, priority: route.priority };
+          return { index: index, typeScore: route.typeScore, fitness: fitness, priority: route.priority };
         });
 
-        const sortedFitnesses = fitnesses.sort((a, b) => b.fitness - a.fitness);
+        const sortedFitnesses = fitnesses.sort((a, b) => a.typeScore - b.typeScore);
 
         const max = sortedFitnesses.slice(0, 10);
 
