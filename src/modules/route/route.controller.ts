@@ -24,7 +24,6 @@ import { OptionalAuthGuard } from 'src/guards/optional-jwt.guard';
 import { Point, RouteQueryDto, UpdateItineraryDto, ItinerariesByAccountQueryDto, ACCESS } from './dto';
 import { PATH_CONTAIN_ID } from 'src/constants';
 import { Role } from 'src/utils';
-import { getRoute } from 'src/commons/routes';
 
 @Controller('routes')
 export class RouteController {
@@ -123,8 +122,9 @@ export class RouteController {
 
   @Post('/:id/arrange')
   async generateNewItinerary(@Body('routes') routes: Point[][], @Param('id') id: string) {
-    routes.map((route) =>
-      route.map((location) => {
+    const cloneRoutes = routes;
+    routes.map((route, i) =>
+      route.map((location, j) => {
         const isTrue = Boolean(location._id) || Boolean(location.latitude && location.longitude);
 
         if (isTrue === false)
@@ -132,8 +132,18 @@ export class RouteController {
             message: 'A Location must have _id or coordinates.',
             data: null,
           });
+
+        if (location.latitude) {
+          const isValid = j === 0 || j === route.length;
+          if (!isValid) {
+            const item = cloneRoutes[i][j];
+            cloneRoutes[i][j] = cloneRoutes[i][route.length - 1];
+            cloneRoutes[i][route.length - 1] = item;
+          }
+        }
       }),
     );
+    console.log(cloneRoutes);
 
     const itinerary = await this.geneticService.checkExistedItinerary(id);
     if (Boolean(itinerary) === false)
@@ -145,7 +155,7 @@ export class RouteController {
     const { startDate, endDate } = itinerary;
 
     const { comparedRoutes, recommendedHotels } = await this.geneticService.compareItinerary(
-      routes,
+      cloneRoutes,
       startDate,
       endDate,
     );
